@@ -13,6 +13,7 @@ interface AppTextInputProps extends TextInputProps {
   error?: string;
   containerStyle?: object;
   rightIcon?: React.ReactNode;
+  inputHeight?: number; // custom height for multiline
 }
 
 const AppTextInput: React.FC<AppTextInputProps> = ({
@@ -21,6 +22,8 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
   style,
   containerStyle,
   rightIcon,
+  inputHeight,
+  multiline = false,
   ...props
 }) => {
   return (
@@ -37,20 +40,35 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
       )}
 
       {/* Input Wrapper */}
-      <View style={[styles.inputWrapper, error && styles.inputError]}>
+      <View
+        style={[
+          styles.inputWrapper,
+          error && styles.inputError,
+          multiline && {
+            alignItems: 'flex-start',
+            minHeight: inputHeight || 100,
+            paddingVertical: 6,
+          },
+        ]}
+      >
         <TextInput
           placeholderTextColor={colors.gray}
-          style={[styles.input, style]}
+          style={[
+            styles.input,
+            style,
+            multiline && { textAlignVertical: 'top', paddingVertical: 0 },
+          ]}
+          multiline={multiline}
           {...props}
         />
         {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
       </View>
 
-      {error ? (
+      {error && (
         <Typography variant="caption" color={colors.error} style={styles.error}>
           {error}
         </Typography>
-      ) : null}
+      )}
     </View>
   );
 };
@@ -69,13 +87,12 @@ const styles = StyleSheet.create({
     borderColor: colors.mainColor,
     borderRadius: 5,
     paddingHorizontal: 12,
-    height:45
+    height: 45,
   },
   input: {
     flex: 1,
     fontSize: 14,
     color: colors.textDark,
-    // paddingVertical: 10,
   },
   iconContainer: {
     marginLeft: 8,

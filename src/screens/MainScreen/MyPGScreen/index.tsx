@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Typography from '../../ui/Typography';
+import Typography from '../../../ui/Typography';
 
 const MyPGScreen = () => (
     <View style={styles.container}>

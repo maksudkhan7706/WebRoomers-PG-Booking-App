@@ -5,7 +5,7 @@ import colors from '../constants/colors';
 import BookingScreen from '../screens/MainScreen/BookingScreen';
 import HomeScreen from '../screens/MainScreen/HomeScreen';
 import ProfileScreen from '../screens/MainScreen/ProfileScreen';
-import MyPGScreen from '../screens/MyPGScreen';
+import MyPGScreen from '../screens/MainScreen/MyPGScreen';
 import FloatingActions from '../ui/FloatingActions';
 import { View } from 'react-native';
 
@@ -57,7 +57,7 @@ const MainTabs = ({ route }: any) => {
         <Tab.Screen
           name="BookingScreen"
           component={BookingScreen}
-          options={{ tabBarLabel: 'Booking' }}
+          options={{ tabBarLabel: 'Enquiry' }}
         />
         {role === 'LANDLORD' && (
           <Tab.Screen
