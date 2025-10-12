@@ -17,6 +17,7 @@ import images from '../../../assets/images';
 import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import AppImageSlider from '../../../ui/AppImageSlider';
 
 const { width } = Dimensions.get('window');
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -101,37 +102,19 @@ const HomeScreen = () => {
           />
         }
       />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom:120}}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         {/* Auto Banner Slider */}
         <View style={styles.sliderContainer}>
-          <FlatList
-            ref={flatListRef}
+          <AppImageSlider
             data={banners}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            keyExtractor={item => item.id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleBannerPress(item.screen)}
-              >
-                <Image source={item.image} style={styles.bannerImage} />
-              </TouchableOpacity>
-            )}
+            showThumbnails={false}
+            onPressBanner={(screen: any) => navigation.navigate(screen)}
           />
-
-          {/* Dots Indicator */}
-          <View style={styles.dotsContainer}>
-            {banners.map((_, index) => (
-              <View
-                key={index}
-                style={[styles.dot, activeIndex === index && styles.activeDot]}
-              />
-            ))}
-          </View>
         </View>
+
         {/* Recent PGs */}
         <View style={styles.sectionContainer}>
           <Typography
@@ -143,7 +126,14 @@ const HomeScreen = () => {
           </Typography>
 
           {recentPGs.map(item => (
-            <View key={item.id} style={styles.pgCard}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate(NAV_KEYS.PGDetailScreen);
+              }}
+              activeOpacity={0.9}
+              key={item.id}
+              style={styles.pgCard}
+            >
               <View style={styles.pgInfoRow}>
                 <View>
                   <Typography variant="body" weight="medium">
@@ -183,7 +173,7 @@ const HomeScreen = () => {
               >
                 {item.rent}
               </Typography>
-            </View>
+            </TouchableOpacity>
           ))}
 
           <TouchableOpacity style={styles.viewAllButton} activeOpacity={0.8}>

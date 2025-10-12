@@ -105,4 +105,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AppTextInput;
+export default React.memo(AppTextInput);

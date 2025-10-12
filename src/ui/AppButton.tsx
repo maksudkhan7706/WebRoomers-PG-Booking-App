@@ -72,4 +72,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AppButton;
+export default React.memo(AppButton);

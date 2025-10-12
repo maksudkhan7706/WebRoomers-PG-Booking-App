@@ -161,4 +161,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FloatingActions;
+export default React.memo(FloatingActions);

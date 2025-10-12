@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
   View,
   Text,
@@ -181,7 +181,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   );
 };
 
-export default AppCustomDropdown;
+export default React.memo(AppCustomDropdown);
 
 const styles = StyleSheet.create({
   inputWrapper: {

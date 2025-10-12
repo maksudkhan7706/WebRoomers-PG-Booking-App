@@ -7,6 +7,7 @@ import Login from '../screens/AuthScreen/Login';
 import Register from '../screens/AuthScreen/Register';
 import MainTabs from './MainTabs';
 import ForgotPassword from '../screens/AuthScreen/ForgotPassword';
+import PGDetailScreen from '../screens/MainScreen/PGDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,17 +19,25 @@ const RootNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuth ? (
-          <Stack.Screen name={NAV_KEYS.MAIN_TABS}>
-            {props => (
-              <MainTabs
-                {...props}
-                route={{
-                  ...props.route,
-                  params: { role }, //pass role here
-                }}
-              />
-            )}
-          </Stack.Screen>
+          <>
+            <Stack.Screen name={NAV_KEYS.MAIN_TABS}>
+              {props => (
+                <MainTabs
+                  {...props}
+                  route={{
+                    ...props.route,
+                    params: { role }, //pass role here
+                  }}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen
+              name={NAV_KEYS.PGDetailScreen}
+              component={PGDetailScreen}
+              options={{ headerShown: false }}
+            />
+
+          </>
         ) : (
           <>
             <Stack.Screen name={NAV_KEYS.ROLE_SELECT} component={RoleSelect} />
