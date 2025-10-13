@@ -9,8 +9,8 @@ export default StyleSheet.create({
     backgroundColor: colors.white,
   },
   sliderContainer: {
+    marginHorizontal: 16,
     marginTop: 10,
-    alignItems: 'center',
   },
   bannerImage: {
     width: width - 32,
@@ -100,9 +100,9 @@ export default StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    borderRadius:10,
-    borderWidth:0.1,
-    borderColor:colors.lightGary
+    borderRadius: 10,
+    borderWidth: 0.1,
+    borderColor: colors.lightGary,
   },
   categoryImage: {
     width: width / 2.5,

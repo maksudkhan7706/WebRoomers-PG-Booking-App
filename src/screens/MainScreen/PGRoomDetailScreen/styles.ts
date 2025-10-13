@@ -1,13 +1,13 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import colors from '../../../constants/colors';
-
-const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
   },
+
+
 
   card: {
     backgroundColor: colors.white,
@@ -25,47 +25,40 @@ export default StyleSheet.create({
     borderWidth: 0.1,
     borderColor: colors.mainColor,
   },
-
-  title: {
-    marginBottom: 10,
+  roomInfoContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   },
-
-  addressRow: {
+  priceRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  addressText: {
-    marginLeft: 6,
-    flexShrink: 1,
-  },
-
-  detailWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  detailItem: {
-    width: width / 2 - 30,
-    marginBottom: 10,
-  },
-
-  featuresWrapper: {
-    flexDirection: 'column',
-    marginTop: 6,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 6,
-  },
-
-  forPgButton: {
+  priceBox: {
     backgroundColor: colors.mainColor,
     borderRadius: 5,
     position: 'absolute',
-    right: 0,
-    top: -10,
+    right: -12,
+    top: -12,
     paddingVertical: 5,
     paddingHorizontal: 10,
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  facilityRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  facilityBadge: {
+    backgroundColor: colors.mainColor,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginRight: 6,
+    marginBottom: 6,
   },
 });

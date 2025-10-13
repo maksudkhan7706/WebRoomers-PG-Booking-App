@@ -7,6 +7,7 @@ import AppImageSlider from '../../../ui/AppImageSlider';
 import colors from '../../../constants/colors';
 import images from '../../../assets/images';
 import styles from './styles';
+import AppButton from '../../../ui/AppButton';
 
 const PGDetailScreen = () => {
   const banners = [
@@ -81,6 +82,11 @@ const PGDetailScreen = () => {
           <Typography variant="label" color={colors.gray}>
             no any description
           </Typography>
+          <View style={styles.forPgButton}>
+            <Typography variant="label" weight="bold" color={colors.white}>
+              For PG ₹6000
+            </Typography>
+          </View>
         </View>
 
         {/* Address */}
@@ -90,7 +96,11 @@ const PGDetailScreen = () => {
           </Typography>
           <View style={styles.addressRow}>
             <FontAwesome name="map-marker" size={16} color={colors.gray} />
-            <Typography variant="label" color={colors.gray} style={styles.addressText}>
+            <Typography
+              variant="label"
+              color={colors.gray}
+              style={styles.addressText}
+            >
               Udaipur, Bhuwana, 313001
             </Typography>
           </View>
@@ -144,6 +154,14 @@ const PGDetailScreen = () => {
             ))}
           </View>
         </View>
+        <View style={{ paddingHorizontal: 16,marginTop:30 }}>
+          <AppButton
+            title="Book PG"
+            onPress={() => {console.log('Book PG');
+             }}
+          />
+        </View>
+
       </ScrollView>
     </View>
   );

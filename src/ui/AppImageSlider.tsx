@@ -7,6 +7,8 @@ import {
   Dimensions,
   Animated,
   StyleSheet,
+  ImageStyle,
+  ViewStyle,
 } from 'react-native';
 import colors from '../constants/colors';
 
@@ -24,6 +26,8 @@ type Props = {
   autoScroll?: boolean;
   showThumbnails?: boolean;
   intervalTime?: number;
+  bannerImageStyle?: ImageStyle;
+  contentContainerStyle?: ViewStyle;
 };
 
 const AppImageSlider: React.FC<Props> = ({
@@ -32,6 +36,8 @@ const AppImageSlider: React.FC<Props> = ({
   autoScroll = true,
   showThumbnails = false,
   intervalTime = 3000,
+  bannerImageStyle,
+  contentContainerStyle,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const mainRef = useRef<FlatList<any>>(null);
@@ -62,29 +68,55 @@ const AppImageSlider: React.FC<Props> = ({
     }
   }).current;
 
-  //Simple Slider with dots (Home page)
   if (!showThumbnails) {
+    const ITEM_WIDTH = width - 80;
+    const SPACING = 14;
+
     return (
       <View style={styles.sliderContainer}>
         <FlatList
           ref={mainRef}
           data={data}
           horizontal
-          pagingEnabled
+          decelerationRate="fast"
           showsHorizontalScrollIndicator={false}
+          snapToInterval={ITEM_WIDTH + SPACING}
+          snapToAlignment="start"
+          pagingEnabled={false}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => (
+          contentContainerStyle={[
+            {
+              paddingLeft: 0,
+              paddingRight: (width - ITEM_WIDTH) / 2,
+            },
+            contentContainerStyle,
+          ]}
+          renderItem={({ item, index }) => (
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.9}
               onPress={() => onPressBanner?.(item.screen)}
+              style={{
+                marginRight: index === data.length - 1 ? 0 : SPACING,
+              }}
             >
-              <Image source={item.image} style={styles.bannerImage} />
+              <Image
+                source={item.image}
+                style={[
+                  {
+                    width: ITEM_WIDTH,
+                    height: 180,
+                    borderRadius: 16,
+                    resizeMode: 'stretch',
+                  },
+                  bannerImageStyle,
+                ]}
+              />
             </TouchableOpacity>
           )}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
         />
-        {/* Dots Indicator */}
+
         <View style={styles.dotsContainer}>
           {data.map((_, index) => (
             <View
@@ -121,7 +153,7 @@ const AppImageSlider: React.FC<Props> = ({
               style={[
                 styles.mainImage,
                 {
-                  marginLeft: index == 0 ? 0 : 20,
+                  marginLeft: 10,
                 },
               ]}
               resizeMode="stretch"

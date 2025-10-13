@@ -6,8 +6,7 @@ import AttachRoom from './attachRoom.jpg';
 import CommonRoom from './commonRoom.jpg';
 import Dormitory from './dormitory.jpg';
 import FourRoom from './fourRoom.jpg';
-import RecentPGImg from './recentpgImg.png';
-import SingleBed from './singleBed.png';
+import SingleBed from './acRoom.jpg';
 
 export default {
   TransparentWebRoomerLogo,
@@ -18,6 +17,5 @@ export default {
   CommonRoom,
   Dormitory,
   FourRoom,
-  RecentPGImg,
   SingleBed
 };

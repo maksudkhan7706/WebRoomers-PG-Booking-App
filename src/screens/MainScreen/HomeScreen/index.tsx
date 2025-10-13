@@ -59,7 +59,8 @@ const HomeScreen = () => {
       name: 'TDI Delhi International PG',
       address: 'Naharlagun',
       rent: '₹11,000',
-      image: images.RecentPGImg,
+      image: images.AttachRoom,
+      isRoomAvailable: 0
     },
     {
       id: '2',
@@ -67,6 +68,8 @@ const HomeScreen = () => {
       address: 'Koramangala, Bangalore',
       rent: '₹5000',
       image: images.SingleBed,
+      isRoomAvailable: 2
+
     },
     {
       id: '3',
@@ -74,6 +77,8 @@ const HomeScreen = () => {
       address: 'BTM Layout, Bangalore',
       rent: '₹12,500',
       image: images.CommonRoom,
+      isRoomAvailable: 1
+
     },
   ];
 
@@ -128,7 +133,11 @@ const HomeScreen = () => {
           {recentPGs.map(item => (
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate(NAV_KEYS.PGDetailScreen);
+                if (item.isRoomAvailable <= 0) {
+                  navigation.navigate(NAV_KEYS.PGDetailScreen);
+                } else {
+                  navigation.navigate(NAV_KEYS.PGRoomListScreen);
+                }
               }}
               activeOpacity={0.9}
               key={item.id}

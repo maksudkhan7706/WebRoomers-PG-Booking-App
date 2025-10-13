@@ -4,13 +4,14 @@ export type RootStackParamList = {
   Login: { role?: 'USER' | 'LANDLORD' };
   Register: undefined;
   ForgotPassword: undefined;
-
   //Main
   HomeScreen: undefined;
   BookingScreen: undefined;
   ProfileScreen: undefined;
   MainTabs: { role?: 'USER' | 'LANDLORD' };
-  PGDetailScreen:undefined
+  PGDetailScreen: undefined;
+  PGRoomListScreen: undefined;
+  PGRoomDetailScreen: undefined;
 };
 
 export const NAV_KEYS = {
@@ -23,7 +24,8 @@ export const NAV_KEYS = {
   HomeScreen: 'HomeScreen',
   BookingScreen: 'BookingScreen',
   ProfileScreen: 'ProfileScreen',
-  // Optional: If you use a bottom tab navigator name
   MAIN_TABS: 'MainTabs',
-  PGDetailScreen:'PGDetailScreen'
+  PGDetailScreen: 'PGDetailScreen',
+  PGRoomListScreen: 'PGRoomListScreen',
+  PGRoomDetailScreen: 'PGRoomDetailScreen',
 } as const;

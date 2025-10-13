@@ -8,6 +8,8 @@ import Register from '../screens/AuthScreen/Register';
 import MainTabs from './MainTabs';
 import ForgotPassword from '../screens/AuthScreen/ForgotPassword';
 import PGDetailScreen from '../screens/MainScreen/PGDetailScreen';
+import PGRoomListScreen from '../screens/MainScreen/PGRoomListScreen';
+import PGRoomDetailScreen from '../screens/MainScreen/PGRoomDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,7 +38,16 @@ const RootNavigator = () => {
               component={PGDetailScreen}
               options={{ headerShown: false }}
             />
-
+            <Stack.Screen
+              name={NAV_KEYS.PGRoomListScreen}
+              component={PGRoomListScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name={NAV_KEYS.PGRoomDetailScreen}
+              component={PGRoomDetailScreen}
+              options={{ headerShown: false }}
+            />
           </>
         ) : (
           <>
