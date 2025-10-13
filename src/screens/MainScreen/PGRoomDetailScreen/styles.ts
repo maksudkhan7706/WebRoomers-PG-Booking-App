@@ -38,15 +38,15 @@ export default StyleSheet.create({
     backgroundColor: colors.mainColor,
     borderRadius: 5,
     position: 'absolute',
-    right: -12,
-    top: -12,
+    right: -15,
+    top: -30,
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 6,
+    marginTop: 10,
   },
   facilityRow: {
     flexDirection: 'row',

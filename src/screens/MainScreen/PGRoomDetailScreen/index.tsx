@@ -35,25 +35,12 @@ const PGRoomDetailScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Image Slider */}
         <AppImageSlider data={banners} showThumbnails autoScroll />
-
         {/* Room Info */}
         <View style={styles.card}>
           <View style={styles.priceRow}>
             <View>
-              <Typography
-                numberOfLines={2}
-                style={{
-                  width: '75%',
-                }}
-                variant="body"
-                weight="medium"
-              >
+              <Typography numberOfLines={2} variant="body" weight="medium">
                 Code World International PG - Room Room-101
-              </Typography>
-            </View>
-            <View style={styles.priceBox}>
-              <Typography variant="label" weight="bold" color={colors.white}>
-                For PG ₹6000
               </Typography>
             </View>
           </View>

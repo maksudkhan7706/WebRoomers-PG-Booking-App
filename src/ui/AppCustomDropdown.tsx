@@ -157,6 +157,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholder="Search..."
+                placeholderTextColor={colors.gray}
                 style={styles.searchInput}
               />
             )}
