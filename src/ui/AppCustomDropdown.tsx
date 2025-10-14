@@ -27,6 +27,7 @@ interface AppCustomDropdownProps {
   showSearch?: boolean;
   multiSelect?: boolean;
   placeholder?: string;
+  error?: string; // ✅ new prop
 }
 
 const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
@@ -37,6 +38,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   showSearch = false,
   multiSelect = false,
   placeholder = '',
+  error,
 }) => {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -50,18 +52,12 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
 
   const handleSelect = (item: string) => {
     if (multiSelect) {
-      if (selected.includes(item)) {
+      if (selected.includes(item))
         setSelected(selected.filter(i => i !== item));
-      } else {
-        setSelected([...selected, item]);
-      }
+      else setSelected([...selected, item]);
     } else {
-      //Single select: allow unselect on second tap
-      if (selected[0] === item) {
-        setSelected([]);
-      } else {
-        setSelected([item]);
-      }
+      if (selected[0] === item) setSelected([]);
+      else setSelected([item]);
       setVisible(false);
     }
   };
@@ -126,12 +122,26 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
 
   return (
     <>
-      <TouchableOpacity style={styles.inputWrapper} onPress={openModal}>
+      <TouchableOpacity
+        style={[
+          styles.inputWrapper,
+          {
+            marginBottom: error ? 5 : 16,
+          },
+        ]}
+        onPress={openModal}
+      >
         <Typography style={{ color: selected.length ? '#000' : '#999' }}>
           {selected.length ? selected.join(', ') : placeholder || label}
         </Typography>
         <FontAwesome name="angle-down" size={18} color={colors.lightGary} />
       </TouchableOpacity>
+
+      {error ? (
+        <Typography variant="label" style={{ color: 'red', marginBottom: 10 }}>
+          {error}
+        </Typography>
+      ) : null}
 
       <Modal
         visible={visible}
@@ -150,8 +160,13 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
               { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <Typography variant='body' weight='bold' style={styles.dropdownLabel}>{label}</Typography>
-
+            <Typography
+              variant="body"
+              weight="bold"
+              style={styles.dropdownLabel}
+            >
+              {label}
+            </Typography>
             {showSearch && (
               <TextInput
                 value={searchText}
@@ -161,7 +176,6 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
                 style={styles.searchInput}
               />
             )}
-
             {filteredData.length > 0 ? (
               <FlatList
                 data={filteredData}
@@ -170,7 +184,6 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
                 keyboardShouldPersistTaps="handled"
               />
             ) : (
-              //Show when no search result found
               <View style={styles.noResultContainer}>
                 <Text style={styles.noResultText}>No results found</Text>
               </View>
@@ -194,7 +207,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 45,
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   overlay: {
     flex: 1,

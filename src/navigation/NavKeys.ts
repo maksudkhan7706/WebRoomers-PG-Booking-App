@@ -6,12 +6,13 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   //Main
   HomeScreen: undefined;
-  BookingScreen: undefined;
+  PGEnquiryScreen: undefined;
   ProfileScreen: undefined;
   MainTabs: { role?: 'USER' | 'LANDLORD' };
   PGDetailScreen: undefined;
   PGRoomListScreen: undefined;
   PGRoomDetailScreen: undefined;
+  PGBookScreen: undefined;
 };
 
 export const NAV_KEYS = {
@@ -22,10 +23,11 @@ export const NAV_KEYS = {
   FORGOTPASSWORD: 'ForgotPassword',
   // Main Screens / Bottom Tabs
   HomeScreen: 'HomeScreen',
-  BookingScreen: 'BookingScreen',
+  PGEnquiryScreen: 'PGEnquiryScreen',
   ProfileScreen: 'ProfileScreen',
   MAIN_TABS: 'MainTabs',
   PGDetailScreen: 'PGDetailScreen',
   PGRoomListScreen: 'PGRoomListScreen',
   PGRoomDetailScreen: 'PGRoomDetailScreen',
+  PGBookScreen: 'PGBookScreen',
 } as const;

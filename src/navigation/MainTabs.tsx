@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../constants/colors';
-import BookingScreen from '../screens/MainScreen/BookingScreen';
+import PGEnquiryScreen from '../screens/MainScreen/PGEnquiryScreen';
 import HomeScreen from '../screens/MainScreen/HomeScreen';
 import ProfileScreen from '../screens/MainScreen/ProfileScreen';
 import MyPGScreen from '../screens/MainScreen/MyPGScreen';
@@ -24,7 +24,7 @@ const MainTabs = ({ route }: any) => {
           tabBarInactiveTintColor: colors.lightGary,
           tabBarIcon: ({ color, size }) => {
             let iconName = 'home';
-            if (route.name === 'BookingScreen') iconName = 'list';
+            if (route.name === 'PGEnquiryScreen') iconName = 'list';
             else if (route.name === 'ProfileScreen') iconName = 'person';
             else if (route.name === 'MyPGScreen') iconName = 'domain';
             return <Icon name={iconName} size={size} color={color} />;
@@ -55,8 +55,8 @@ const MainTabs = ({ route }: any) => {
           options={{ tabBarLabel: 'Home' }}
         />
         <Tab.Screen
-          name="BookingScreen"
-          component={BookingScreen}
+          name="PGEnquiryScreen"
+          component={PGEnquiryScreen}
           options={{ tabBarLabel: 'Enquiry' }}
         />
         {role === 'LANDLORD' && (

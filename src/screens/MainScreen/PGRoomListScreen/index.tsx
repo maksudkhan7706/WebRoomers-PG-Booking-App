@@ -55,7 +55,7 @@ const RoomCard = memo(({ item }: { item: any }) => {
   const bannerData = item.banners.map((img: any, idx: number) => ({
     id: `${item.id}-${idx}`,
     image: img,
-    screen: NAV_KEYS.BookingScreen,
+    screen: NAV_KEYS.PGEnquiryScreen,
   }));
 
   return (

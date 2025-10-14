@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Image,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
@@ -70,87 +78,100 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
   return (
     <View style={styles.container}>
       <AppHeader title="" showBack containerStyle={styles.headerContainer} />
-
-      <View style={styles.innerContainer}>
-        <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
-        <Typography
-          variant="heading"
-          weight="bold"
-          color={colors.mainColor}
-          style={styles.titleText}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAwareScrollView
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid={true}
+          extraScrollHeight={Platform.OS === 'ios' ? 60 : 100}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.innerContainer}
         >
-          Login
-        </Typography>
-        <Typography
-          variant="body"
-          weight="light"
-          color={colors.mainColor}
-          style={styles.subtitleText}
-        >
-          Login using your details.
-        </Typography>
+          <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
 
-        <AppTextInput
-          placeholder="Email / Mobile Number"
-          value={email}
-          onChangeText={setEmail}
-          error={errors.email}
-          keyboardType="email-address"
-        />
-
-        <AppTextInput
-          placeholder="Enter Password"
-          secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
-          error={errors.password}
-          rightIcon={
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Icon
-                name={showPassword ? 'eye-off' : 'eye'}
-                size={20}
-                color={colors.gray}
-              />
-            </TouchableOpacity>
-          }
-        />
-
-        <TouchableOpacity
-          style={styles.forgotContainer}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate(NAV_KEYS.FORGOTPASSWORD)}
-        >
           <Typography
-            variant="label"
-            weight="medium"
+            variant="heading"
+            weight="bold"
             color={colors.mainColor}
-            align="right"
+            style={styles.titleText}
           >
-            Forgot Password?
+            Login
           </Typography>
-        </TouchableOpacity>
 
-        <AppButton title="Login" onPress={handleLogin} disabled={!isActive} />
-
-        <View style={styles.registerContainer}>
-          <Typography variant="label" weight="regular" color={colors.mainColor}>
-            Not have an Account?{' '}
+          <Typography
+            variant="body"
+            weight="light"
+            color={colors.mainColor}
+            style={styles.subtitleText}
+          >
+            Login using your details.
           </Typography>
+
+          <AppTextInput
+            placeholder="Email / Mobile Number"
+            value={email}
+            onChangeText={setEmail}
+            error={errors.email}
+            keyboardType="email-address"
+          />
+
+          <AppTextInput
+            placeholder="Enter Password"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            error={errors.password}
+            rightIcon={
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Icon
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={colors.gray}
+                />
+              </TouchableOpacity>
+            }
+          />
+
           <TouchableOpacity
+            style={styles.forgotContainer}
             activeOpacity={0.8}
-            onPress={() => navigation.navigate(NAV_KEYS.REGISTER)}
+            onPress={() => navigation.navigate(NAV_KEYS.FORGOTPASSWORD)}
           >
             <Typography
               variant="label"
               weight="medium"
               color={colors.mainColor}
-              style={styles.registerText}
+              align="right"
             >
-              Register Now
+              Forgot Password?
             </Typography>
           </TouchableOpacity>
-        </View>
-      </View>
+
+          <AppButton title="Login" onPress={handleLogin} disabled={!isActive} />
+
+          <View style={styles.registerContainer}>
+            <Typography
+              variant="label"
+              weight="regular"
+              color={colors.mainColor}
+            >
+              Not have an Account?{' '}
+            </Typography>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate(NAV_KEYS.REGISTER)}
+            >
+              <Typography
+                variant="label"
+                weight="medium"
+                color={colors.mainColor}
+                style={styles.registerText}
+              >
+                Register Now
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
     </View>
   );
 };

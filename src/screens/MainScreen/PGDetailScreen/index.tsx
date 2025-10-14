@@ -8,8 +8,14 @@ import colors from '../../../constants/colors';
 import images from '../../../assets/images';
 import styles from './styles';
 import AppButton from '../../../ui/AppButton';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
+import { useNavigation } from '@react-navigation/native';
+
+type PGDetailtNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const PGDetailScreen = () => {
+  const navigation = useNavigation<PGDetailtNavProp>();
   const banners = [
     { id: '1', image: images.BannerOne },
     { id: '2', image: images.AttachRoom },
@@ -154,14 +160,14 @@ const PGDetailScreen = () => {
             ))}
           </View>
         </View>
-        <View style={{ paddingHorizontal: 16,marginTop:30 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
           <AppButton
             title="Book PG"
-            onPress={() => {console.log('Book PG');
-             }}
+            onPress={() => {
+              navigation.navigate(NAV_KEYS.PGBookScreen);
+            }}
           />
         </View>
-
       </ScrollView>
     </View>
   );

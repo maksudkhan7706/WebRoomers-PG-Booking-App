@@ -27,9 +27,9 @@ const HomeScreen = () => {
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const banners = [
-    { id: '1', image: images.BannerOne, screen: NAV_KEYS.BookingScreen },
+    { id: '1', image: images.BannerOne, screen: NAV_KEYS.PGEnquiryScreen },
     { id: '2', image: images.BannerTwo, screen: NAV_KEYS.ProfileScreen },
-    { id: '3', image: images.BannerOne, screen: NAV_KEYS.BookingScreen },
+    { id: '3', image: images.BannerOne, screen: NAV_KEYS.PGEnquiryScreen },
     { id: '4', image: images.BannerTwo, screen: NAV_KEYS.HomeScreen },
   ];
 

@@ -7,6 +7,12 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import colors from '../../../constants/colors';
 import AppImageSlider from '../../../ui/AppImageSlider';
 import images from '../../../assets/images';
+import AppButton from '../../../ui/AppButton';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
+import { useNavigation } from '@react-navigation/native';
+
+type PGRoomDetailStNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const banners = [
   { id: '1', image: images.PGRoom },
@@ -18,6 +24,7 @@ const banners = [
 ];
 
 const PGRoomDetailScreen = () => {
+  const navigation = useNavigation<PGRoomDetailStNavProp>();
   return (
     <View style={styles.container}>
       <AppHeader
@@ -112,6 +119,14 @@ const PGRoomDetailScreen = () => {
               markets for added convenience.
             </Typography>
           </View>
+        </View>
+        <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
+          <AppButton
+            title="Book PG"
+            onPress={() => {
+              navigation.navigate(NAV_KEYS.PGBookScreen);
+            }}
+          />
         </View>
       </ScrollView>
     </View>
