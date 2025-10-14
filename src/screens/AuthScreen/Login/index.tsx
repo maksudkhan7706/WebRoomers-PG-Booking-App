@@ -19,6 +19,10 @@ import Typography from '../../../ui/Typography';
 import AppButton from '../../../ui/AppButton';
 import AppTextInput from '../../../ui/AppTextInput';
 import Icon from 'react-native-vector-icons/Feather';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { loginUser } from '../../../store/authSlice';
+import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
 
 type LoginNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -35,12 +39,10 @@ interface LoginProps {
 const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
   navigation,
   route,
-  setIsAuth,
-  setRole,
 }) => {
   const role = route.params?.role ?? 'USER';
-  console.log('login role ========>>>>', role);
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: RootState) => state.auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -49,9 +51,12 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
+  useEffect(() => {
+    setIsActive(email.trim().length > 0 || password.trim().length > 0);
+  }, [email, password]);
+
   const handleValidate = () => {
     const newErrors: { email?: string; password?: string } = {};
-
     if (!email) newErrors.email = 'Email or phone is required';
     else if (!/\S+@\S+\.\S+/.test(email))
       newErrors.email = 'Enter a valid email address';
@@ -64,14 +69,31 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  useEffect(() => {
-    setIsActive(email.trim().length > 0 || password.trim().length > 0);
-  }, [email, password]);
+  const handleLogin = async () => {
+    if (!handleValidate()) return;
+    try {
+      const payload = {
+        email_mobile: email.trim(),
+        password: password,
+        company_id: '35',
+        role,
+      };
 
-  const handleLogin = () => {
-    if (handleValidate()) {
-      setRole(role);
-      setIsAuth(true);
+      const resultAction = await dispatch(loginUser(payload));
+      if (loginUser.fulfilled.match(resultAction)) {
+        const userData = resultAction.payload;
+        if (userData.success) {
+          showSuccessMsg(userData.message || 'Successfully logged in.');
+          console.log('User Data:', userData.data);
+          console.log('User Role:', payload.role);
+        } else {
+          showErrorMsg(userData.message || 'Login Failed');
+        }
+      } else {
+        showErrorMsg('Login Failed');
+      }
+    } catch (err) {
+      showErrorMsg('Login Error Something went wrong!');
     }
   };
 
@@ -146,7 +168,12 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
             </Typography>
           </TouchableOpacity>
 
-          <AppButton title="Login" onPress={handleLogin} disabled={!isActive} />
+          <AppButton
+            title="Login"
+            onPress={handleLogin}
+            loading={loading}
+            disabled={!isActive || loading}
+          />
 
           <View style={styles.registerContainer}>
             <Typography

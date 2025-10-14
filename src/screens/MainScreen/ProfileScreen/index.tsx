@@ -80,7 +80,7 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Profile" />
+      <AppHeader title="Profile" showBack />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
@@ -90,14 +90,6 @@ const ProfileScreen = () => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Basic Info */}
-          <Typography
-            variant="heading"
-            weight="bold"
-            style={{ marginBottom: 10 }}
-          >
-            Basic Information
-          </Typography>
-
           <AppTextInput
             label="Full Name *"
             placeholder="Enter your full name"
@@ -117,8 +109,8 @@ const ProfileScreen = () => {
 
           {/* Identity Verification */}
           <Typography
-            variant="heading"
-            weight="bold"
+            variant="subheading"
+            weight="medium"
             style={{ marginVertical: 10 }}
           >
             Identity Verification
@@ -150,8 +142,8 @@ const ProfileScreen = () => {
 
           {/* References */}
           <Typography
-            variant="heading"
-            weight="bold"
+            variant="subheading"
+            weight="medium"
             style={{ marginVertical: 10 }}
           >
             References
@@ -184,9 +176,8 @@ const ProfileScreen = () => {
             value={form.city}
             onChangeText={text => setForm({ ...form, city: text })}
           />
-
           {/* Submit Button */}
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 20, marginBottom: 66 }}>
             <AppButton title="Submit Profile" onPress={handleSubmit} />
           </View>
         </KeyboardAwareScrollView>

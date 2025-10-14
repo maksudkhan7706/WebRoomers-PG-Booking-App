@@ -32,6 +32,7 @@ interface Errors {
 }
 
 const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
+  
   const [selectedGender, setSelectedGender] = useState<string[]>([]);
   const [stayDuration, setStayDuration] = useState<string[]>([]);
   const [numPersons, setNumPersons] = useState<string[]>([]);

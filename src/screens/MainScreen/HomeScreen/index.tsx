@@ -18,6 +18,8 @@ import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import AppImageSlider from '../../../ui/AppImageSlider';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store';
 
 const { width } = Dimensions.get('window');
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -25,7 +27,8 @@ type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen = () => {
   const navigation = useNavigation<HomeNavProp>();
   const flatListRef = useRef<FlatList>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const { userData, userRole } = useSelector((state: RootState) => state.auth);
+
   const banners = [
     { id: '1', image: images.BannerOne, screen: NAV_KEYS.PGEnquiryScreen },
     { id: '2', image: images.BannerTwo, screen: NAV_KEYS.ProfileScreen },
@@ -33,24 +36,8 @@ const HomeScreen = () => {
     { id: '4', image: images.BannerTwo, screen: NAV_KEYS.HomeScreen },
   ];
 
-  //Auto Slide
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const nextIndex = (activeIndex + 1) % banners.length;
-      setActiveIndex(nextIndex);
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [activeIndex]);
-
-  const handleBannerPress = (screen: keyof RootStackParamList) => {
-    navigation.navigate({ name: screen as any, params: undefined });
-  };
-
-  const handleScroll = (event: any) => {
-    const index = Math.round(event.nativeEvent.contentOffset.x / width);
-    setActiveIndex(index);
-  };
+  console.log('IN HOME USER DATE ====>>>>', userData);
+  console.log('IN HOME USER ROLE ====>>>>', userRole);
 
   //Dummy PG data
   const recentPGs = [
@@ -60,7 +47,7 @@ const HomeScreen = () => {
       address: 'Naharlagun',
       rent: '₹11,000',
       image: images.AttachRoom,
-      isRoomAvailable: 0
+      isRoomAvailable: 0,
     },
     {
       id: '2',
@@ -68,8 +55,7 @@ const HomeScreen = () => {
       address: 'Koramangala, Bangalore',
       rent: '₹5000',
       image: images.SingleBed,
-      isRoomAvailable: 2
-
+      isRoomAvailable: 2,
     },
     {
       id: '3',
@@ -77,8 +63,7 @@ const HomeScreen = () => {
       address: 'BTM Layout, Bangalore',
       rent: '₹12,500',
       image: images.CommonRoom,
-      isRoomAvailable: 1
-
+      isRoomAvailable: 1,
     },
   ];
 

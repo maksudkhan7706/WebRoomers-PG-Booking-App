@@ -3,7 +3,9 @@ import {
   TouchableWithoutFeedback,
   Animated,
   StyleSheet,
+  View,
   ViewStyle,
+  ActivityIndicator,
 } from 'react-native';
 import colors from '../constants/colors';
 import Typography from './Typography';
@@ -12,6 +14,7 @@ interface AppButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
   style?: ViewStyle;
 }
 
@@ -19,6 +22,7 @@ const AppButton: React.FC<AppButtonProps> = ({
   title,
   onPress,
   disabled = false,
+  loading = false,
   style,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
@@ -44,18 +48,22 @@ const AppButton: React.FC<AppButtonProps> = ({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading} // disable while loading
     >
       <Animated.View
         style={[
           styles.btn,
           style,
-          { transform: [{ scale }], opacity: disabled ? 0.5 : 1 },
+          { transform: [{ scale }], opacity: disabled || loading ? 0.5 : 1 },
         ]}
       >
-        <Typography variant="body" weight="medium" color={colors.white}>
-          {title}
-        </Typography>
+        {loading ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Typography variant="body" weight="medium" color={colors.white}>
+            {title}
+          </Typography>
+        )}
       </Animated.View>
     </TouchableWithoutFeedback>
   );

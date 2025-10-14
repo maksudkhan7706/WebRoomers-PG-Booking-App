@@ -10,6 +10,12 @@ import { useNavigation } from '@react-navigation/native';
 import Typography from './Typography';
 import colors from '../constants/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { NAV_KEYS, RootStackParamList } from '../navigation/NavKeys';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+
+type HeaderNavprop = NativeStackNavigationProp<RootStackParamList>;
+
 
 interface AppHeaderProps {
   title: string;
@@ -20,7 +26,7 @@ interface AppHeaderProps {
   titleStyle?: TextStyle;
   backIconColor?: string;
   onRightIconPress?: () => void
-} 
+}
 
 const AppHeader: React.FC<AppHeaderProps> = ({
   title,
@@ -32,7 +38,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   backIconColor = colors.black,
   onRightIconPress
 }) => {
-  const navigation = useNavigation();
+ const navigation = useNavigation<HeaderNavprop>();
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -50,7 +56,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       >
         {title}
       </Typography>
-      <TouchableOpacity activeOpacity={0.8} onPress={onRightIconPress} style={styles.viewOfIcons}>{rightIcon}</TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.8} onPress={() => {
+        navigation.navigate(NAV_KEYS.ProfileScreen)
+      }} style={styles.viewOfIcons}>{rightIcon}</TouchableOpacity>
     </View>
   );
 };

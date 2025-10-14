@@ -54,19 +54,20 @@ const ImagePickerInput: React.FC<Props> = ({ label, onSelect }) => {
 
   return (
     <View style={{ marginBottom: 20 }}>
-      <Typography weight="medium" style={{ marginBottom: 6 }}>
+      <Typography variant='caption' weight="medium" style={{ marginBottom: 6 }}>
         {label}
       </Typography>
       <TouchableOpacity
+        activeOpacity={0.8}
         onPress={openPicker}
         style={{
           height: 120,
           borderWidth: 1,
-          borderColor: colors.logoBg,
+          borderColor: '#f3f3fa',
           borderRadius: 10,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.logoBg,
+          backgroundColor: '#f3f3fa',
         }}
       >
         {imageUri ? (

@@ -5,15 +5,24 @@ import {
   Animated,
   Linking,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../constants/colors';
+import { useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { NAV_KEYS } from '../navigation/NavKeys';
+import { logoutUser } from '../store/authSlice';
+import { AppDispatch } from '../store';
+import { showSuccessMsg } from '../utils/appMessages';
 
 const FloatingActions = () => {
   const [showOptions, setShowOptions] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<any>();
 
   const toggleOptions = () => {
     setShowOptions(!showOptions);
@@ -24,7 +33,40 @@ const FloatingActions = () => {
     }).start();
   };
 
-  const callStyle = {
+  const confirmLogout = () => {
+    Alert.alert(
+      'Logout Confirmation',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: handleLogout,
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const handleLogout = async () => {
+    try {
+      toggleOptions();
+      await dispatch(logoutUser());
+      showSuccessMsg('Logout successfully');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: NAV_KEYS.LOGIN }],
+      });
+    } catch (error) {
+      console.log('Logout error:', error);
+    }
+  };
+
+  // Animation styles (bottom to top distance)
+  const logoutStyle = {
     transform: [
       { scale: animation },
       {
@@ -36,19 +78,21 @@ const FloatingActions = () => {
     ],
     opacity: animation,
   };
-  const whatsappStyle = {
+
+  const callStyle = {
     transform: [
       { scale: animation },
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -120],
+          outputRange: [0, -120], // ☎️ Call (Logout ke upar)
         }),
       },
     ],
     opacity: animation,
   };
-  const inquiryStyle = {
+
+  const whatsappStyle = {
     transform: [
       { scale: animation },
       {
@@ -63,7 +107,6 @@ const FloatingActions = () => {
 
   return (
     <>
-      {/* Overlay */}
       {showOptions && (
         <TouchableOpacity
           onPress={toggleOptions}
@@ -71,21 +114,7 @@ const FloatingActions = () => {
           style={styles.overlay}
         />
       )}
-
       <View style={styles.container}>
-        {/* Inquiry */}
-        {/* <Animated.View style={[styles.iconWrapper, inquiryStyle]}>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.mainColor }]}
-          >
-            <MaterialCommunityIcons
-              name="file-document-edit-outline"
-              size={22}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </Animated.View> */}
-
         {/* WhatsApp */}
         <Animated.View style={[styles.iconWrapper, whatsappStyle]}>
           <TouchableOpacity
@@ -103,6 +132,16 @@ const FloatingActions = () => {
             style={[styles.actionBtn, { backgroundColor: '#1E90FF' }]}
           >
             <Feather name="phone-call" size={22} color="#fff" />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Logout */}
+        <Animated.View style={[styles.iconWrapper, logoutStyle]}>
+          <TouchableOpacity
+            onPress={confirmLogout}
+            style={[styles.actionBtn, { backgroundColor: '#FF3B30' }]}
+          >
+            <MaterialCommunityIcons name="logout" size={22} color="#fff" />
           </TouchableOpacity>
         </Animated.View>
 
