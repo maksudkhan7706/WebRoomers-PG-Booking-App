@@ -12,7 +12,7 @@ import { View } from 'react-native';
 const Tab = createBottomTabNavigator();
 
 const MainTabs = ({ route }: any) => {
-  const role = route.params?.role ?? 'USER'; // default USER
+  const role = route.params?.role ?? 'user'; // default user
   console.log('role ==========>>>>>>', role);
 
   return (
@@ -59,7 +59,7 @@ const MainTabs = ({ route }: any) => {
           component={PGEnquiryScreen}
           options={{ tabBarLabel: 'Enquiry' }}
         />
-        {role === 'LANDLORD' && (
+        {role === 'landlord' && (
           <Tab.Screen
             name="MyPGScreen"
             component={MyPGScreen}

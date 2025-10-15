@@ -1,0 +1,152 @@
+import React, { useState } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  Image,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
+import colors from '../../../constants/colors';
+import styles from './styles';
+import AppHeader from '../../../ui/AppHeader';
+import images from '../../../assets/images';
+import Typography from '../../../ui/Typography';
+import AppButton from '../../../ui/AppButton';
+import AppTextInput from '../../../ui/AppTextInput';
+import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
+import { AppDispatch } from '../../../store';
+import { useDispatch } from 'react-redux';
+import { reSendOtp } from '../../../store/authSlice';
+
+type EmailVerificationNavProp = NativeStackNavigationProp<
+  RootStackParamList,
+  typeof NAV_KEYS.EmailVerification
+>;
+type EmailVerificationRouteProp = RouteProp<
+  RootStackParamList,
+  typeof NAV_KEYS.EmailVerification
+>;
+
+interface Props {
+  navigation: EmailVerificationNavProp;
+  route: EmailVerificationRouteProp;
+}
+
+const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
+  const { email, otp, role, mobile_number, full_name } = route.params || {};
+
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [currentOtp, setCurrentOtp] = useState(otp);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleVerify = () => {
+    if (!enteredOtp.trim()) {
+      showErrorMsg('Please enter OTP');
+      return;
+    }
+
+    if (enteredOtp.trim() === String(currentOtp)) {
+      showSuccessMsg('Email verified successfully!');
+      navigation.navigate(NAV_KEYS.LOGIN, { role });
+    } else {
+      showErrorMsg('Invalid OTP! Please try again.');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email || !mobile_number || !full_name) return;
+
+    const payload = {
+      email,
+      mobile_number,
+      full_name,
+    };
+
+    try {
+      const resultAction = await dispatch(reSendOtp(payload)).unwrap();
+      console.log('Resend OTP Response ===>>', resultAction);
+
+      if (resultAction.success) {
+        showSuccessMsg('OTP re-sent successfully!');
+        setCurrentOtp(resultAction.otp); // ✅ update current OTP
+      } else {
+        showErrorMsg(resultAction.message || 'Failed to re-send OTP');
+      }
+    } catch (err: any) {
+      console.log('Re-send OTP Error ===>', err);
+      showErrorMsg('Something went wrong');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <AppHeader title="" showBack containerStyle={styles.headerContainer} />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAwareScrollView
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid={true}
+          extraScrollHeight={Platform.OS === 'ios' ? 60 : 100}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.innerContainer}
+        >
+          <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
+          <Typography
+            variant="heading"
+            weight="bold"
+            color={colors.mainColor}
+            style={styles.titleText}
+          >
+            Verify your Email Address
+          </Typography>
+
+          <Typography
+            variant="body"
+            weight="light"
+            color={colors.mainColor}
+            style={styles.subtitleText}
+          >
+            {email}
+          </Typography>
+
+          <AppTextInput
+            placeholder="Enter OTP"
+            keyboardType="number-pad"
+            value={enteredOtp}
+            onChangeText={setEnteredOtp}
+          />
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={{ marginBottom: 20 }}
+            onPress={handleResendOtp}
+          >
+            <Typography
+              variant="body"
+              weight="light"
+              align="right"
+              color={colors.mainColor}
+              style={{
+                textDecorationLine: 'underline',
+              }}
+            >
+              Re-send OTP
+            </Typography>
+          </TouchableOpacity>
+
+          <AppButton
+            title="Verify & Continue"
+            onPress={handleVerify}
+            disabled={!enteredOtp.trim()}
+          />
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
+    </View>
+  );
+};
+
+export default EmailVerification;

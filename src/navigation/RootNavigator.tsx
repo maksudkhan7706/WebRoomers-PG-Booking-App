@@ -13,12 +13,13 @@ import PGRoomListScreen from '../screens/MainScreen/PGRoomListScreen';
 import PGRoomDetailScreen from '../screens/MainScreen/PGRoomDetailScreen';
 import PGBookScreen from '../screens/MainScreen/PGBookScreen';
 import ProfileScreen from '../screens/MainScreen/ProfileScreen';
+import EmailVerification from '../screens/AuthScreen/EmailVerification';
 
 const Stack = createNativeStackNavigator();
 
 const RootNavigator = () => {
   const { isAuth } = useSelector((state: RootState) => state.auth);
-  const role = useSelector((state: RootState) => state.auth.userRole) ?? 'USER';
+  const role = useSelector((state: RootState) => state.auth.userRole) ?? 'user';
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -53,6 +54,8 @@ const RootNavigator = () => {
           <Stack.Screen name={NAV_KEYS.ROLE_SELECT} component={RoleSelect} />
           <Stack.Screen name={NAV_KEYS.LOGIN} component={Login} />
           <Stack.Screen name={NAV_KEYS.REGISTER} component={Register} />
+          <Stack.Screen name={NAV_KEYS.EmailVerification} component={EmailVerification} />
+
           <Stack.Screen
             name={NAV_KEYS.FORGOTPASSWORD}
             component={ForgotPassword}

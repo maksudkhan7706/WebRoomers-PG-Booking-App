@@ -40,7 +40,7 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
   navigation,
   route,
 }) => {
-  const role = route.params?.role ?? 'USER';
+  const role = route.params?.role ?? 'user';
   const dispatch = useDispatch<AppDispatch>();
   const { loading } = useSelector((state: RootState) => state.auth);
   const [email, setEmail] = useState('');
@@ -96,6 +96,7 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
       showErrorMsg('Login Error Something went wrong!');
     }
   };
+  console.log('role in handleLogin =========>>>>>>', role);
 
   return (
     <View style={styles.container}>
@@ -185,7 +186,7 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
             </Typography>
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => navigation.navigate(NAV_KEYS.REGISTER)}
+              onPress={() => navigation.navigate(NAV_KEYS.REGISTER, { role })}
             >
               <Typography
                 variant="label"

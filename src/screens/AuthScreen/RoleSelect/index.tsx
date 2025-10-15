@@ -15,7 +15,9 @@ type RoleSelectNavProp = NativeStackNavigationProp<
 >;
 
 const RoleSelect = () => {
-  const [selectedRole, setSelectedRole] = useState<'USER' | 'LANDLORD' | null>(null);
+  const [selectedRole, setSelectedRole] = useState<'user' | 'landlord' | null>(
+    null,
+  );
   const navigation = useNavigation<RoleSelectNavProp>();
 
   const handleContinue = () => {
@@ -27,10 +29,13 @@ const RoleSelect = () => {
   return (
     <View style={styles.container}>
       {/* <AppHeader title="WEBROOMERS" /> */}
-      <Image source={images.TransparentWebRoomerLogo} style={[styles.logo, { marginTop: 55 }]} />
+      <Image
+        source={images.TransparentWebRoomerLogo}
+        style={[styles.logo, { marginTop: 55 }]}
+      />
       <View style={styles.content}>
         <View style={styles.cardContainer}>
-          {['USER', 'LANDLORD'].map(role => (
+          {['user', 'landlord'].map(role => (
             <TouchableOpacity
               key={role}
               style={[
@@ -38,7 +43,7 @@ const RoleSelect = () => {
                 selectedRole === role && styles.selectedCard,
               ]}
               activeOpacity={0.8}
-              onPress={() => setSelectedRole(role as 'USER' | 'LANDLORD')}
+              onPress={() => setSelectedRole(role as 'user' | 'landlord')}
             >
               <Image
                 source={images.TransparentWebRoomerLogo}
@@ -47,7 +52,7 @@ const RoleSelect = () => {
 
               <View style={styles.cardFooter}>
                 <Typography variant="body" weight="bold">
-                  {role}
+                  {role.toUpperCase()}
                 </Typography>
                 <AntDesign name="right" size={14} color="black" />
               </View>

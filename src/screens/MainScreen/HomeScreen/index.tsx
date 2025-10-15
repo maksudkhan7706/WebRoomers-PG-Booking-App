@@ -36,8 +36,8 @@ const HomeScreen = () => {
     { id: '4', image: images.BannerTwo, screen: NAV_KEYS.HomeScreen },
   ];
 
-  console.log('IN HOME USER DATE ====>>>>', userData);
-  console.log('IN HOME USER ROLE ====>>>>', userRole);
+  console.log('IN HOME user DATE ====>>>>', userData);
+  console.log('IN HOME user ROLE ====>>>>', userRole);
 
   //Dummy PG data
   const recentPGs = [

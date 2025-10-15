@@ -1,8 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { postRequest } from '../services/apiService';
-import { loginUrl } from '../services/urlHelper';
+import {
+  loginUrl,
+  registerUrl,
+  reSendOtpUrl,
+  sendOtpUrl,
+} from '../services/urlHelper';
 
+// =======================
+// 🔹 Initial State
+// =======================
 interface AuthState {
   loading: boolean;
   userData: any | null;
@@ -19,7 +27,9 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Login API
+// =======================
+// 🔹 LOGIN API
+// =======================
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (
@@ -34,7 +44,6 @@ export const loginUser = createAsyncThunk(
     try {
       const response = await postRequest(loginUrl(), payload);
       if (response.success) {
-        // save user data + role to AsyncStorage
         await AsyncStorage.setItem('userData', JSON.stringify(response.data));
         await AsyncStorage.setItem('userRole', payload.role);
       }
@@ -45,7 +54,9 @@ export const loginUser = createAsyncThunk(
   },
 );
 
-// Load user data from AsyncStorage on app start
+// =======================
+// 🔹 LOAD USER (AsyncStorage)
+// =======================
 export const loadUserFromStorage = createAsyncThunk(
   'auth/loadUserFromStorage',
   async (_, { rejectWithValue }) => {
@@ -63,7 +74,9 @@ export const loadUserFromStorage = createAsyncThunk(
   },
 );
 
-// Logout
+// =======================
+// 🔹 LOGOUT
+// =======================
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
@@ -77,12 +90,76 @@ export const logoutUser = createAsyncThunk(
   },
 );
 
+// =======================
+// 🔹 REGISTER API
+// =======================
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async (
+    payload: {
+      full_name: string;
+      email: string;
+      mobile: string;
+      password: string;
+      user_type: string; // user ya landlord
+      company_id: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(registerUrl(), payload);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+// =======================
+// 🔹 SEND OTP API (new)
+// =======================
+export const sendOtp = createAsyncThunk(
+  'auth/sendOtp',
+  async (
+    payload: {
+      email: string;
+      mobile_number: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(sendOtpUrl(), payload);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// -------------------- RE-SEND OTP --------------------
+export const reSendOtp = createAsyncThunk(
+  'auth/reSendOtp',
+  async (
+    payload: { email: string; mobile_number: string; full_name: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(reSendOtpUrl(), payload);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// =======================
+// 🔹 SLICE
+// =======================
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {},
   extraReducers: builder => {
     builder
+      // -------------------- LOGIN --------------------
       .addCase(loginUser.pending, state => {
         state.loading = true;
         state.error = null;
@@ -101,6 +178,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
+      // -------------------- LOAD USER --------------------
       .addCase(loadUserFromStorage.fulfilled, (state, action) => {
         state.userData = action.payload.userData;
         state.userRole = action.payload.userRole;
@@ -109,10 +188,63 @@ const authSlice = createSlice({
       .addCase(loadUserFromStorage.rejected, state => {
         state.isAuth = false;
       })
+
+      // -------------------- LOGOUT --------------------
       .addCase(logoutUser.fulfilled, state => {
         state.userData = null;
         state.userRole = null;
         state.isAuth = false;
+      })
+
+      // -------------------- REGISTER --------------------
+      .addCase(registerUser.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.success) {
+          state.userData = null;
+          state.userRole = null;
+          state.isAuth = false; // abhi login nahi hua
+        } else {
+          state.error = action.payload.message;
+        }
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // -------------------- SEND OTP --------------------
+      .addCase(sendOtp.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        if (!action.payload.success) {
+          state.error = action.payload.message;
+        }
+      })
+      .addCase(sendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // -------------------- RE-SEND OTP --------------------
+      .addCase(reSendOtp.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(reSendOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        if (!action.payload.success) {
+          state.error = action.payload.message;
+        }
+      })
+      .addCase(reSendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

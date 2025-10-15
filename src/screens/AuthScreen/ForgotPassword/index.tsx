@@ -90,7 +90,7 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() =>
-              navigation.navigate(NAV_KEYS.LOGIN, { role: 'USER' })
+              navigation.navigate(NAV_KEYS.LOGIN, { role: 'user' })
             }
           >
             <Typography
