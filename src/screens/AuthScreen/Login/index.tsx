@@ -157,7 +157,9 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
           <TouchableOpacity
             style={styles.forgotContainer}
             activeOpacity={0.8}
-            onPress={() => navigation.navigate(NAV_KEYS.FORGOTPASSWORD)}
+            onPress={() =>
+              navigation.navigate(NAV_KEYS.FORGOTPASSWORD, { role })
+            }
           >
             <Typography
               variant="label"

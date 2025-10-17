@@ -1,34 +1,91 @@
-import React from 'react';
-import { View, ScrollView, Image } from 'react-native';
+import React, { useEffect, memo } from 'react';
+import { View, ScrollView, ActivityIndicator } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { fetchPgRoomDetail } from '../../../store/mainSlice';
 import Typography from '../../../ui/Typography';
-import styles from './styles';
 import AppHeader from '../../../ui/AppHeader';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import colors from '../../../constants/colors';
-import AppImageSlider from '../../../ui/AppImageSlider';
-import images from '../../../assets/images';
 import AppButton from '../../../ui/AppButton';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
-import { useNavigation } from '@react-navigation/native';
+import styles from './styles';
+import AppImageSlider from '../../../ui/AppImageSlider';
 
 type PGRoomDetailStNavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const banners = [
-  { id: '1', image: images.PGRoom },
-  { id: '2', image: images.AttachRoom },
-  { id: '3', image: images.CommonRoom },
-  { id: '4', image: images.Dormitory },
-  { id: '5', image: images.FourRoom },
-  { id: '6', image: images.SingleBed },
-];
-
-const PGRoomDetailScreen = () => {
+const PGRoomDetailScreen = memo(() => {
   const navigation = useNavigation<PGRoomDetailStNavProp>();
+  const dispatch = useDispatch<AppDispatch>();
+  const route = useRoute();
+  const { roomId, pgId, companyId } = (route.params as any) || {};
+
+  const { pgRoomDetail, loading } = useSelector(
+    (state: RootState) => state.main,
+  );
+
+  console.log(roomId, '==== room route =========>>>>>>', pgId, companyId);
+  console.log('pgRoomDetail== =========>>>>>>', pgRoomDetail);
+
+  useEffect(() => {
+    if (roomId && pgId && companyId) {
+      dispatch(
+        fetchPgRoomDetail({
+          room_id: roomId,
+          pg_id: pgId,
+          company_id: companyId,
+        }),
+      );
+    }
+  }, [dispatch, roomId, pgId, companyId]);
+
+  if (loading || !pgRoomDetail?.data) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.mainColor} />
+      </View>
+    );
+  }
+
+  const room = pgRoomDetail?.data?.room_details;
+  const pg = pgRoomDetail?.data?.pg_details;
+  // Clean images for slider
+  const gallery = pgRoomDetail?.data?.property?.gallery_images?.[0] || {};
+  const allImages = [
+    ...(gallery.living_room || []),
+    ...(gallery.bedroom || []),
+    ...(gallery.kitchen || []),
+    ...(gallery.bathroom || []),
+    ...(gallery.floorplan || []),
+    ...(gallery.extra || []),
+  ];
+
+  const banners =
+    allImages.length > 0
+      ? allImages.map((img: string, idx: number) => ({
+          id: `${idx}`,
+          image: { uri: img },
+        }))
+      : [
+          {
+            id: 'featured',
+            image: {
+              uri: pgRoomDetail?.data?.property?.property_featured_image,
+            },
+          },
+        ];
+
   return (
     <View style={styles.container}>
       <AppHeader
-        title="Room Room-101"
+        title={`Room ${room.room_number}`}
         showBack
         rightIcon={
           <FontAwesome
@@ -42,29 +99,30 @@ const PGRoomDetailScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Image Slider */}
         <AppImageSlider data={banners} showThumbnails autoScroll />
+
         {/* Room Info */}
         <View style={styles.card}>
           <View style={styles.priceRow}>
-            <View>
-              <Typography numberOfLines={2} variant="body" weight="medium">
-                Code World International PG - Room Room-101
-              </Typography>
-            </View>
+            <Typography numberOfLines={2} variant="body" weight="medium">
+              {pg.property_title} - Room {room.room_number}
+            </Typography>
           </View>
+
           <View style={styles.rowBetween}>
             <Typography variant="label" weight="medium">
               Room Type:
             </Typography>
             <Typography variant="label" color={colors.gray}>
-              Double
+              {room.room_type.charAt(0).toUpperCase() + room.room_type.slice(1)}
             </Typography>
           </View>
+
           <View style={styles.rowBetween}>
             <Typography variant="label" weight="medium">
               Security Deposit:
             </Typography>
             <Typography variant="label" color={colors.gray}>
-              ₹1,000
+              ₹{room.security_deposit}
             </Typography>
           </View>
 
@@ -73,7 +131,7 @@ const PGRoomDetailScreen = () => {
               Price / Month:
             </Typography>
             <Typography variant="label" color={colors.gray}>
-              ₹7,000
+              ₹{room.price}
             </Typography>
           </View>
 
@@ -82,7 +140,7 @@ const PGRoomDetailScreen = () => {
               Availability:
             </Typography>
             <Typography variant="label" color={colors.gray}>
-              1
+              {pg.property_availability || 'N/A'}
             </Typography>
           </View>
 
@@ -92,10 +150,10 @@ const PGRoomDetailScreen = () => {
               Facilities:
             </Typography>
             <View style={styles.facilityRow}>
-              {['AC', 'Attached Bathroom', 'Geyser', 'WiFi'].map((item, i) => (
+              {(room.facilities || []).map((f: string, i: number) => (
                 <View key={i} style={styles.facilityBadge}>
                   <Typography variant="label" color={colors.white}>
-                    {item}
+                    {f}
                   </Typography>
                 </View>
               ))}
@@ -112,25 +170,20 @@ const PGRoomDetailScreen = () => {
               color={colors.gray}
               style={{ marginTop: 4, lineHeight: 18 }}
             >
-              This spacious and bright single room offers a peaceful environment
-              perfect for students or working individuals. It includes an
-              attached bathroom, high-speed WiFi, a comfortable bed, a study
-              table, and a cupboard. Located close to public transport and local
-              markets for added convenience.
+              {room.description || 'No description available.'}
             </Typography>
           </View>
         </View>
+
         <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
           <AppButton
             title="Book PG"
-            onPress={() => {
-              navigation.navigate(NAV_KEYS.PGBookScreen);
-            }}
+            onPress={() => navigation.navigate(NAV_KEYS.PGBookScreen)}
           />
         </View>
       </ScrollView>
     </View>
   );
-};
+});
 
 export default PGRoomDetailScreen;

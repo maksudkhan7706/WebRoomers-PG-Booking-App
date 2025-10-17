@@ -29,17 +29,31 @@ export const postRequest = async (endpoint: string, body: any) => {
 };
 
 export const getRequest = async (endpoint: string) => {
+  const url = baseUrl + endpoint;
+  console.log('GET API URL:', url);
+
   try {
-    const res = await fetch(baseUrl + endpoint, {
+    const res = await fetch(url, {
       method: 'GET',
       headers: {
+        Accept: 'application/json',
         'Content-Type': 'application/json',
-        Authorization: `API Key ${authKey}`,
+        AuthKey: authKey, // ✅ same as Postman header
       },
     });
 
-    const data = await res.json();
-    return data;
+    // Try JSON parsing safely
+    const text = await res.text();
+    console.log('RAW RESPONSE:', text);
+
+    try {
+      const data = JSON.parse(text);
+      console.log('GET API Parsed Response:', data);
+      return data;
+    } catch (jsonErr) {
+      console.log('JSON parse error:', jsonErr);
+      throw new Error('Invalid JSON from server');
+    }
   } catch (error) {
     console.log('GET API Error:', error);
     throw error;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TouchableWithoutFeedback,
@@ -13,8 +13,12 @@ import AppTextInput from '../../../ui/AppTextInput';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ImagePickerInput from '../../../ui/ImagePickerInput';
 import AppButton from '../../../ui/AppButton';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store';
 
 const ProfileScreen = () => {
+  const { userData } = useSelector((state: RootState) => state.auth);
+
   const [form, setForm] = useState({
     fullName: '',
     mobileNumber: '',
@@ -35,8 +39,26 @@ const ProfileScreen = () => {
     aadhaarNumber: '',
   });
 
+  useEffect(() => {
+    if (userData) {
+      setForm({
+        fullName: userData.user_fullname || '',
+        mobileNumber: userData.user_mobile || '',
+        aadhaarNumber: userData.aadhar_number || '',
+        aadhaarFront: userData.aadhar_front,
+        aadhaarBack: userData.aadhar_back || null,
+        policeVerification: userData.police_verification || null,
+        ref1Name: userData.ref1_name || '',
+        ref1Mobile: userData.ref1_mobile || '',
+        ref2Name: userData.ref2_name || '',
+        ref2Mobile: userData.ref2_mobile || '',
+        city: userData.user_city_ids || '',
+      });
+    }
+  }, [userData]);
+
   const handleImageSelect = (key: string, file: any) => {
-    setForm({ ...form, [key]: file });
+    setForm(prev => ({ ...prev, [key]: file }));
   };
 
   const validateForm = () => {
@@ -70,7 +92,6 @@ const ProfileScreen = () => {
 
   const handleSubmit = () => {
     if (validateForm()) {
-      // Form valid, ab API call ya save process yahan hoga
       Alert.alert('Success', 'Profile submitted successfully!');
       console.log('Form Data:', form);
     } else {
@@ -84,7 +105,7 @@ const ProfileScreen = () => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
-          enableOnAndroid={true}
+          enableOnAndroid
           extraScrollHeight={Platform.OS === 'ios' ? 80 : 100}
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
@@ -127,16 +148,19 @@ const ProfileScreen = () => {
 
           <ImagePickerInput
             label="Aadhaar Front Photo"
+            value={form.aadhaarFront}
             onSelect={file => handleImageSelect('aadhaarFront', file)}
           />
 
           <ImagePickerInput
             label="Aadhaar Back Photo"
+            value={form.aadhaarBack}
             onSelect={file => handleImageSelect('aadhaarBack', file)}
           />
 
           <ImagePickerInput
             label="Police Verification Photo"
+            value={form.policeVerification}
             onSelect={file => handleImageSelect('policeVerification', file)}
           />
 

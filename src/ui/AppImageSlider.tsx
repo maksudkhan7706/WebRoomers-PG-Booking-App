@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import {
   View,
   FlatList,
-  Image,
   TouchableOpacity,
   Dimensions,
   Animated,
@@ -11,6 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import colors from '../constants/colors';
+import AppImage from './AppImage';
 
 const { width } = Dimensions.get('window');
 
@@ -43,9 +43,9 @@ const AppImageSlider: React.FC<Props> = ({
   const mainRef = useRef<FlatList<any>>(null);
   const thumbRef = useRef<FlatList<any>>(null);
 
-  // Auto-scroll main slider
+  //Auto-scroll feature
   useEffect(() => {
-    if (!autoScroll) return;
+    if (!autoScroll || !data.length) return;
     const interval = setInterval(() => {
       const next = (activeIndex + 1) % data.length;
       mainRef.current?.scrollToIndex({ index: next, animated: true });
@@ -55,11 +55,11 @@ const AppImageSlider: React.FC<Props> = ({
   }, [activeIndex, autoScroll, data.length, intervalTime]);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      const index = viewableItems[0].index ?? 0;
+    if (viewableItems?.length > 0) {
+      const index = viewableItems[0]?.index ?? 0;
       setActiveIndex(index);
       if (showThumbnails) {
-        thumbRef.current?.scrollToIndex({
+        thumbRef?.current?.scrollToIndex({
           index,
           animated: true,
           viewPosition: 0.5,
@@ -68,6 +68,7 @@ const AppImageSlider: React.FC<Props> = ({
     }
   }).current;
 
+  //If Thumbnails are NOT shown (simple slider)
   if (!showThumbnails) {
     const ITEM_WIDTH = width - 80;
     const SPACING = 14;
@@ -83,7 +84,7 @@ const AppImageSlider: React.FC<Props> = ({
           snapToInterval={ITEM_WIDTH + SPACING}
           snapToAlignment="start"
           pagingEnabled={false}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item?.id}
           contentContainerStyle={[
             {
               paddingLeft: 0,
@@ -94,22 +95,24 @@ const AppImageSlider: React.FC<Props> = ({
           renderItem={({ item, index }) => (
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => onPressBanner?.(item.screen)}
-              style={{
-                marginRight: index === data.length - 1 ? 0 : SPACING,
-              }}
+              onPress={() => onPressBanner?.(item?.screen)}
+              style={{ marginRight: index === data?.length - 1 ? 0 : SPACING }}
             >
-              <Image
-                source={item.image}
-                style={[
+              <AppImage
+                source={
+                  typeof item?.image === 'string'
+                    ? { uri: item?.image }
+                    : item?.image
+                }
+                style={StyleSheet.flatten([
                   {
                     width: ITEM_WIDTH,
                     height: 180,
                     borderRadius: 16,
-                    resizeMode: 'stretch',
                   },
                   bannerImageStyle,
-                ]}
+                ])}
+                resizeMode="stretch"
               />
             </TouchableOpacity>
           )}
@@ -117,6 +120,7 @@ const AppImageSlider: React.FC<Props> = ({
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
         />
 
+        {/* Dots */}
         <View style={styles.dotsContainer}>
           {data.map((_, index) => (
             <View
@@ -129,7 +133,9 @@ const AppImageSlider: React.FC<Props> = ({
     );
   }
 
-  //Thumbnail Style (PG Detail page)
+  //Thumbnail style (PG Detail Page)
+  const ITEM_WIDTH = width - 80;
+  const SPACING = 14;
   return (
     <View>
       {/* Main Slider */}
@@ -139,8 +145,9 @@ const AppImageSlider: React.FC<Props> = ({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        keyExtractor={item => item.id}
-        renderItem={({ item, index }) => (
+        snapToInterval={ITEM_WIDTH + SPACING}
+        keyExtractor={item => item?.id}
+        renderItem={({ item }) => (
           <View
             style={{
               padding: 10,
@@ -148,14 +155,20 @@ const AppImageSlider: React.FC<Props> = ({
               alignItems: 'center',
             }}
           >
-            <Image
-              source={item.image}
-              style={[
-                styles.mainImage,
+            <AppImage
+              source={
+                typeof item?.image === 'string'
+                  ? { uri: item?.image }
+                  : item?.image
+              }
+              style={StyleSheet.flatten([
                 {
-                  marginLeft: 10,
+                  width: ITEM_WIDTH,
+                  height: 180,
+                  borderRadius: 16,
                 },
-              ]}
+                bannerImageStyle,
+              ])}
               resizeMode="stretch"
             />
           </View>
@@ -178,25 +191,29 @@ const AppImageSlider: React.FC<Props> = ({
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => {
-                mainRef.current?.scrollToIndex({ index, animated: true });
+                mainRef?.current?.scrollToIndex({ index, animated: true });
                 setActiveIndex(index);
               }}
-              style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.20)',
-                padding: 5,
-              }}
+              style={styles.thumbWrapper}
             >
-              <Animated.Image
-                source={item.image}
-                style={[
-                  styles.thumbImage,
-                  {
-                    opacity: isActive ? 1 : 0.5,
-                    transform: [{ scale: isActive ? 1.05 : 1 }],
-                  },
-                ]}
-                blurRadius={isActive ? 0 : 1.5}
-              />
+              <Animated.View
+                style={{
+                  transform: [{ scale: isActive ? 1.05 : 1 }],
+                }}
+              >
+                <AppImage
+                  source={
+                    typeof item?.image === 'string'
+                      ? { uri: item?.image }
+                      : item?.image
+                  }
+                  style={StyleSheet.flatten([
+                    styles.thumbImage,
+                    { opacity: isActive ? 1 : 0.5 },
+                  ])}
+                  resizeMode="stretch"
+                />
+              </Animated.View>
             </TouchableOpacity>
           );
         }}
@@ -205,19 +222,12 @@ const AppImageSlider: React.FC<Props> = ({
   );
 };
 
-export default React.memo(AppImageSlider);
+export default memo(AppImageSlider);
 
 const styles = StyleSheet.create({
   sliderContainer: {
     width,
     alignItems: 'center',
-  },
-  bannerImage: {
-    width: width - 32,
-    height: 180,
-    borderRadius: 16,
-    marginHorizontal: 16,
-    resizeMode: 'stretch',
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -239,17 +249,23 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 16,
     resizeMode: 'stretch',
-    backgroundColor: 'red',
+    backgroundColor: '#eee',
+    marginLeft: 10,
   },
   thumbList: {
     alignSelf: 'center',
     marginBottom: 15,
   },
+  thumbWrapper: {
+    backgroundColor: 'rgba(0,0,0,0.20)',
+    padding: 5,
+    borderRadius: 8,
+    marginHorizontal: 6,
+  },
   thumbImage: {
     width: 90,
     height: 70,
     borderRadius: 10,
-    marginHorizontal: 10,
     resizeMode: 'stretch',
   },
 });

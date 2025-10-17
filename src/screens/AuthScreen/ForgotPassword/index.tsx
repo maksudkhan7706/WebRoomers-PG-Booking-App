@@ -10,6 +10,10 @@ import Typography from '../../../ui/Typography';
 import AppButton from '../../../ui/AppButton';
 import AppTextInput from '../../../ui/AppTextInput';
 import styles from './styles';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../store';
+import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
+import { forgotPassword } from '../../../store/authSlice';
 
 type ForgotNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -22,17 +26,18 @@ interface ForgotProps {
   route: ForgotRouteProp;
 }
 
-const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
+const ForgotPassword: React.FC<ForgotProps> = ({ navigation, route }) => {
+  const role = route.params?.role ?? 'user';
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ email?: string }>({});
   const [isActive, setIsActive] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleValidate = () => {
     const newErrors: { email?: string } = {};
     if (!email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email))
       newErrors.email = 'Enter a valid email address';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -41,11 +46,22 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
     setIsActive(email.trim().length > 0);
   }, [email]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (handleValidate()) {
-      // TODO: API call for forgot password
-      console.log('Submit email:', email);
-      navigation.navigate(NAV_KEYS.LOGIN, {});
+      try {
+        const result = await dispatch(
+          forgotPassword({ email_mobile: email }),
+        ).unwrap();
+
+        if (result.success) {
+          showSuccessMsg(result.message);
+          navigation.navigate(NAV_KEYS.LOGIN, { role });
+        } else {
+          showErrorMsg(result.message || 'Failed to reset password');
+        }
+      } catch (err) {
+        showErrorMsg('Something went wrong');
+      }
     }
   };
 
@@ -54,6 +70,7 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
       <AppHeader title="" showBack containerStyle={styles.headerContainer} />
       <View style={styles.innerContainer}>
         <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
+
         <Typography
           variant="heading"
           weight="bold"
@@ -63,6 +80,7 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
         >
           Forgot Password
         </Typography>
+
         <Typography
           variant="body"
           weight="light"
@@ -85,13 +103,11 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
 
         <View style={styles.registerContainer}>
           <Typography variant="label" weight="regular" color={colors.mainColor}>
-            Already have an Account?{''}
+            Already have an Account?{' '}
           </Typography>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() =>
-              navigation.navigate(NAV_KEYS.LOGIN, { role: 'user' })
-            }
+            onPress={() => navigation.navigate(NAV_KEYS.LOGIN, { role })}
           >
             <Typography
               variant="label"
@@ -106,11 +122,11 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation }) => {
 
         <View style={[styles.registerContainer, { marginTop: 10 }]}>
           <Typography variant="label" weight="regular" color={colors.mainColor}>
-            Not have an Account?{''}
+            Not have an Account?{' '}
           </Typography>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => navigation.navigate(NAV_KEYS.REGISTER)}
+            onPress={() => navigation.navigate(NAV_KEYS.REGISTER, { role })}
           >
             <Typography
               variant="label"

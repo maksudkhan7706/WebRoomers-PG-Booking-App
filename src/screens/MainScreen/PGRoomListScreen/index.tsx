@@ -1,159 +1,162 @@
-import React, { memo } from 'react';
-import { View, FlatList } from 'react-native';
+import React, { memo, useEffect } from 'react';
+import { View, FlatList, ActivityIndicator } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { fetchPgRooms } from '../../../store/mainSlice';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AppHeader from '../../../ui/AppHeader';
 import Typography from '../../../ui/Typography';
 import AppImageSlider from '../../../ui/AppImageSlider';
 import colors from '../../../constants/colors';
-import images from '../../../assets/images';
-import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
 import AppButton from '../../../ui/AppButton';
 import styles from './styles';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
 
 type RoomListNavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const rooms = [
-  {
-    id: '1',
-    title: 'Room-002',
-    type: 'Double Room',
-    pgName: 'Main Jaipur International PG',
-    price: '₹3,000/month',
-    deposit: '₹100',
-    facilities: [
-      'Cupboard',
-      'Study Table',
-      'Laundry Service',
-      'Meals Included',
-    ],
-    banners: [images.AttachRoom, images.CommonRoom, images.Dormitory],
-    gender: 'Boys',
-    description: 'Test description ',
-  },
-  {
-    id: '2',
-    title: 'Example Room',
-    type: 'Single Room',
-    pgName: 'Main Jaipur International PG',
-    price: '₹2,000/month',
-    deposit: '₹1,000',
-    facilities: ['AC', 'Attached Bathroom', 'Geyser', 'TV', 'WiFi'],
-    banners: [images.FourRoom, images.SingleBed, images.PGRoom],
-    gender: 'Girls',
-    description:
-      'This spacious and bright single room offers a peaceful environment perfect for security.',
-  },
-];
-
-const RoomCard = memo(({ item }: { item: any }) => {
-  const visibleFacilities = item.facilities.slice(0, 4);
-  const hasMore = item.facilities.length > 4;
+const PGRoomListScreen = memo(() => {
+  const dispatch = useDispatch<AppDispatch>();
+  const route = useRoute();
   const navigation = useNavigation<RoomListNavProp>();
+  const { propertyId, companyId }: any = route.params;
 
-  const bannerData = item.banners.map((img: any, idx: number) => ({
-    id: `${item.id}-${idx}`,
-    image: img,
-    screen: NAV_KEYS.PGEnquiryScreen,
-  }));
+  const { pgRooms, loading } = useSelector((state: RootState) => state.main);
 
-  return (
-    <View style={styles.card}>
-      {/* Slider inside RoomCard */}
-      <AppImageSlider
-        data={bannerData}
-        showThumbnails={false}
-        autoScroll
-        contentContainerStyle={{
-          paddingLeft: 16,
-          marginTop: 10,
-        }}
-      />
+  useEffect(() => {
+    if (propertyId && companyId) {
+      dispatch(fetchPgRooms({ pg_id: propertyId, company_id: companyId }));
+    }
+  }, [dispatch, propertyId, companyId]);
 
-      <View style={styles.cardBody}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Typography variant="body" weight="medium">
-            {item.title}
-          </Typography>
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.mainColor} />
+      </View>
+    );
+  }
+
+  const rooms = pgRooms?.data || [];
+
+  const renderRoom = ({ item }: { item: any }) => {
+    const visibleFacilities = item.facilities?.slice(0, 4) || [];
+    const hasMore = item.facilities && item.facilities.length > 4;
+    const banners = (item.images || []).map((img: string, idx: number) => ({
+      id: `${item.id}-${idx}`,
+      image: img.replace(/[\[\]\"]/g, ''),
+      screen: NAV_KEYS.PGEnquiryScreen,
+    }));
+
+    return (
+      <View style={styles.card}>
+        <AppImageSlider
+          data={banners}
+          showThumbnails={false}
+          autoScroll
+          contentContainerStyle={{ paddingLeft: 16, marginTop: 10 }}
+        />
+
+        <View style={styles.cardBody}>
           <View
             style={{
-              backgroundColor:
-                item.gender == 'Boys' ? colors.mainColor : '#e83f8b',
-              borderRadius: 5,
-              paddingVertical: 5,
-              paddingHorizontal: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            <Typography variant="label" weight="bold" color={colors.white}>
-              {item.gender}
+            <Typography variant="body" weight="medium">
+              {item.room_number}
             </Typography>
+            <View
+              style={{
+                backgroundColor:
+                  item.room_type.toLowerCase() === 'double'
+                    ? colors.mainColor
+                    : '#e83f8b',
+                borderRadius: 5,
+                paddingVertical: 5,
+                paddingHorizontal: 10,
+              }}
+            >
+              <Typography variant="label" weight="bold" color={colors.white}>
+                {item.room_type === 'double' ? 'Boys' : 'Girls'}
+              </Typography>
+            </View>
           </View>
-        </View>
 
-        <Typography variant="label" color={colors.gray}>
-          {item.type}
-        </Typography>
-        <Typography variant="caption" color={colors.gray}>
-          {item.pgName}
-        </Typography>
-
-        <View style={styles.rowBetween}>
-          <Typography variant="body" weight="bold" color={colors.mainColor}>
-            {item.price}
+          <Typography variant="label" color={colors.gray}>
+            {item.room_type.charAt(0).toUpperCase() + item.room_type.slice(1)}{' '}
+            Room
           </Typography>
           <Typography variant="caption" color={colors.gray}>
-            Security Deposit: ₹{item.deposit}
+            {pgRooms?.pg_name || ''}
           </Typography>
-        </View>
 
-        <View style={styles.facilityRow}>
-          {visibleFacilities.map((f: string, i: number) => (
-            <View key={i} style={styles.facilityTag}>
-              <Typography variant="caption" color={colors.gray}>
-                {f}
-              </Typography>
-            </View>
-          ))}
-          {hasMore && (
-            <View
-              style={[
-                styles.facilityTag,
-                { backgroundColor: colors.mainColor + '15' },
-              ]}
-            >
-              <Typography variant="caption" color={colors.mainColor}>
-                + more
-              </Typography>
-            </View>
-          )}
-        </View>
-        <Typography numberOfLines={2} variant="caption" color={colors.gray}>
-          {item.description}
-        </Typography>
+          <View style={styles.rowBetween}>
+            <Typography variant="body" weight="bold" color={colors.mainColor}>
+              ₹{item.price}/month
+            </Typography>
+            <Typography variant="caption" color={colors.gray}>
+              Security Deposit: ₹{item.security_deposit}
+            </Typography>
+          </View>
 
-        <AppButton
-          title="View Details"
-          onPress={() => {
-            navigation.navigate(NAV_KEYS.PGRoomDetailScreen);
-          }}
-          style={{
-            marginTop: 10,
-            height: 40,
-          }}
-        />
+          <View style={styles.facilityRow}>
+            {visibleFacilities.map((f: string, i: number) => (
+              <View key={i} style={styles.facilityTag}>
+                <Typography variant="caption" color={colors.gray}>
+                  {f}
+                </Typography>
+              </View>
+            ))}
+            {hasMore && (
+              <View
+                style={[
+                  styles.facilityTag,
+                  { backgroundColor: colors.mainColor + '15' },
+                ]}
+              >
+                <Typography variant="caption" color={colors.mainColor}>
+                  + more
+                </Typography>
+              </View>
+            )}
+          </View>
+
+          <Typography
+            style={{ paddingVertical: 2 }}
+            numberOfLines={2}
+            variant="label"
+            color={colors.gray}
+          >
+            {item.description}
+          </Typography>
+
+          <AppButton
+            title="View Details"
+            onPress={() => {
+              navigation.navigate(NAV_KEYS.PGRoomDetailScreen, {
+                roomId: item.id,
+                pgId: item.pg_id,
+                companyId: item.company_id,
+              });
+            }}
+            style={{ marginTop: 10, height: 40 }}
+          />
+        </View>
       </View>
-    </View>
-  );
-});
+    );
+  };
 
-const PGRoomListScreen = memo(() => {
+  console.log('rooms ==========>>>>', rooms);
+
   return (
     <View style={styles.container}>
       <AppHeader
@@ -170,18 +173,18 @@ const PGRoomListScreen = memo(() => {
 
       <FlatList
         data={rooms}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         ListHeaderComponent={
           <View style={styles.headerContainer}>
             <Typography variant="body" weight="bold">
-              Main Jaipur International PG Rooms
+              {pgRooms?.pg_name || ''}
             </Typography>
             <Typography variant="label" color={colors.gray}>
               Rooms That Fit Your Lifestyle & Budget
             </Typography>
           </View>
         }
-        renderItem={({ item }) => <RoomCard item={item} />}
+        renderItem={renderRoom}
         contentContainerStyle={{ paddingBottom: 50 }}
         showsVerticalScrollIndicator={false}
       />

@@ -12,6 +12,10 @@ export default StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 10,
   },
+
+  loaderContainer:{
+    flex: 1, justifyContent: 'center', alignItems: 'center' 
+  },
   bannerImage: {
     width: width - 32,
     height: 180,
@@ -54,30 +58,52 @@ export default StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
+    position: 'relative', // absolute FOR button ke liye
   },
+
   pgInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column', // title + address vertically
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 8,
   },
+
+  pgTextContainer: {
+    width: '100%',
+  },
+
   addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 5,
   },
+
+  addressText: {
+    marginLeft: 4,
+    flexShrink: 1,
+  },
+
   forPgContainer: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
     backgroundColor: colors.mainColor,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
     borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    maxWidth: 120, // agar text bahut lamba ho to truncate ho jaye
   },
+
   pgImage: {
     width: '100%',
     height: 160,
     borderRadius: 12,
     marginTop: 8,
-    resizeMode: 'stretch',
+    resizeMode: 'cover',
   },
+
   rentText: {
     marginTop: 8,
   },

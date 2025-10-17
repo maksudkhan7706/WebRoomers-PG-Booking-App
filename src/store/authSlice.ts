@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { postRequest } from '../services/apiService';
 import {
+  forgotPasswordpUrl,
   loginUrl,
   registerUrl,
   reSendOtpUrl,
@@ -150,6 +151,19 @@ export const reSendOtp = createAsyncThunk(
     }
   },
 );
+
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (payload: { email_mobile: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(forgotPasswordpUrl(), payload);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
 // =======================
 // 🔹 SLICE
 // =======================
@@ -243,6 +257,21 @@ const authSlice = createSlice({
         }
       })
       .addCase(reSendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // -------------------- FORGOT PASSWORD --------------------
+      .addCase(forgotPassword.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        if (!action.payload.success) {
+          state.error = action.payload.message;
+        }
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

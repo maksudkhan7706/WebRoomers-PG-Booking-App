@@ -10,15 +10,19 @@ export type RootStackParamList = {
     mobile_number: string;
     full_name: string;
   };
-  ForgotPassword: undefined;
+  ForgotPassword: { role?: 'user' | 'landlord' };
   //Main
   HomeScreen: undefined;
   PGEnquiryScreen: undefined;
   ProfileScreen: undefined;
   MainTabs: { role?: 'user' | 'landlord' };
-  PGDetailScreen: undefined;
-  PGRoomListScreen: undefined;
-  PGRoomDetailScreen: undefined;
+  PGRoomListScreen: { propertyId: string; companyId: string };
+  PGDetailScreen: { propertyId: string; companyId: string };
+  PGRoomDetailScreen: {
+    roomId: string;
+    pgId: string;
+    companyId: string;
+  };
   PGBookScreen: undefined;
 };
 
