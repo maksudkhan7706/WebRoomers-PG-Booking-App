@@ -14,6 +14,7 @@ import PGRoomDetailScreen from '../screens/MainScreen/PGRoomDetailScreen';
 import PGBookScreen from '../screens/MainScreen/PGBookScreen';
 import ProfileScreen from '../screens/MainScreen/ProfileScreen';
 import EmailVerification from '../screens/AuthScreen/EmailVerification';
+import LandlordAddPG from '../screens/MainScreen/LandlordAddPG';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +48,8 @@ const RootNavigator = () => {
           />
           <Stack.Screen name={NAV_KEYS.PGBookScreen} component={PGBookScreen} />
           <Stack.Screen name={NAV_KEYS.ProfileScreen} component={ProfileScreen} />
+          <Stack.Screen name={NAV_KEYS.LandlordAddPG} component={LandlordAddPG} />
+
 
         </>
       ) : (

@@ -17,9 +17,20 @@ const ImagePickerInput: React.FC<Props> = ({ label, value, onSelect }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
-    if (value) {
-      const fullUri = `https://domain.webroomer.com/${value}`;
+    if (!value) {
+      setImageUri(null);
+      return;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      // 🧩 Case: server se path aaya (e.g. "uploads/user-docs/aadhar_back_xxx.jpg")
+      const cleanPath = value.startsWith('/') ? value.slice(1) : value;
+      const fullUri = `https://domain.webroomer.com/${cleanPath}`;
+      console.log('✅ Image from server:', fullUri);
       setImageUri(fullUri);
+    } else if (value?.uri) {
+      // 🧩 Case: local file picker se aayi image
+      console.log('✅ Local image:', value.uri);
+      setImageUri(value.uri);
     } else {
       setImageUri(null);
     }
@@ -28,7 +39,10 @@ const ImagePickerInput: React.FC<Props> = ({ label, value, onSelect }) => {
   const openPicker = async () => {
     const hasPermission = await checkCameraAndGalleryPermissions();
     if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Please allow camera and gallery access.');
+      Alert.alert(
+        'Permission Denied',
+        'Please allow camera and gallery access.',
+      );
       return;
     }
 
@@ -59,6 +73,8 @@ const ImagePickerInput: React.FC<Props> = ({ label, value, onSelect }) => {
     ]);
   };
 
+  console.log('imageUri ========>>>>>>', imageUri);
+
   return (
     <View style={{ marginBottom: 20 }}>
       <Typography variant="caption" weight="medium" style={{ marginBottom: 6 }}>
@@ -84,9 +100,11 @@ const ImagePickerInput: React.FC<Props> = ({ label, value, onSelect }) => {
             resizeMode="cover"
           />
         ) : (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
             <Icon name="photo-camera" size={30} color={colors.gray} />
-            <Typography color={colors.gray}>Upload / Capture Photo</Typography>
+            <Typography variant='label' weight='medium' color={colors.gray}>Upload / Capture Photo</Typography>
           </View>
         )}
       </TouchableOpacity>

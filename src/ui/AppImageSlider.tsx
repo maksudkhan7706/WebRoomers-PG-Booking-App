@@ -147,6 +147,9 @@ const AppImageSlider: React.FC<Props> = ({
         showsHorizontalScrollIndicator={false}
         snapToInterval={ITEM_WIDTH + SPACING}
         keyExtractor={item => item?.id}
+        contentContainerStyle={{
+          paddingLeft: data?.length == 1 ? 25: 0
+        }}
         renderItem={({ item }) => (
           <View
             style={{

@@ -15,6 +15,11 @@ import AppCustomDropdown from '../../../ui/AppCustomDropdown';
 import AppDatePicker from '../../../ui/AppDatePicker';
 import AppButton from '../../../ui/AppButton';
 import styles from './styles';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { AppDispatch, RootState } from '../../../store';
+import { bookRoomApi } from '../../../store/mainSlice';
+import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
 
 interface UserData {
   fullName: string;
@@ -31,13 +36,21 @@ interface Errors {
   endDate?: string;
 }
 
-const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
-  
+const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
+  // Inside component
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { roomId, pgId, companyId, screenType } = (route.params as any) || {};
+  const { userData } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.main);
+
   const [selectedGender, setSelectedGender] = useState<string[]>([]);
   const [stayDuration, setStayDuration] = useState<string[]>([]);
   const [numPersons, setNumPersons] = useState<string[]>([]);
   const [foodPreference, setFoodPreference] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
+
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [userMessage, setUserMessage] = useState('');
   const [errors, setErrors] = useState<Errors>({});
@@ -68,7 +81,9 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
     { label: 'Both', value: 'both' },
   ];
 
-  const handleRegister = () => {
+  console.log('screenType =========>>>', screenType);
+
+  const handleRegister = async () => {
     const newErrors: Errors = {};
     if (selectedGender.length === 0)
       newErrors.selectedGender = 'Please select gender';
@@ -81,19 +96,39 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
     if (!startDate) newErrors.startDate = 'Please select start date';
     if (!endDate) newErrors.endDate = 'Please select end date';
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length === 0) {
-      // All valid
-      console.log('Form Submitted', {
-        userData,
-        selectedGender,
-        stayDuration,
-        numPersons,
-        foodPreference,
-        startDate,
-        endDate,
-        userMessage,
-      });
-      Alert.alert('PG Booking Submitted Successfully!');
+      try {
+        const payload = {
+          pg_id: pgId,
+          room_id: roomId,
+          company_id: companyId,
+          user_id: userData?.user_id,
+          name: userData?.user_fullname,
+          mobile: userData?.user_mobile,
+          email: userData?.user_email,
+          gender: selectedGender[0], // ✅ string value
+          stay_duration: stayDuration[0],
+          no_of_persons: numPersons[0],
+          food_preference: foodPreference[0],
+          check_in_date: startDate?.toISOString().split('T')[0],
+          check_out_date: endDate?.toISOString().split('T')[0],
+          message: userMessage,
+          type: screenType == 'isRoom' ? 'room' : 'pg',
+        };
+        const res = await dispatch(bookRoomApi(payload)).unwrap();
+        console.log('payload sending:', payload);
+        console.log('API response:', res);
+        if (res?.success) {
+          showSuccessMsg(res.message);
+          navigation.goBack();
+        } else {
+          showErrorMsg(res?.message || 'Something went wrong');
+        }
+      } catch (err: any) {
+        console.log('Booking Error:', err);
+        showErrorMsg('Booking failed. Please try again.');
+      }
     }
   };
 
@@ -122,17 +157,17 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
           {/* Non-editable user fields */}
           <AppTextInput
             placeholder="Full Name"
-            value={'Maksud'}
+            value={userData.user_fullname || ''}
             editable={false}
           />
           <AppTextInput
             placeholder="Mobile Number"
-            value={'6376247706'}
+            value={userData.user_mobile || ''}
             editable={false}
           />
           <AppTextInput
             placeholder="Email Address"
-            value={'maksud.khan@gmail.com'}
+            value={userData.user_email || ''}
             editable={false}
           />
           {/* Dropdowns with inline errors */}
@@ -141,7 +176,7 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
             data={genderOptions}
             selectedValues={selectedGender}
             onSelect={val => {
-              setSelectedGender(val);
+              setSelectedGender(val); //direct value store
               if (val.length)
                 setErrors(prev => ({ ...prev, selectedGender: '' }));
             }}
@@ -216,6 +251,7 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ userData }) => {
             title="Submit"
             onPress={handleRegister}
             style={{ marginTop: 70 }}
+            loading={loading}
           />
         </KeyboardAwareScrollView>
       </TouchableWithoutFeedback>

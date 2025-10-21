@@ -1,24 +1,34 @@
 import { baseUrl, authKey } from './urlHelper';
 
-export const postRequest = async (endpoint: string, body: any) => {
+export const postRequest = async (
+  endpoint: string,
+  body: any,
+  isMultipart = false,
+) => {
   const url = baseUrl + endpoint;
   console.log('POST API URL:', url);
   console.log('POST API Payload:', body);
 
   try {
-    // Convert body to URLSearchParams
-    const formBody = new URLSearchParams();
-    Object.keys(body).forEach(key => formBody.append(key, body[key]));
-
-    const res = await fetch(url, {
+    let options: any = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', //Postman style
-        AuthKey: authKey, // exact key
+        AuthKey: authKey,
       },
-      body: formBody.toString(), // send as form-data
-    });
+    };
 
+    if (isMultipart) {
+      //Image upload (FormData)
+      options.body = body; // Directly send FormData
+    } else {
+      //Normal x-www-form-urlencoded
+      const formBody = new URLSearchParams();
+      Object.keys(body).forEach(key => formBody.append(key, body[key]));
+      options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      options.body = formBody.toString();
+    }
+
+    const res = await fetch(url, options);
     const data = await res.json();
     console.log('POST API Response:', data);
     return data;
@@ -38,7 +48,7 @@ export const getRequest = async (endpoint: string) => {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        AuthKey: authKey, // ✅ same as Postman header
+        AuthKey: authKey, //same as Postman header
       },
     });
 

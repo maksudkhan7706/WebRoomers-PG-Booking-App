@@ -20,12 +20,14 @@ import AppImage from '../../../ui/AppImage';
 import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import AppButton from '../../../ui/AppButton';
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen = () => {
   const navigation = useNavigation<HomeNavProp>();
   const dispatch = useDispatch<AppDispatch>();
   const { data, loading } = useSelector((state: RootState) => state.main);
+  const { userRole } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     const companyId = '35';
@@ -35,6 +37,7 @@ const HomeScreen = () => {
   const banners = data?.data?.banners || [];
   const recentPGs = data?.data?.recent_pgs || [];
   const categories = data?.data?.property_categories || [];
+  console.log('userRole =========>>>>>', userRole);
 
   return (
     <View style={styles.container}>
@@ -64,6 +67,17 @@ const HomeScreen = () => {
               showThumbnails={false}
             />
           </View>
+          {userRole == 'landlord' ? (
+            <View style={{ paddingHorizontal: 40, marginTop: 15 }}>
+              <AppButton
+                title={'Add PG'}
+                loading={loading}
+                disabled={loading}
+                onPress={() => navigation.navigate(NAV_KEYS.LandlordAddPG)}
+              />
+            </View>
+          ) : null}
+
           {/* Recent PG */}
           <View style={styles.sectionContainer}>
             <Typography

@@ -3,7 +3,7 @@ import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { fetchPGDetailData } from '../../../store/mainSlice';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AppHeader from '../../../ui/AppHeader';
 import Typography from '../../../ui/Typography';
@@ -11,8 +11,14 @@ import AppImageSlider from '../../../ui/AppImageSlider';
 import colors from '../../../constants/colors';
 import AppButton from '../../../ui/AppButton';
 import styles from './styles';
+import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type PGDetailStNavProp = NativeStackNavigationProp<RootStackParamList>;
+
 
 const PGDetailScreen = () => {
+  const navigation = useNavigation<PGDetailStNavProp>();
   const dispatch = useDispatch<AppDispatch>();
   const { pgDetail, loading } = useSelector((state: RootState) => state.main);
   const route = useRoute();
@@ -85,7 +91,7 @@ const PGDetailScreen = () => {
     { label: 'On Floor', value: property.floor || 'N/A' },
   ];
 
-  console.log('pgDetail ========>>>>>>', pgDetail);
+  console.log('pgDetail ========>>>>>>', property);
 
   return (
     <View style={styles.container}>
@@ -218,7 +224,15 @@ const PGDetailScreen = () => {
         )}
 
         <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
-          <AppButton title="Book PG" onPress={() => { }} />
+          <AppButton title="Book PG"
+            onPress={() => {
+              navigation.navigate(NAV_KEYS.PGBookScreen, {
+                screenType: 'isPG',
+                roomId: property.property_id,
+                pgId: property.landlord_id,
+                companyId: property.company_id,
+              });
+            }} />
         </View>
       </ScrollView>
     </View>

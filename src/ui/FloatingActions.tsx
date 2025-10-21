@@ -58,7 +58,7 @@ const FloatingActions = () => {
       showSuccessMsg('Logout successfully');
       navigation.reset({
         index: 0,
-        routes: [{ name: NAV_KEYS.LOGIN }],
+        routes: [{ name: NAV_KEYS.ROLE_SELECT }],
       });
     } catch (error) {
       console.log('Logout error:', error);

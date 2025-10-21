@@ -18,3 +18,7 @@ export const pgRoomsUrl = (pg_id: string, company_id: string) =>
   `/getPgRooms?pg_id=${pg_id}&company_id=${company_id}`;
 
 export const pgRoomDetailUrl = () => '/getPgRoomDetails';
+export const userInfoUrl = () => `/userInfo`;
+export const roomBookingUrl = () => `/roomBooking`;
+export const updateProfileUrl = () => `/updateProfile`;
+

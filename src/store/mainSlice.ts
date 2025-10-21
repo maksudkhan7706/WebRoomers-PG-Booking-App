@@ -5,6 +5,9 @@ import {
   pgDetailUrl,
   pgRoomsUrl,
   pgRoomDetailUrl,
+  userInfoUrl,
+  roomBookingUrl,
+  updateProfileUrl,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -13,6 +16,7 @@ interface MainState {
   pgDetail: any;
   pgRooms: any;
   pgRoomDetail: any;
+  apiUserData: any;
   error: string | null;
 }
 
@@ -22,6 +26,7 @@ const initialState: MainState = {
   pgDetail: null,
   pgRooms: null,
   pgRoomDetail: null,
+  apiUserData: null,
   error: null,
 };
 
@@ -88,6 +93,77 @@ export const fetchPgRoomDetail = createAsyncThunk(
     }
   },
 );
+// User Info API
+export const apiUserDataFetch = createAsyncThunk(
+  'main/apiUserDataFetch',
+  async (
+    payload: { user_id: string; company_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(userInfoUrl(), payload);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+//Room Booking API
+export const bookRoomApi = createAsyncThunk(
+  'main/bookRoomApi',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const res = await postRequest(roomBookingUrl(), payload);
+      return res;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  },
+);
+
+// Profile Update API
+export const updateProfileApi = createAsyncThunk(
+  'main/updateProfileApi',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      console.log('formData =======>>>>',formData);
+      // Convert payload to FormData
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== null && payload[key] !== undefined) {
+          if (
+            key === 'aadhar_front' ||
+            key === 'aadhar_back' ||
+            key === 'police_verification' ||
+            key === 'qr_code'
+          ) {
+            // Agar image hai (uri, name, type)
+            if (typeof payload[key] === 'object' && payload[key]?.uri) {
+              formData.append(key, {
+                uri: payload[key].uri,
+                name: payload[key].name || 'image.jpg',
+                type: payload[key].type || 'image/jpeg',
+              });
+            }
+          } else {
+            formData.append(key, payload[key]);
+          }
+        }
+      });
+
+      const res = await postRequest(updateProfileUrl(), formData, true); // ✅ 'true' agar multipart supported hai
+      console.log('PROFILE UPDATE RESPONSE =====>', res);
+      return res;
+    } catch (err: any) {
+      console.log(
+        'PROFILE UPDATE ERROR =====>',
+        err.response?.data || err.message,
+      );
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  },
+);
 
 const mainSlice = createSlice({
   name: 'main',
@@ -148,6 +224,41 @@ const mainSlice = createSlice({
       .addCase(fetchPgRoomDetail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // User Info API
+      .addCase(apiUserDataFetch.pending, state => {
+        state.loading = true;
+        state.error = null;
+        state.apiUserData = null;
+      })
+      .addCase(apiUserDataFetch.fulfilled, (state, action) => {
+        state.loading = false;
+        state.apiUserData = action.payload;
+      })
+      .addCase(apiUserDataFetch.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+    builder
+      .addCase(bookRoomApi.pending, state => {
+        state.loading = true;
+      })
+      .addCase(bookRoomApi.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(bookRoomApi.rejected, state => {
+        state.loading = false;
+      })
+      //Update Profile
+      .addCase(updateProfileApi.pending, state => {
+        state.loading = true;
+      })
+      .addCase(updateProfileApi.fulfilled, (state, action) => {
+        state.loading = false;
+        state.apiUserData = action.payload;
+      })
+      .addCase(updateProfileApi.rejected, state => {
+        state.loading = false;
       });
   },
 });

@@ -23,7 +23,13 @@ export type RootStackParamList = {
     pgId: string;
     companyId: string;
   };
-  PGBookScreen: undefined;
+  PGBookScreen: {
+    screenType: string;
+    roomId: string;
+    pgId: string;
+    companyId: string;
+  };
+  LandlordAddPG: undefined;
 };
 
 export const NAV_KEYS = {
@@ -42,4 +48,5 @@ export const NAV_KEYS = {
   PGRoomListScreen: 'PGRoomListScreen',
   PGRoomDetailScreen: 'PGRoomDetailScreen',
   PGBookScreen: 'PGBookScreen',
+  LandlordAddPG: 'LandlordAddPG',
 } as const;

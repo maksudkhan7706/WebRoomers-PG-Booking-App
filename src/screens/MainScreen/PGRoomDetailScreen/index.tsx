@@ -26,8 +26,6 @@ const PGRoomDetailScreen = memo(() => {
     (state: RootState) => state.main,
   );
 
-  console.log(roomId, '==== room route =========>>>>>>', pgId, companyId);
-  console.log('pgRoomDetail== =========>>>>>>', pgRoomDetail);
 
   useEffect(() => {
     if (roomId && pgId && companyId) {
@@ -57,19 +55,10 @@ const PGRoomDetailScreen = memo(() => {
   const room = pgRoomDetail?.data?.room_details;
   const pg = pgRoomDetail?.data?.pg_details;
   // Clean images for slider
-  const gallery = pgRoomDetail?.data?.property?.gallery_images?.[0] || {};
-  const allImages = [
-    ...(gallery.living_room || []),
-    ...(gallery.bedroom || []),
-    ...(gallery.kitchen || []),
-    ...(gallery.bathroom || []),
-    ...(gallery.floorplan || []),
-    ...(gallery.extra || []),
-  ];
-
+  const roomImages = pgRoomDetail?.data?.room_details?.images || [];
   const banners =
-    allImages.length > 0
-      ? allImages.map((img: string, idx: number) => ({
+    roomImages.length > 0
+      ? roomImages.map((img: string, idx: number) => ({
           id: `${idx}`,
           image: { uri: img },
         }))
@@ -77,10 +66,13 @@ const PGRoomDetailScreen = memo(() => {
           {
             id: 'featured',
             image: {
-              uri: pgRoomDetail?.data?.property?.property_featured_image,
+              uri: pgRoomDetail?.data?.pg_details?.property_featured_image,
             },
           },
         ];
+
+
+
 
   return (
     <View style={styles.container}>
@@ -177,8 +169,15 @@ const PGRoomDetailScreen = memo(() => {
 
         <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
           <AppButton
-            title="Book PG"
-            onPress={() => navigation.navigate(NAV_KEYS.PGBookScreen)}
+            title="Book Room"
+            onPress={() => {
+              navigation.navigate(NAV_KEYS.PGBookScreen, {
+                screenType:'isRoom',
+                roomId: room.id,
+                pgId: room.pg_id,
+                companyId: room.company_id,
+              });
+            }}
           />
         </View>
       </ScrollView>
