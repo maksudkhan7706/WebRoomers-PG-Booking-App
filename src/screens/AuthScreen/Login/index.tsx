@@ -105,7 +105,7 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
           enableOnAndroid={true}
-          extraScrollHeight={Platform.OS === 'ios' ? 60 : 100}
+          extraScrollHeight={Platform.OS === 'ios' ? 80 : 80}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >

@@ -3,7 +3,7 @@ import { View, StyleSheet, ViewStyle, ImageStyle } from 'react-native';
 import React from 'react';
 
 interface AppImageProps {
-  source: { uri?: string } | null;
+  source: { uri?: string } | number | null; // number for local require()
   style?: ImageStyle | ViewStyle;
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
 }
@@ -15,16 +15,21 @@ const AppImage: React.FC<AppImageProps> = ({
 }) => {
   const [isError, setIsError] = React.useState(false);
 
-  if (!source?.uri || isError) {
+  if (!source || isError) {
     return <View style={[styles.skeletonBox, style]} />;
   }
 
+  const fastImageSource =
+    typeof source === 'number'
+      ? source
+      : {
+          uri: source.uri,
+          priority: FastImage.priority.normal,
+        };
+
   return (
     <FastImage
-      source={{
-        uri: source.uri,
-        priority: FastImage.priority.normal,
-      }}
+      source={fastImageSource as any}
       style={style as any}
       resizeMode={resizeMode as any}
       onError={() => setIsError(true)}

@@ -37,7 +37,7 @@ const HomeScreen = () => {
   const banners = data?.data?.banners || [];
   const recentPGs = data?.data?.recent_pgs || [];
   const categories = data?.data?.property_categories || [];
-  console.log('userRole =========>>>>>', userRole);
+  console.log('userRole in home =========>>>>>', userRole);
 
   return (
     <View style={styles.container}>

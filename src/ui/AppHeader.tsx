@@ -12,10 +12,10 @@ import colors from '../constants/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NAV_KEYS, RootStackParamList } from '../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
+import AppImage from './AppImage';
+import images from '../assets/images';
 
 type HeaderNavprop = NativeStackNavigationProp<RootStackParamList>;
-
 
 interface AppHeaderProps {
   title: string;
@@ -25,7 +25,7 @@ interface AppHeaderProps {
   containerStyle?: ViewStyle;
   titleStyle?: TextStyle;
   backIconColor?: string;
-  onRightIconPress?: () => void
+  onRightIconPress?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -36,29 +36,40 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   containerStyle,
   titleStyle,
   backIconColor = colors.black,
-  onRightIconPress
+  onRightIconPress,
 }) => {
- const navigation = useNavigation<HeaderNavprop>();
+  const navigation = useNavigation<HeaderNavprop>();
 
   return (
     <View style={[styles.container, containerStyle]}>
       <View style={styles.viewOfIcons}>
-        {showBack && (
+        {showBack ? (
           <TouchableOpacity hitSlop={15} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color={backIconColor} />
           </TouchableOpacity>
+        ) : (
+          <AppImage
+            source={images.TransparentWebRoomerLogo}
+            style={{ width: 100, height: 60, right: 10 }}
+            resizeMode="cover"
+          />
         )}
-        {leftIcon}
       </View>
       {/* Title */}
       <Typography
-        style={[styles.title, titleStyle, { marginRight: rightIcon ? 20 : 0 }]}
+        style={[styles.title, titleStyle, { marginRight: rightIcon ? 60 : 0 }]}
       >
         {title}
       </Typography>
-      <TouchableOpacity activeOpacity={0.8} onPress={() => {
-        navigation.navigate(NAV_KEYS.ProfileScreen)
-      }} style={styles.viewOfIcons}>{rightIcon}</TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => {
+          navigation.navigate(NAV_KEYS.ProfileScreen);
+        }}
+        style={styles.viewOfIcons}
+      >
+        {rightIcon}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -67,7 +78,7 @@ export default React.memo(AppHeader);
 
 const styles = StyleSheet.create({
   container: {
-    height: 70,
+    height: 100,
     backgroundColor: colors.white,
     flexDirection: 'row',
     alignItems: 'center',
@@ -78,6 +89,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    paddingTop: 15,
   },
   title: {
     fontSize: 18,

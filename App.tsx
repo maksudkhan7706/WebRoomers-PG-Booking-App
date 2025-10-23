@@ -11,6 +11,7 @@ import colors from './src/constants/colors';
 import FlashMessage from 'react-native-flash-message';
 import { loadUserFromStorage } from './src/store/authSlice';
 import { NavigationContainer } from '@react-navigation/native';
+import RNBootSplash from 'react-native-bootsplash';
 
 const AppWrapper = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,6 +19,10 @@ const AppWrapper = () => {
   const insets = useSafeAreaInsets();
   const [loadingUser, setLoadingUser] = React.useState(true);
 
+  useEffect(() => {
+    RNBootSplash.hide({ fade: true }); // 👈 splash hide karega
+  }, []);
+  
   useEffect(() => {
     const loadUser = async () => {
       await dispatch(loadUserFromStorage());

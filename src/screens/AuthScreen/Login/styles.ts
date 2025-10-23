@@ -11,8 +11,9 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   innerContainer: {
-    flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   logo: {
     height: 120,
