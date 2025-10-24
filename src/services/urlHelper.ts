@@ -21,4 +21,12 @@ export const pgRoomDetailUrl = () => '/getPgRoomDetails';
 export const userInfoUrl = () => `/userInfo`;
 export const roomBookingUrl = () => `/roomBooking`;
 export const updateProfileUrl = () => `/updateProfile`;
+export const myPgListUrl = () => `/myPgList`;
 
+//Landlord ADD/EDIT PG DROPDOWN
+export const getAllCategoriesUrl = () => '/getAllCategories';
+export const getAllCitiesUrl = () => '/getAllCities';
+export const getAllFloorsUrl = () => '/getAllFloors';
+export const getAllFlooringsUrl = () => '/getAllFloorings';
+export const getAllWashroomUrl = () => '/getAllWashroom';
+export const getAllFeaturesUrl = () => '/getAllFeatures';

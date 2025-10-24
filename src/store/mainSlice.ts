@@ -8,6 +8,13 @@ import {
   userInfoUrl,
   roomBookingUrl,
   updateProfileUrl,
+  myPgListUrl,
+  getAllCategoriesUrl,
+  getAllCitiesUrl,
+  getAllFloorsUrl,
+  getAllFlooringsUrl,
+  getAllWashroomUrl,
+  getAllFeaturesUrl,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -18,6 +25,13 @@ interface MainState {
   pgRoomDetail: any;
   apiUserData: any;
   error: string | null;
+  myPgList: null;
+  pgCategories: { label: string; value: string }[];
+  pgCities: { label: string; value: string }[];
+  pgFloors: { label: string; value: string }[];
+  pgFloorings: { label: string; value: string }[];
+  pgWashrooms: { label: string; value: string }[];
+  pgExtraFeatures: { label: string; value: string }[];
 }
 
 const initialState: MainState = {
@@ -28,6 +42,13 @@ const initialState: MainState = {
   pgRoomDetail: null,
   apiUserData: null,
   error: null,
+  myPgList: null,
+  pgCategories: [],
+  pgCities: [],
+  pgFloors: [],
+  pgFloorings: [],
+  pgWashrooms: [],
+  pgExtraFeatures: [],
 };
 
 //Dashboard API
@@ -108,7 +129,6 @@ export const apiUserDataFetch = createAsyncThunk(
     }
   },
 );
-
 //Room Booking API
 export const bookRoomApi = createAsyncThunk(
   'main/bookRoomApi',
@@ -121,14 +141,13 @@ export const bookRoomApi = createAsyncThunk(
     }
   },
 );
-
 // Profile Update API
 export const updateProfileApi = createAsyncThunk(
   'main/updateProfileApi',
   async (payload: any, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      console.log('formData =======>>>>',formData);
+      console.log('formData =======>>>>', formData);
       // Convert payload to FormData
       Object.keys(payload).forEach(key => {
         if (payload[key] !== null && payload[key] !== undefined) {
@@ -161,6 +180,93 @@ export const updateProfileApi = createAsyncThunk(
         err.response?.data || err.message,
       );
       return rejectWithValue(err.response?.data || err.message);
+    }
+  },
+);
+// My PG List API
+export const fetchMyPgList = createAsyncThunk(
+  'main/fetchMyPgList',
+  async (
+    payload: { company_id: string; landlord_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(myPgListUrl(), payload);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// PG Categories
+export const fetchPgCategories = createAsyncThunk(
+  'main/fetchPgCategories',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllCategoriesUrl(), payload);
+      return response.data; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// PG Cities
+export const fetchPgCities = createAsyncThunk(
+  'main/fetchPgCities',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllCitiesUrl(), payload);
+      return response.data; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// PG Floors
+export const fetchPgFloors = createAsyncThunk(
+  'main/fetchPgFloors',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllFloorsUrl(), payload);
+      return response.data; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// PG Floorings
+export const fetchPgFloorings = createAsyncThunk(
+  'main/fetchPgFloorings',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllFlooringsUrl(), payload);
+      return response.data; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// PG Washrooms
+export const fetchPgWashrooms = createAsyncThunk(
+  'main/fetchPgWashrooms',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllWashroomUrl(), payload);
+      return response.data; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// PG Extra Features
+export const fetchPgExtraFeatures = createAsyncThunk(
+  'main/fetchPgExtraFeatures',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllFeaturesUrl(), payload);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
     }
   },
 );
@@ -259,6 +365,118 @@ const mainSlice = createSlice({
       })
       .addCase(updateProfileApi.rejected, state => {
         state.loading = false;
+      })
+      // My PG List
+      .addCase(fetchMyPgList.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyPgList.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myPgList = action.payload;
+      })
+      .addCase(fetchMyPgList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // PG Categories
+      .addCase(fetchPgCategories.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        // object ko array me convert karenge
+        state.pgCategories = Object.values(action.payload).map((item: any) => ({
+          label: item.property_category_title,
+          value: item.property_category_id,
+        }));
+      })
+      .addCase(fetchPgCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // PG Cities
+      .addCase(fetchPgCities.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgCities.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgCities = Object.values(action.payload).map((item: any) => ({
+          label: item.city_name,
+          value: item.slug,
+        }));
+      })
+      .addCase(fetchPgCities.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // PG Floors
+      .addCase(fetchPgFloors.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgFloors.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgFloors = Object.values(action.payload).map((item: any) => ({
+          label: item.property_floor_title,
+          value: item.property_floor_id,
+        }));
+      })
+      .addCase(fetchPgFloors.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // PG Floorings
+      .addCase(fetchPgFloorings.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgFloorings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgFloorings = Object.values(action.payload).map((item: any) => ({
+          label: item.property_flooring_title,
+          value: item.property_flooring_id,
+        }));
+      })
+      .addCase(fetchPgFloorings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // PG Washrooms
+      .addCase(fetchPgWashrooms.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgWashrooms.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgWashrooms = Object.values(action.payload).map((item: any) => ({
+          label: item.property_washroom_title,
+          value: item.property_washroom_id,
+        }));
+      })
+      .addCase(fetchPgWashrooms.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // PG Extra Features
+      .addCase(fetchPgExtraFeatures.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgExtraFeatures.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgExtraFeatures = Object.values(action.payload).map(
+          (item: any) => ({
+            label: item.property_features_title,
+            value: item.property_features_id,
+          }),
+        );
+      })
+      .addCase(fetchPgExtraFeatures.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

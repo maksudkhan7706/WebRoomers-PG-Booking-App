@@ -69,4 +69,19 @@ export default StyleSheet.create({
   postButton: {
     marginVertical: 40,
   },
+
+  extraFeaturesColumn: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  extraFeaturesIconTitle: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 8,
+  },
 });

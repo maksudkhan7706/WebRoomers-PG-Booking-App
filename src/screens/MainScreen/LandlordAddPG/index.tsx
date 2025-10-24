@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Dimensions,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import Typography from '../../../ui/Typography';
 import AppHeader from '../../../ui/AppHeader';
 import AppTextInput from '../../../ui/AppTextInput';
@@ -16,8 +10,17 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ImagePickerInput from '../../../ui/ImagePickerInput';
 import AppButton from '../../../ui/AppButton';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-
-const screenWidth = Dimensions.get('window').width;
+import { useRoute } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '../../../store';
+import {
+  fetchPgCategories,
+  fetchPgCities,
+  fetchPgExtraFeatures,
+  fetchPgFloorings,
+  fetchPgFloors,
+  fetchPgWashrooms,
+} from '../../../store/mainSlice';
 
 // Dropdown options
 const pgForOptions = [
@@ -25,70 +28,16 @@ const pgForOptions = [
   { label: 'Girls', value: 'girls' },
   { label: 'Both', value: 'both' },
 ];
-
-const pgTypeOptions = [
-  { label: 'Single Room', value: 'single' },
-  { label: 'Shared Room', value: 'shared' },
-  { label: 'Apartment', value: 'apartment' },
-];
-
-const pgCityOptions = [
-  { label: 'Jaipur', value: 'jaipur' },
-  { label: 'Delhi', value: 'delhi' },
-  { label: 'Mumbai', value: 'mumbai' },
-];
-
-const floorOptions = [
-  { label: 'Ground Floor', value: 'ground' },
-  { label: '1st Floor', value: '1' },
-  { label: '2nd Floor', value: '2' },
-  { label: '3rd Floor', value: '3' },
-];
-
-const flooringOptions = [
-  { label: 'Marble', value: 'marble' },
-  { label: 'Tiles', value: 'tiles' },
-  { label: 'Wooden', value: 'wooden' },
-];
-
-const washroomOptions = [
-  { label: 'Attached', value: 'attached' },
-  { label: 'Common', value: 'common' },
-];
-
 const availabilityOptions = [
   { label: 'Ready to Move', value: 'readytomove' },
   { label: 'Under Construction', value: 'underconstruction' },
 ];
-
 const furnitureOptions = [
   { label: 'Fully Furnished', value: 'fully' },
   { label: 'Semi Furnished', value: 'semi' },
   { label: 'Unfurnished', value: 'unfurnished' },
 ];
-
 const parkingOptions = ['2 Wheeler', '4 Wheeler', 'No Parking'];
-
-const extraFeaturesList = [
-  'Power Backup',
-  'CCTV Surveillance',
-  'Security / Fire Alarm',
-  'Access to High Speed Internet',
-  'Lift',
-  'Reserved Parking',
-  'Service / Goods Lift',
-  'Intercom Facility',
-  '24hr Water Supply Available',
-  'Cafeteria / Food Court',
-  'Park nearby',
-  'Hospital Nearby',
-  'Bank/ATM nearby',
-  'Approach Road Available',
-  'Proper Boundary Wall',
-  'Electricity Available',
-  'Washing Machine',
-  'Maintanence Staff',
-];
 
 const uploadItems = [
   { key: 'mainPicture', label: 'Main Picture (Single)' },
@@ -102,11 +51,27 @@ const uploadItems = [
 ];
 
 const LandlordAddPG = () => {
+  const route = useRoute<any>();
+  const { type, propertyId } = route.params || {};
+  const {
+    pgCategories,
+    pgCities,
+    pgFloors,
+    pgFloorings,
+    pgWashrooms,
+    pgExtraFeatures,
+  } = useSelector((state: any) => state.main);
+  const dispatch = useDispatch<AppDispatch>();
+  const { userData } = useSelector((state: any) => state.auth);
+
   const [form, setForm] = useState<any>({
     pgTitle: '',
     pgFor: '',
     pgType: '',
     pgCity: '',
+    pgFloor: '',
+    flooring: '',
+    washroom: '',
     pgAddress: '',
     totalRooms: '',
     price: '',
@@ -115,13 +80,14 @@ const LandlordAddPG = () => {
     area: '',
     description: '',
   });
-
   const [availability, setAvailability] = useState<string | null>(null);
   const [furniture, setFurniture] = useState<string | null>(null);
   const [parking, setParking] = useState<string[]>([]);
   const [extraFeatures, setExtraFeatures] = useState<string[]>([]);
-
   const [images, setImages] = useState<any>({});
+  const [isAgreed, setIsAgreed] = useState(false);
+  const isActive = isAgreed;
+  const [loading, setLoading] = useState(false);
 
   const handleImageSelect = (key: string, file: any) => {
     setImages((prev: any) => ({ ...prev, [key]: file }));
@@ -140,12 +106,63 @@ const LandlordAddPG = () => {
   ) => {
     setter(current === value ? null : value);
   };
-  const [isAgreed, setIsAgreed] = useState(false);
-  const isActive = isAgreed;
+  //If editing, fetch existing PG details once
+  useEffect(() => {
+    if (type === 'editPG' && propertyId) {
+      fetchPGDetails(propertyId);
+    }
+  }, [type, propertyId]);
+
+  const fetchPGDetails = async (id: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`https://yourapi.com/pg/${id}`);
+      const data = await res.json();
+
+      // Fill form fields with existing data
+      setForm({
+        pgTitle: data.pgTitle,
+        pgFor: data.pgFor,
+        pgType: data.pgType,
+        pgCity: data.pgCity,
+        pgAddress: data.pgAddress,
+        totalRooms: data.totalRooms,
+        price: data.price,
+        security: data.security,
+        maintenance: data.maintenance,
+        area: data.area,
+        description: data.description,
+      });
+    } catch (err) {
+      console.log('Error loading PG details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //Submit handler
+  const handleSubmit = () => {
+    if (type === 'addPG') {
+      Alert.alert('✅ Added', 'PG added successfully!');
+      // call POST API
+    } else if (type === 'editPG') {
+      Alert.alert('✏️ Updated', 'PG updated successfully!');
+      // call PUT/PATCH API with propertyId
+    }
+  };
+  //Drop-down Apis
+  useEffect(() => {
+    dispatch(fetchPgCategories({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgCities({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgFloors({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgFloorings({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgWashrooms({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgExtraFeatures({ company_id: userData?.company_id || '35' }));
+  }, []);
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Add PG" showBack />
+      <AppHeader title={type === 'editPG' ? 'Edit PG' : 'Add PG'} showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -160,28 +177,24 @@ const LandlordAddPG = () => {
           value={form.pgTitle}
           onChangeText={text => setForm({ ...form, pgTitle: text })}
         />
-
         <AppCustomDropdown
           label="PG For *"
           data={pgForOptions}
           selectedValues={form.pgFor}
           onSelect={value => setForm({ ...form, pgFor: value })}
         />
-
         <AppCustomDropdown
           label="PG Type *"
-          data={pgTypeOptions}
+          data={pgCategories}
           selectedValues={form.pgType}
           onSelect={value => setForm({ ...form, pgType: value })}
         />
-
         <AppCustomDropdown
           label="PG City *"
-          data={pgCityOptions}
+          data={pgCities}
           selectedValues={form.pgCity}
           onSelect={value => setForm({ ...form, pgCity: value })}
         />
-
         {/* Google Map Placeholder */}
         <View style={styles.mapContainer}>
           <Icon name="map" size={50} color={colors.gray} />
@@ -201,7 +214,6 @@ const LandlordAddPG = () => {
           value={form.totalRooms}
           onChangeText={text => setForm({ ...form, totalRooms: text })}
         />
-
         <AppTextInput
           label="Price (per room) *"
           placeholder="Enter Price"
@@ -209,7 +221,6 @@ const LandlordAddPG = () => {
           value={form.price}
           onChangeText={text => setForm({ ...form, price: text })}
         />
-
         <AppTextInput
           label="Security Charges (₹)"
           placeholder="Enter Security Charges"
@@ -217,7 +228,6 @@ const LandlordAddPG = () => {
           value={form.security}
           onChangeText={text => setForm({ ...form, security: text })}
         />
-
         <AppTextInput
           label="Maintenance Charges (₹)"
           placeholder="Enter Maintenance Charges"
@@ -225,7 +235,6 @@ const LandlordAddPG = () => {
           value={form.maintenance}
           onChangeText={text => setForm({ ...form, maintenance: text })}
         />
-
         <AppTextInput
           label="PG Area (sqft)"
           placeholder="Enter Property Area in SqFt"
@@ -233,7 +242,6 @@ const LandlordAddPG = () => {
           value={form.area}
           onChangeText={text => setForm({ ...form, area: text })}
         />
-
         {/* Availability */}
         <Typography variant="body" weight="medium" style={styles.sectionTitle}>
           Availability
@@ -276,7 +284,6 @@ const LandlordAddPG = () => {
             </TouchableOpacity>
           ))}
         </View>
-
         {/* Furniture */}
         <Typography variant="body" weight="medium" style={styles.sectionTitle}>
           Furniture
@@ -315,7 +322,6 @@ const LandlordAddPG = () => {
             </TouchableOpacity>
           ))}
         </View>
-
         {/* Parking */}
         <Typography variant="body" weight="medium" style={styles.sectionTitle}>
           Parking
@@ -357,52 +363,72 @@ const LandlordAddPG = () => {
         <Typography variant="body" weight="medium" style={styles.sectionTitle}>
           Additional Details
         </Typography>
-        <AppCustomDropdown label="PG on Floor" data={floorOptions} />
-        <AppCustomDropdown label="Flooring" data={flooringOptions} />
-        <AppCustomDropdown label="Washroom" data={washroomOptions} />
+        <AppCustomDropdown
+          label="PG on Floor"
+          data={pgFloors}
+          selectedValues={form.pgFloor}
+          onSelect={value => setForm({ ...form, pgFloor: value })}
+        />
+        <AppCustomDropdown
+          label="Flooring"
+          data={pgFloorings}
+          selectedValues={form.flooring}
+          onSelect={value => setForm({ ...form, flooring: value })}
+        />
+        <AppCustomDropdown
+          label="Washroom"
+          data={pgWashrooms}
+          selectedValues={form.washroom}
+          onSelect={value => setForm({ ...form, washroom: value })}
+        />
         {/* Extra Features */}
-        <Typography variant="body" weight="medium" style={styles.sectionTitle}>
-          Extra Features
-        </Typography>
-        <View style={styles.rowWrap}>
-          {extraFeaturesList.map((label, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() =>
-                toggleMultiSelect(extraFeatures, setExtraFeatures, label)
-              }
-              activeOpacity={0.7}
-              style={styles.optionItem}
-            >
-              <Icon
-                name={
-                  extraFeatures.includes(label)
-                    ? 'check-box'
-                    : 'check-box-outline-blank'
+        <View>
+          <Typography
+            variant="body"
+            weight="medium"
+            style={styles.sectionTitle}
+          >
+            Extra Features
+          </Typography>
+          <View style={styles.extraFeaturesColumn}>
+            {pgExtraFeatures.map((item: any, index: number) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() =>
+                  toggleMultiSelect(extraFeatures, setExtraFeatures, item.value)
                 }
-                size={20}
-                color={
-                  extraFeatures.includes(label) ? colors.mainColor : colors.gray
-                }
-              />
-              <Typography
-                variant="label"
-                weight="medium"
-                style={[
-                  styles.optionLabel,
-                  {
-                    color: extraFeatures.includes(label)
+                activeOpacity={0.7}
+                style={styles.extraFeaturesIconTitle}
+              >
+                <Icon
+                  name={
+                    extraFeatures.includes(item.value)
+                      ? 'check-box'
+                      : 'check-box-outline-blank'
+                  }
+                  size={20}
+                  color={
+                    extraFeatures.includes(item.value)
+                      ? colors.mainColor
+                      : colors.gray
+                  }
+                />
+                <Typography
+                  variant="label"
+                  weight="medium"
+                  style={{
+                    marginLeft: 6,
+                    color: extraFeatures.includes(item.value)
                       ? colors.mainColor
                       : colors.gray,
-                  },
-                ]}
-              >
-                {label}
-              </Typography>
-            </TouchableOpacity>
-          ))}
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-
         {/* Description */}
         <AppTextInput
           label="Description"
@@ -413,7 +439,6 @@ const LandlordAddPG = () => {
           numberOfLines={4}
           containerStyle={styles.descContainer}
         />
-
         {/* Upload Section in 2 Columns */}
         <Typography variant="body" weight="medium" style={styles.sectionTitle}>
           Upload Property Photos
@@ -429,7 +454,6 @@ const LandlordAddPG = () => {
             </View>
           ))}
         </View>
-
         {/* Checkbox Section */}
         <TouchableOpacity
           style={styles.checkboxContainer}
@@ -445,12 +469,12 @@ const LandlordAddPG = () => {
             I agree to the Terms of Services and Privacy Policy
           </Typography>
         </TouchableOpacity>
-
         <AppButton
-          title="Post PG"
-          onPress={() => Alert.alert('PG Posted!', 'UI looking perfect 💪')}
-          style={styles.postButton}
+          title={type === 'editPG' ? 'Update PG' : 'Post PG'}
+          onPress={handleSubmit}
           disabled={!isActive}
+          loading={loading}
+          style={styles.postButton}
         />
       </ScrollView>
     </View>

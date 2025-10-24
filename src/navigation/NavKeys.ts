@@ -29,7 +29,8 @@ export type RootStackParamList = {
     pgId: string;
     companyId: string;
   };
-  LandlordAddPG: undefined;
+LandlordAddPG: { type: 'addPG' | 'editPG'; propertyId?: string };
+
 };
 
 export const NAV_KEYS = {

@@ -73,7 +73,9 @@ const HomeScreen = () => {
                 title={'Add PG'}
                 loading={loading}
                 disabled={loading}
-                onPress={() => navigation.navigate(NAV_KEYS.LandlordAddPG)}
+                onPress={() =>
+                  navigation.navigate(NAV_KEYS.LandlordAddPG, { type: 'addPG' })
+                }
               />
             </View>
           ) : null}
