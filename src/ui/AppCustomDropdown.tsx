@@ -9,6 +9,7 @@ import {
   Animated,
   Easing,
   StyleSheet,
+  ViewStyle,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import colors from '../constants/colors';
@@ -28,6 +29,7 @@ interface AppCustomDropdownProps {
   multiSelect?: boolean;
   placeholder?: string;
   error?: string; // ✅ new prop
+  inputWrapperStyle?: ViewStyle
 }
 
 const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
@@ -39,6 +41,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   multiSelect = false,
   placeholder = '',
   error,
+  inputWrapperStyle
 }) => {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -127,6 +130,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
           styles.inputWrapper,
           {
             marginBottom: error ? 5 : 16,
+            ...inputWrapperStyle
           },
         ]}
         onPress={openModal}

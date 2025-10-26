@@ -1,0 +1,112 @@
+import { StyleSheet } from 'react-native';
+import colors from '../../../constants/colors';
+
+export default StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.white },
+  contentConainter: { padding: 16 },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGary,
+  },
+  tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  activeTab: { borderBottomWidth: 2, borderBottomColor: colors.mainColor },
+  tabText: { color: colors.gray },
+  activeTabText: { color: colors.mainColor },
+  sectionHeader: {
+    marginBottom: 10,
+  },
+  roomCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 15,
+    elevation: 2,
+  },
+  roomHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  roomTitle: { fontSize: 15 },
+  statusRow: { flexDirection: 'row', alignItems: 'center' },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 100,
+    backgroundColor: colors.succes,
+    marginRight: 6,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  infoCol: { width: '48%' },
+  facilityWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  facilityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f2ff',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    gap: 10,
+  },
+  formRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap:10
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 8,
+    padding: 10,
+    marginRight: 10,
+  },
+  facilityRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  checkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15,
+    marginBottom: 8,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 8,
+    padding: 10,
+    textAlignVertical: 'top',
+    marginTop: 6,
+  },
+  uploadBox: {
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
+    alignItems: 'center',
+  },
+    descContainer: {
+    marginTop: 5,
+    marginBottom: 50,
+  },
+});

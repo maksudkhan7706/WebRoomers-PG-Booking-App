@@ -7,7 +7,8 @@ const colors = {
   logoBg:'#e4e2e2',
   mainColor:"#114a82",
   error:'red',
-  lightGary:"#a4a29f"
+  lightGary:"#a4a29f",
+  succes:"#008001"
 };
 
 export default colors;

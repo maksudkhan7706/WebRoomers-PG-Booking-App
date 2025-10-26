@@ -53,6 +53,7 @@ const uploadItems = [
 const LandlordAddPG = () => {
   const route = useRoute<any>();
   const { type, propertyId } = route.params || {};
+  
   const {
     pgCategories,
     pgCities,

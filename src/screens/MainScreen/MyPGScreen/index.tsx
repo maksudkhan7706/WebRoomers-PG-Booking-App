@@ -37,6 +37,7 @@ const MyPGScreen = () => {
   }, [dispatch]);
 
   const renderItem = ({ item }: any) => {
+    
     let statusLabel = '';
     let bgColor = '';
     let textColor = '';
@@ -147,7 +148,11 @@ const MyPGScreen = () => {
             <AppButton
               style={{ width: 100, height: 35 }}
               title={'Add Rooms'}
-              onPress={() => console.log('press')}
+              onPress={() =>
+                navigation.navigate(NAV_KEYS.PGRoomManagement, {
+                  roomId: item?.property_id,
+                })
+              }
             />
           </View>
         </View>
