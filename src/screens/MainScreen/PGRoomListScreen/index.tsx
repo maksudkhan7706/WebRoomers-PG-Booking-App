@@ -180,13 +180,30 @@ const PGRoomListScreen = memo(() => {
               {pgRooms?.pg_name || ''}
             </Typography>
             <Typography variant="label" color={colors.gray}>
-              Rooms That Fit Your Lifestyle & Budget
+              {rooms.length >= 0
+                ? ''
+                : 'Rooms That Fit Your Lifestyle & Budget'}
             </Typography>
           </View>
         }
         renderItem={renderRoom}
-        contentContainerStyle={{ paddingBottom: 50 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <View style={styles.listEmpty}>
+            <FontAwesome name="inbox" size={48} color={colors.gray} />
+            <Typography variant="body" weight="bold" style={{ marginTop: 12 }}>
+              No data found
+            </Typography>
+            <Typography
+              variant="label"
+              color={colors.gray}
+              style={{ marginTop: 6 }}
+            >
+              There are no rooms available right now. Please check back later.
+            </Typography>
+          </View>
+        )}
       />
     </View>
   );

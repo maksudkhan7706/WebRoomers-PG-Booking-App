@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,8 +28,8 @@ interface AppCustomDropdownProps {
   showSearch?: boolean;
   multiSelect?: boolean;
   placeholder?: string;
-  error?: string; // ✅ new prop
-  inputWrapperStyle?: ViewStyle
+  error?: string;
+  inputWrapperStyle?: ViewStyle;
 }
 
 const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
@@ -41,7 +41,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   multiSelect = false,
   placeholder = '',
   error,
-  inputWrapperStyle
+  inputWrapperStyle,
 }) => {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -49,18 +49,27 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(20));
 
+  // Sync internal state when parent updates (for reset)
+  useEffect(() => {
+    setSelected(selectedValues);
+  }, [selectedValues]);
+
+  // Update parent when selected changes
   useEffect(() => {
     onSelect && onSelect(selected);
   }, [selected]);
 
-  const handleSelect = (item: string) => {
+  // Handle select by VALUE instead of label
+  const handleSelect = (item: DropdownItem) => {
     if (multiSelect) {
-      if (selected.includes(item))
-        setSelected(selected.filter(i => i !== item));
-      else setSelected([...selected, item]);
+      if (selected.includes(item.value)) {
+        setSelected(selected.filter(i => i !== item.value));
+      } else {
+        setSelected([...selected, item.value]);
+      }
     } else {
-      if (selected[0] === item) setSelected([]);
-      else setSelected([item]);
+      if (selected[0] === item.value) setSelected([]);
+      else setSelected([item.value]);
       setVisible(false);
     }
   };
@@ -69,7 +78,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
     setVisible(true);
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 20,
+        toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }),
@@ -102,11 +111,11 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   );
 
   const renderItem = ({ item }: { item: DropdownItem }) => {
-    const isSelected = selected.includes(item.label);
+    const isSelected = selected.includes(item.value);
     return (
       <TouchableOpacity
         style={styles.itemContainer}
-        onPress={() => handleSelect(item.label)}
+        onPress={() => handleSelect(item)}
       >
         <Text
           style={[
@@ -123,20 +132,23 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
     );
   };
 
+  // ✅ Display label(s) based on selected value(s)
+  const selectedLabels = data
+    .filter(i => selected.includes(i.value))
+    .map(i => i.label)
+    .join(', ');
+
   return (
     <>
       <TouchableOpacity
         style={[
           styles.inputWrapper,
-          {
-            marginBottom: error ? 5 : 16,
-            ...inputWrapperStyle
-          },
+          { marginBottom: error ? 5 : 16, ...inputWrapperStyle },
         ]}
         onPress={openModal}
       >
         <Typography style={{ color: selected.length ? '#000' : '#999' }}>
-          {selected.length ? selected.join(', ') : placeholder || label}
+          {selected.length ? selectedLabels : placeholder || label}
         </Typography>
         <FontAwesome name="angle-down" size={18} color={colors.lightGary} />
       </TouchableOpacity>
@@ -183,7 +195,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
             {filteredData.length > 0 ? (
               <FlatList
                 data={filteredData}
-                keyExtractor={(_, index) => index.toString()}
+                keyExtractor={(item, index) => item.value + index}
                 renderItem={renderItem}
                 keyboardShouldPersistTaps="handled"
               />

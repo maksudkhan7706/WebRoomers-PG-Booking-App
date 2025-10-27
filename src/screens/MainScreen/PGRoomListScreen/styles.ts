@@ -3,7 +3,7 @@ import colors from '../../../constants/colors';
 const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
- container: {
+  container: {
     flex: 1,
     backgroundColor: colors.white,
   },
@@ -59,5 +59,11 @@ export default StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 6,
     alignItems: 'center',
+  },
+  listEmpty: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
 });

@@ -37,7 +37,6 @@ const MyPGScreen = () => {
   }, [dispatch]);
 
   const renderItem = ({ item }: any) => {
-    
     let statusLabel = '';
     let bgColor = '';
     let textColor = '';
@@ -73,21 +72,30 @@ const MyPGScreen = () => {
       <View style={styles.card}>
         {/* Header */}
         <View style={styles.cardHeader}>
-          <TouchableOpacity
-            activeOpacity={0.6}
-            style={styles.headerLeft}
-            onPress={() =>
-              navigation.navigate(NAV_KEYS.LandlordAddPG, {
-                type: 'editPG',
-                propertyId: item.property_id,
-              })
-            }
-          >
-            <Feather name="edit-3" size={18} color={colors.mainColor} />
-            <Typography variant="label" style={{ marginLeft: 6 }}>
-              {item.property_code}
+          <View>
+            <Typography
+              style={{ marginBottom: 3 }}
+              variant="body"
+              weight="medium"
+            >
+              {item.title || ''}
             </Typography>
-          </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.6}
+              style={styles.headerLeft}
+              onPress={() =>
+                navigation.navigate(NAV_KEYS.LandlordAddPG, {
+                  type: 'editPG',
+                  propertyId: item.property_id,
+                })
+              }
+            >
+              <Feather name="edit-3" size={14} color={colors.mainColor} />
+              <Typography variant="label" style={{ marginLeft: 6 }}>
+                {item.property_code}
+              </Typography>
+            </TouchableOpacity>
+          </View>
 
           <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
             <Typography variant="label" color={textColor}>
@@ -97,6 +105,7 @@ const MyPGScreen = () => {
         </View>
 
         {/* Image Slider */}
+
         <View style={styles.sliderContainer}>
           {item?.gallery?.living_room?.length > 0 ? (
             <AppImageSlider
@@ -117,6 +126,9 @@ const MyPGScreen = () => {
 
         {/* Details */}
         <View style={styles.cardContent}>
+          {/* <Typography variant="body" weight="medium">
+            {item.title || ''}
+          </Typography> */}
           <View style={styles.rowBetween}>
             <Typography variant="body" weight="medium">
               City
@@ -148,11 +160,12 @@ const MyPGScreen = () => {
             <AppButton
               style={{ width: 100, height: 35 }}
               title={'Add Rooms'}
-              onPress={() =>
+              onPress={() => {
                 navigation.navigate(NAV_KEYS.PGRoomManagement, {
                   roomId: item?.property_id,
-                })
-              }
+                }),
+                  console.log('Add Rooms Click =======>>>', item);
+              }}
             />
           </View>
         </View>

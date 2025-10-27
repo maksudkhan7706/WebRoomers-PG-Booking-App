@@ -27,6 +27,6 @@ export default StyleSheet.create({
   },
   subtitleText: {
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: -5,
   },
 });

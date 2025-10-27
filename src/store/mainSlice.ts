@@ -15,6 +15,7 @@ import {
   getAllFlooringsUrl,
   getAllWashroomUrl,
   getAllFeaturesUrl,
+  postEnquiry,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -270,6 +271,21 @@ export const fetchPgExtraFeatures = createAsyncThunk(
     }
   },
 );
+//Enquiry submit thunk
+export const submitPgEnquiry = createAsyncThunk(
+  'main/submitPgEnquiry',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(postEnquiry(), payload);
+      console.log('API response inside thunk:', response);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data || { message: 'Something went wrong' },
+      );
+    }
+  },
+);
 
 const mainSlice = createSlice({
   name: 'main',
@@ -404,8 +420,9 @@ const mainSlice = createSlice({
       .addCase(fetchPgCities.fulfilled, (state, action) => {
         state.loading = false;
         state.pgCities = Object.values(action.payload).map((item: any) => ({
+          ...item,
           label: item.city_name,
-          value: item.slug,
+          value: item.city_id,
         }));
       })
       .addCase(fetchPgCities.rejected, (state, action) => {
@@ -475,6 +492,18 @@ const mainSlice = createSlice({
         );
       })
       .addCase(fetchPgExtraFeatures.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Post Enquiry
+      .addCase(submitPgEnquiry.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitPgEnquiry.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(submitPgEnquiry.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

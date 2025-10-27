@@ -112,6 +112,16 @@ const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
           >
             {email}
           </Typography>
+          {currentOtp ? (
+            <Typography
+              variant="body"
+              weight="bold"
+              color={colors.gray}
+              style={{ marginBottom: 15, textAlign: 'center' }}
+            >
+              OTP: {currentOtp}
+            </Typography>
+          ) : null}
 
           <AppTextInput
             placeholder="Enter OTP"

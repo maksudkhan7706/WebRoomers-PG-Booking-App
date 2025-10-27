@@ -30,3 +30,6 @@ export const getAllFloorsUrl = () => '/getAllFloors';
 export const getAllFlooringsUrl = () => '/getAllFloorings';
 export const getAllWashroomUrl = () => '/getAllWashroom';
 export const getAllFeaturesUrl = () => '/getAllFeatures';
+
+
+export const postEnquiry = () => '/postEnquiry';
