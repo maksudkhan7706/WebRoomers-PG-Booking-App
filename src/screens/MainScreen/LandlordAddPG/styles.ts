@@ -30,16 +30,14 @@ export default StyleSheet.create({
     marginLeft: 8,
   },
   mapContainer: {
-    height: 180,
+    height: 200, // thoda zyada visible area
     borderRadius: 10,
     overflow: 'hidden',
     marginVertical: 15,
-    backgroundColor: colors.logoBg,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#f0f0f0', // optional fallback background
   },
   map: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
   },
   descContainer: {
     marginTop: 20,

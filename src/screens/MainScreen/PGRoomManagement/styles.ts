@@ -68,7 +68,7 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    gap:10
+    gap: 10,
   },
   input: {
     flex: 1,
@@ -105,8 +105,15 @@ export default StyleSheet.create({
     marginTop: 6,
     alignItems: 'center',
   },
-    descContainer: {
+  descContainer: {
     marginTop: 5,
     marginBottom: 50,
+  },
+  listEmpty: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 100,
   },
 });

@@ -30,7 +30,7 @@ export type RootStackParamList = {
     companyId: string;
   };
   LandlordAddPG: { type: 'addPG' | 'editPG'; propertyId?: string };
-  PGRoomManagement: { roomId?: string };
+  PGRoomManagement: { roomId?: string,companyId:string };
 };
 
 export const NAV_KEYS = {

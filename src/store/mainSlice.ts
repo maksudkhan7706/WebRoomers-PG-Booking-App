@@ -16,6 +16,9 @@ import {
   getAllWashroomUrl,
   getAllFeaturesUrl,
   postEnquiry,
+  addEditPgRoomUrl,
+  getAllRoomFeaturesUrl,
+  deletePgRoomUrl,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -33,6 +36,7 @@ interface MainState {
   pgFloorings: { label: string; value: string }[];
   pgWashrooms: { label: string; value: string }[];
   pgExtraFeatures: { label: string; value: string }[];
+  allRoomFeatures: { label: string; value: string }[];
 }
 
 const initialState: MainState = {
@@ -50,6 +54,7 @@ const initialState: MainState = {
   pgFloorings: [],
   pgWashrooms: [],
   pgExtraFeatures: [],
+  allRoomFeatures: [],
 };
 
 //Dashboard API
@@ -271,6 +276,18 @@ export const fetchPgExtraFeatures = createAsyncThunk(
     }
   },
 );
+// All Room Features
+export const fetchAllRoomFeatures = createAsyncThunk(
+  'main/fetchAllRoomFeatures',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllRoomFeaturesUrl(), payload);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
 //Enquiry submit thunk
 export const submitPgEnquiry = createAsyncThunk(
   'main/submitPgEnquiry',
@@ -283,6 +300,34 @@ export const submitPgEnquiry = createAsyncThunk(
       return rejectWithValue(
         error.response?.data || { message: 'Something went wrong' },
       );
+    }
+  },
+);
+ //Add / Edit PG Room
+export const addEditPgRoom = createAsyncThunk(
+  'main/addEditPgRoom',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(addEditPgRoomUrl(), payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// 🧱 Delete Room API
+export const deletePgRoom = createAsyncThunk(
+  'main/deletePgRoom',
+  async (
+    payload: { room_id: string | number; company_id: string | number },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(deletePgRoomUrl(), payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
     }
   },
 );
@@ -491,7 +536,22 @@ const mainSlice = createSlice({
           }),
         );
       })
-      .addCase(fetchPgExtraFeatures.rejected, (state, action) => {
+      // All Room Features
+      .addCase(fetchAllRoomFeatures.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllRoomFeatures.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allRoomFeatures = Object.values(action.payload).map(
+          (item: any) => ({
+            ...item,
+            label: item.name,
+            value: item.id,
+          }),
+        );
+      })
+      .addCase(fetchAllRoomFeatures.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -504,6 +564,37 @@ const mainSlice = createSlice({
         state.loading = false;
       })
       .addCase(submitPgEnquiry.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //Add / Edit PG Room
+      .addCase(addEditPgRoom.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addEditPgRoom.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(addEditPgRoom.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deletePgRoom.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      //Delete Room
+      .addCase(deletePgRoom.fulfilled, (state, action) => {
+        state.loading = false;
+        // Optionally remove the deleted room from pgRooms.data
+        if (state.pgRooms?.data) {
+          state.pgRooms.data = state.pgRooms.data.filter(
+            (room: any) => room.id !== action.meta.arg.room_id,
+          );
+        }
+      })
+      .addCase(deletePgRoom.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

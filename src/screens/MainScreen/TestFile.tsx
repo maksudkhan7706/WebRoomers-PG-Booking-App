@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Typography from '../ui/Typography';
-import colors from '../constants/colors';
-import { checkCameraAndGalleryPermissions } from '../utils/permissions';
-import AppImage from './AppImage';
+import Typography from '../../ui/Typography';
+import colors from '../../constants/colors';
+import { checkCameraAndGalleryPermissions } from '../../utils/permissions';
+import AppImage from '../../ui/AppImage';
 
 interface PickerFile {
   uri: string;
@@ -39,7 +39,6 @@ const ImagePickerInput: React.FC<Props> = ({
       setImages([]);
       return;
     }
-
     const normalizeImageUri = (val: any): string | null => {
       if (typeof val !== 'string' || !val) return null;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
@@ -60,7 +59,6 @@ const ImagePickerInput: React.FC<Props> = ({
       const uri = normalizeImageUri(value);
       setImages(uri ? [uri] : []);
     } else if (typeof value === 'object' && value?.uri) {
-      //Type-safe handling for PickerFile object
       setImages([value.uri]);
     } else {
       setImages([]);
@@ -120,12 +118,14 @@ const ImagePickerInput: React.FC<Props> = ({
       onSelect([files[0]]);
     }
   };
+
   // 🧹 Remove selected image
   const removeImage = (uri: string) => {
     const updated = images.filter(img => img !== uri);
     setImages(updated);
     onSelect(updated.map(u => ({ uri: u })));
   };
+
   return (
     <View style={styles.container}>
       {label ? (
@@ -141,7 +141,7 @@ const ImagePickerInput: React.FC<Props> = ({
       >
         {images.length > 0 ? (
           images.length === 1 ? (
-            <>
+            <View style={styles.imageWrapper}>
               <AppImage
                 source={{ uri: images[0] }}
                 style={styles.singleImage}
@@ -153,7 +153,7 @@ const ImagePickerInput: React.FC<Props> = ({
               >
                 <Icon name="close" size={18} color="#fff" />
               </TouchableOpacity>
-            </>
+            </View>
           ) : (
             <ScrollView
               horizontal
@@ -161,9 +161,8 @@ const ImagePickerInput: React.FC<Props> = ({
               contentContainerStyle={styles.scrollContainer}
             >
               {images.map((uri, index) => (
-                <>
+                <View key={index} style={styles.imageWrapper}>
                   <AppImage
-                    key={index}
                     source={{ uri }}
                     style={styles.multiImage}
                     resizeMode="cover"
@@ -174,7 +173,7 @@ const ImagePickerInput: React.FC<Props> = ({
                   >
                     <Icon name="close" size={16} color="#fff" />
                   </TouchableOpacity>
-                </>
+                </View>
               ))}
             </ScrollView>
           )
@@ -208,6 +207,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f3fa',
     padding: 6,
   },
+  imageWrapper: {
+    position: 'relative',
+  },
   singleImage: {
     width: '100%',
     height: 100,
@@ -218,14 +220,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 10,
   },
-  scrollContainer: {
-    gap: 10,
-  },
-  placeholderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   removeIcon: {
     position: 'absolute',
     top: 4,
@@ -233,6 +227,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: 10,
     padding: 2,
+  },
+  scrollContainer: {
+    gap: 10,
+  },
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

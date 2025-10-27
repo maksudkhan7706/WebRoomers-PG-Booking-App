@@ -13,6 +13,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '../../../store';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { useRef } from 'react';
 import {
   fetchPgCategories,
   fetchPgCities,
@@ -21,6 +23,7 @@ import {
   fetchPgFloors,
   fetchPgWashrooms,
 } from '../../../store/mainSlice';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 // Dropdown options
 const pgForOptions = [
@@ -53,7 +56,6 @@ const uploadItems = [
 const LandlordAddPG = () => {
   const route = useRoute<any>();
   const { type, propertyId } = route.params || {};
-  
   const {
     pgCategories,
     pgCities,
@@ -95,9 +97,12 @@ const LandlordAddPG = () => {
   };
 
   const toggleMultiSelect = (array: string[], setter: any, label: string) => {
-    setter((prev: string[]) =>
-      prev.includes(label) ? prev.filter(f => f !== label) : [...prev, label],
-    );
+    setter((prev: string[] = []) => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      return safePrev.includes(label)
+        ? safePrev.filter(f => f !== label)
+        : [...safePrev, label];
+    });
   };
 
   const toggleSingleSelect = (
@@ -158,8 +163,18 @@ const LandlordAddPG = () => {
     dispatch(fetchPgFloors({ company_id: userData?.company_id || '35' }));
     dispatch(fetchPgFloorings({ company_id: userData?.company_id || '35' }));
     dispatch(fetchPgWashrooms({ company_id: userData?.company_id || '35' }));
-    dispatch(fetchPgExtraFeatures({ company_id: userData?.company_id || '35' }));
+    dispatch(
+      fetchPgExtraFeatures({ company_id: userData?.company_id || '35' }),
+    );
   }, []);
+
+  const mapRef = useRef(null);
+  const [region, setRegion] = useState({
+    latitude: 26.9124,
+    longitude: 75.7873,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  });
 
   return (
     <View style={styles.container}>
@@ -196,11 +211,27 @@ const LandlordAddPG = () => {
           selectedValues={form.pgCity}
           onSelect={value => setForm({ ...form, pgCity: value })}
         />
-        {/* Google Map Placeholder */}
-        <View style={styles.mapContainer}>
-          <Icon name="map" size={50} color={colors.gray} />
-          <Typography color={colors.gray}>Google Map (Coming Soon)</Typography>
+        <View style={{ marginTop: 10 }}>
+          <View style={styles.mapContainer}>
+            <MapView
+              ref={mapRef}
+              provider={PROVIDER_GOOGLE}
+              style={styles.map}
+              region={region}
+              onRegionChangeComplete={setRegion}
+            >
+              <Marker coordinate={region} title="PG Location" />
+            </MapView>
+          </View>
+          <Typography
+            color={colors.gray}
+            style={{ marginTop: 8, textAlign: 'center' }}
+          >
+            Drag or zoom to set location
+          </Typography>
         </View>
+
+
         <AppTextInput
           label="PG Address *"
           placeholder="Enter Address"
@@ -482,4 +513,4 @@ const LandlordAddPG = () => {
   );
 };
 
-export default LandlordAddPG;
+export default LandlordAddPG; 

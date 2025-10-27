@@ -163,6 +163,7 @@ const MyPGScreen = () => {
               onPress={() => {
                 navigation.navigate(NAV_KEYS.PGRoomManagement, {
                   roomId: item?.property_id,
+                  companyId: userData?.company_id,
                 }),
                   console.log('Add Rooms Click =======>>>', item);
               }}
