@@ -4,6 +4,7 @@ import colors from '../../../constants/colors';
 export default StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.white,
   },
   content: {
     flex: 1,
@@ -13,35 +14,39 @@ export default StyleSheet.create({
     paddingVertical: 30,
   },
   cardContainer: {
-    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    // width: '100%',
   },
   card: {
-    width: '100%',
+    width: '45%',
     marginBottom: 20,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.gray,
     alignItems: 'center',
+    justifyContent: 'center',
     elevation: 0,
     shadowColor: colors.mainColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    paddingVertical:10,
+    paddingVertical: 10,
   },
   selectedCard: {
     borderColor: colors.primary,
     backgroundColor: '#b1d3f470',
   },
   logo: {
-    height: 120,
+    height: 180,
     width: '100%',
     resizeMode: 'cover',
   },
   cardFooter: {
     width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    // flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
     paddingHorizontal: 20,

@@ -18,9 +18,9 @@
     android:theme="@style/BootSplashTheme"
     android:usesCleartextTraffic="true"
     android:supportsRtl="true">
-<meta-data
-    android:name="com.google.android.geo.API_KEY"
-    android:value="AIzaSyD-NHwWwCgWRRMmbMq-dvyQOU6Yl8b0MTw" />
+  <meta-data
+     android:name="com.google.android.geo.API_KEY"
+     android:value="AIzaSyBZrmzANmT_V2heVloY7S7ASKniWrLAtQs" />
     
 <activity
     android:name=".MainActivity"

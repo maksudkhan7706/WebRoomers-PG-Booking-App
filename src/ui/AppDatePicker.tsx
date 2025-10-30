@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   Platform,
   StyleSheet,
-  Text,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Typography from './Typography';
@@ -16,7 +15,9 @@ type Props = {
   date: Date | null;
   onDateChange: (date: Date) => void;
   placeholder?: string;
-  error?: string; // ✅ error prop added
+  error?: string;
+  minimumDate?: Date; // ✅ New prop added
+  maximumDate?: Date; // (optional) if you want to limit future date
 };
 
 const AppDatePicker: React.FC<Props> = ({
@@ -25,6 +26,8 @@ const AppDatePicker: React.FC<Props> = ({
   onDateChange,
   placeholder = 'Select Date',
   error,
+  minimumDate,
+  maximumDate,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -37,9 +40,7 @@ const AppDatePicker: React.FC<Props> = ({
     <View
       style={[
         styles.container,
-        {
-          marginBottom: error ? 5 : 16,
-        },
+        { marginBottom: error ? 5 : 16 },
       ]}
     >
       {label && (
@@ -82,6 +83,8 @@ const AppDatePicker: React.FC<Props> = ({
           mode="date"
           display="default"
           onChange={handleChange}
+          minimumDate={minimumDate} // ✅ Added here
+          maximumDate={maximumDate} // optional
         />
       )}
     </View>
@@ -91,9 +94,7 @@ const AppDatePicker: React.FC<Props> = ({
 export default React.memo(AppDatePicker);
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
+  container: { marginBottom: 16 },
   label: {
     marginBottom: 6,
     color: colors.gray,
@@ -110,12 +111,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 45,
   },
-  dateText: {
-    fontSize: 15,
-  },
-  errorText: {
-    marginTop: 4,
-    color: colors.error,
-    fontSize: 12,
-  },
+  dateText: { fontSize: 15 },
 });

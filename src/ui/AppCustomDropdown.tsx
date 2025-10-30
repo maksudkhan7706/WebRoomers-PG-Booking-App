@@ -51,12 +51,17 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
 
   // Sync internal state when parent updates (for reset)
   useEffect(() => {
-    setSelected(selectedValues);
+    if (JSON.stringify(selectedValues) !== JSON.stringify(selected)) {
+      setSelected(selectedValues);
+    }
   }, [selectedValues]);
 
   // Update parent when selected changes
   useEffect(() => {
-    onSelect && onSelect(selected);
+    if (onSelect) {
+      onSelect(selected);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
   // Handle select by VALUE instead of label

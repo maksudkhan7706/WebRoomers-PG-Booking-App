@@ -76,7 +76,7 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
         mobile: mobile.trim(),
         password: confirmPassword,
         user_type: role,
-        company_id: '35',
+        company_id: '41',
       };
 
       console.log('Register payload ===>', payload);

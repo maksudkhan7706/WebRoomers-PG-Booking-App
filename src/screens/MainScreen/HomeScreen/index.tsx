@@ -30,14 +30,13 @@ const HomeScreen = () => {
   const { userRole } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    const companyId = '35';
+    const companyId = '41';
     dispatch(fetchDashboardData({ company_id: companyId }));
   }, [dispatch]);
 
   const banners = data?.data?.banners || [];
   const recentPGs = data?.data?.recent_pgs || [];
   const categories = data?.data?.property_categories || [];
-  console.log('userRole in home =========>>>>>', userRole);
 
   return (
     <View style={styles.container}>

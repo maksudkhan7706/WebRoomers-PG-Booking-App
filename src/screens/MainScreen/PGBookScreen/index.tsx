@@ -36,7 +36,7 @@ interface Errors {
   endDate?: string;
 }
 
-const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
+const PGBookScreen: React.FC<{ userData: UserData }> = ({ }) => {
   // Inside component
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
@@ -44,13 +44,11 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
   const { roomId, pgId, companyId, screenType } = (route.params as any) || {};
   const { userData } = useSelector((state: RootState) => state.auth);
   const { loading } = useSelector((state: RootState) => state.main);
-
   const [selectedGender, setSelectedGender] = useState<string[]>([]);
   const [stayDuration, setStayDuration] = useState<string[]>([]);
   const [numPersons, setNumPersons] = useState<string[]>([]);
   const [foodPreference, setFoodPreference] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
-
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [userMessage, setUserMessage] = useState('');
   const [errors, setErrors] = useState<Errors>({});
@@ -81,40 +79,41 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
     { label: 'Both', value: 'both' },
   ];
 
-  console.log('screenType =========>>>', screenType);
-
   const handleRegister = async () => {
     const newErrors: Errors = {};
     if (selectedGender.length === 0)
       newErrors.selectedGender = 'Please select gender';
     if (stayDuration.length === 0)
       newErrors.stayDuration = 'Please select stay duration';
-    if (numPersons.length === 0)
-      newErrors.numPersons = 'Please select number of persons';
+    // if (numPersons.length === 0)
+    //   newErrors.numPersons = 'Please select number of persons';
     if (foodPreference.length === 0)
       newErrors.foodPreference = 'Please select food preference';
     if (!startDate) newErrors.startDate = 'Please select start date';
     if (!endDate) newErrors.endDate = 'Please select end date';
+    if (startDate && endDate && endDate < startDate) {
+      newErrors.endDate = 'End Date cannot be before Start Date';
+    }
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       try {
         const payload = {
           pg_id: pgId,
-          room_id: roomId,
           company_id: companyId,
           user_id: userData?.user_id,
           name: userData?.user_fullname,
           mobile: userData?.user_mobile,
           email: userData?.user_email,
-          gender: selectedGender[0], // ✅ string value
+          gender: selectedGender[0], // string value
           stay_duration: stayDuration[0],
-          no_of_persons: numPersons[0],
+          no_of_persons: '1',
           food_preference: foodPreference[0],
           check_in_date: startDate?.toISOString().split('T')[0],
           check_out_date: endDate?.toISOString().split('T')[0],
           message: userMessage,
-          type: screenType == 'isRoom' ? 'room' : 'pg',
+          type: screenType === 'isRoom' ? 'room' : 'pg',
+          ...(screenType === 'isRoom' && { room_id: roomId }), //conditionally add room_id
         };
         const res = await dispatch(bookRoomApi(payload)).unwrap();
         console.log('payload sending:', payload);
@@ -194,8 +193,7 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
             }}
             error={errors.stayDuration}
           />
-
-          <AppCustomDropdown
+          {/* <AppCustomDropdown
             label="Number of Persons *"
             data={personCounts}
             selectedValues={numPersons}
@@ -204,8 +202,12 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
               if (val.length) setErrors(prev => ({ ...prev, numPersons: '' }));
             }}
             error={errors.numPersons}
+          /> */}
+          <AppTextInput
+            placeholder="Number of Persons"
+            value={'1 Person'}
+            editable={false}
           />
-
           <AppCustomDropdown
             label="Food Preference *"
             data={foodOptions}
@@ -227,6 +229,7 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
               setErrors(prev => ({ ...prev, startDate: '' }));
             }}
             error={errors.startDate}
+            minimumDate={new Date()} //Back date disabled
           />
 
           <AppDatePicker
@@ -237,7 +240,9 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
               setErrors(prev => ({ ...prev, endDate: '' }));
             }}
             error={errors.endDate}
+            minimumDate={startDate || new Date()} //End date can't be before start date
           />
+
           {/* Message input */}
           <AppTextInput
             placeholder="Your Message"

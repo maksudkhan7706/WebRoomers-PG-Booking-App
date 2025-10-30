@@ -16,13 +16,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type PGDetailStNavProp = NativeStackNavigationProp<RootStackParamList>;
 
-
 const PGDetailScreen = () => {
   const navigation = useNavigation<PGDetailStNavProp>();
   const dispatch = useDispatch<AppDispatch>();
   const { pgDetail, loading } = useSelector((state: RootState) => state.main);
   const route = useRoute();
   const { propertyId, companyId }: any = route.params;
+  const { userRole } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (propertyId && companyId) {
@@ -59,17 +59,17 @@ const PGDetailScreen = () => {
   const banners =
     allImages.length > 0
       ? allImages.map((img: string, idx: number) => ({
-        id: `${idx}`,
-        image: { uri: img },
-      }))
+          id: `${idx}`,
+          image: { uri: img },
+        }))
       : [
-        {
-          id: 'featured',
-          image: {
-            uri: pgDetail?.data?.property?.property_featured_image,
+          {
+            id: 'featured',
+            image: {
+              uri: pgDetail?.data?.property?.property_featured_image,
+            },
           },
-        },
-      ];
+        ];
   // Features
   const features = property.features || [];
 
@@ -90,8 +90,6 @@ const PGDetailScreen = () => {
     },
     { label: 'On Floor', value: property.floor || 'N/A' },
   ];
-
-  console.log('pgDetail ========>>>>>>', property);
 
   return (
     <View style={styles.container}>
@@ -171,7 +169,6 @@ const PGDetailScreen = () => {
           </View>
         </View>
 
-
         {/* Additional Details */}
         <View style={styles.card}>
           <Typography variant="body" weight="medium" style={styles.title}>
@@ -223,17 +220,21 @@ const PGDetailScreen = () => {
           </View>
         )}
 
-        <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
-          <AppButton title="Book PG"
-            onPress={() => {
-              navigation.navigate(NAV_KEYS.PGBookScreen, {
-                screenType: 'isPG',
-                roomId: property.property_id,
-                pgId: property.landlord_id,
-                companyId: property.company_id,
-              });
-            }} />
-        </View>
+        {userRole == 'landlord' ? null : (
+          <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
+            <AppButton
+              title="Book PG"
+              onPress={() => {
+                navigation.navigate(NAV_KEYS.PGBookScreen, {
+                  screenType: 'isPG',
+                  roomId: property.property_id,
+                  pgId: property.property_id,
+                  companyId: property.company_id,
+                });
+              }}
+            />
+          </View>
+        )}
       </ScrollView>
     </View>
   );

@@ -8,6 +8,7 @@ import ProfileScreen from '../screens/MainScreen/ProfileScreen';
 import MyPGScreen from '../screens/MainScreen/MyPGScreen';
 import FloatingActions from '../ui/FloatingActions';
 import { View } from 'react-native';
+import LandlordEnquiryScreen from '../screens/MainScreen/LandlordEnquiryScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -25,6 +26,7 @@ const MainTabs = ({ route }: any) => {
           tabBarIcon: ({ color, size }) => {
             let iconName = 'home';
             if (route.name === 'PGEnquiryScreen') iconName = 'list';
+            else if (route.name === 'LandlordEnquiryScreen') iconName = 'list';
             else if (route.name === 'ProfileScreen') iconName = 'person';
             else if (route.name === 'MyPGScreen') iconName = 'domain';
             return <Icon name={iconName} size={size} color={color} />;
@@ -54,11 +56,20 @@ const MainTabs = ({ route }: any) => {
           component={HomeScreen}
           options={{ tabBarLabel: 'Home' }}
         />
-        <Tab.Screen
-          name="PGEnquiryScreen"
-          component={PGEnquiryScreen}
-          options={{ tabBarLabel: 'Enquiry' }}
-        />
+        {role === 'landlord' ? (
+          <Tab.Screen
+            name="LandlordEnquiryScreen"
+            component={LandlordEnquiryScreen}
+            options={{ tabBarLabel: 'Enquiry' }}
+          />
+        ) : (
+          <Tab.Screen
+            name="PGEnquiryScreen"
+            component={PGEnquiryScreen}
+            options={{ tabBarLabel: 'Enquiry' }}
+          />
+        )}
+
         {role === 'landlord' && (
           <Tab.Screen
             name="MyPGScreen"

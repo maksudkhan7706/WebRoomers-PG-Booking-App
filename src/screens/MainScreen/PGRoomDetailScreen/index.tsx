@@ -21,7 +21,7 @@ const PGRoomDetailScreen = memo(() => {
   const dispatch = useDispatch<AppDispatch>();
   const route = useRoute();
   const { roomId, pgId, companyId } = (route.params as any) || {};
-
+  const { userRole } = useSelector((state: RootState) => state.auth);
   const { pgRoomDetail, loading } = useSelector(
     (state: RootState) => state.main,
   );
@@ -59,19 +59,20 @@ const PGRoomDetailScreen = memo(() => {
   const banners =
     roomImages.length > 0
       ? roomImages.map((img: string, idx: number) => ({
-          id: `${idx}`,
-          image: { uri: img },
-        }))
+        id: `${idx}`,
+        image: { uri: img },
+      }))
       : [
-          {
-            id: 'featured',
-            image: {
-              uri: pgRoomDetail?.data?.pg_details?.property_featured_image,
-            },
+        {
+          id: 'featured',
+          image: {
+            uri: pgRoomDetail?.data?.pg_details?.property_featured_image,
           },
-        ];
+        },
+      ];
 
 
+// console.log('PGRoomDetailScreen room',room);
 
 
   return (
@@ -167,19 +168,21 @@ const PGRoomDetailScreen = memo(() => {
           </View>
         </View>
 
-        <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
-          <AppButton
-            title="Book Room"
-            onPress={() => {
-              navigation.navigate(NAV_KEYS.PGBookScreen, {
-                screenType:'isRoom',
-                roomId: room.id,
-                pgId: room.pg_id,
-                companyId: room.company_id,
-              });
-            }}
-          />
-        </View>
+        {userRole == 'landlord' ? null : (
+          <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
+            <AppButton
+              title="Book Room"
+              onPress={() => {
+                navigation.navigate(NAV_KEYS.PGBookScreen, {
+                  screenType: 'isRoom',
+                  roomId: room.id,
+                  pgId: room.pg_id,
+                  companyId: room.company_id,
+                });
+              }}
+            />
+          </View>
+        )}
       </ScrollView>
     </View>
   );

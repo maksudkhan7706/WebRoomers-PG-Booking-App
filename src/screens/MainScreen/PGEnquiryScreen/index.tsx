@@ -45,8 +45,8 @@ const PGEnquiryScreen = () => {
   //Drop-down Apis
   useEffect(() => {
     // Dropdown API calls
-    dispatch(fetchPgCategories({ company_id: userData?.company_id || '35' }));
-    dispatch(fetchPgCities({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgCategories({ company_id: userData?.company_id || '41' }));
+    dispatch(fetchPgCities({ company_id: userData?.company_id || '41' }));
     //Default user details fill
     if (userData) {
       setUserFullName(userData?.user_fullname || '');
@@ -70,7 +70,7 @@ const PGEnquiryScreen = () => {
         category_id: selectedProperty[0],
         message: userMessage.trim(),
         user_id: userData?.user_id || 1,
-        company_id: userData?.company_id || 35,
+        company_id: userData?.company_id || 41,
       };
       console.log('Enquiry payload:', payload);
       const res = await dispatch(submitPgEnquiry(payload)).unwrap();

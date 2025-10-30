@@ -39,12 +39,22 @@ const ProfileScreen = () => {
     ref2Name: '',
     ref2Mobile: '',
     city: '',
+    landlordAccountHolder: '',
+    landlordBankName: '',
+    landlordAccountNumber: '',
+    landlordIFSCCode: '',
+    landlordUPIID: '',
+    landlordQrCodeImg: null,
   });
 
   const [errors, setErrors] = useState({
     fullName: '',
     mobileNumber: '',
     aadhaarNumber: '',
+    landlordAccountHolder: '',
+    landlordBankName: '',
+    landlordAccountNumber: '',
+    landlordIFSCCode: '',
   });
 
   //Fetch latest user info from API
@@ -61,8 +71,16 @@ const ProfileScreen = () => {
 
   // Update form when latest API data arrives
   useEffect(() => {
-    if (apiUserData?.success && apiUserData?.data) {
+    if (apiUserData?.success && apiUserData?.data && userData) {
       const d = apiUserData.data;
+      //Fix: Parse bank_detail if it's a string
+      const landlordBankDetail =
+        typeof userData.bank_detail === 'string'
+          ? JSON.parse(userData.bank_detail)
+          : userData.bank_detail;
+
+      console.log('Parsed landlordBankDetail', landlordBankDetail);
+
       setForm({
         fullName: d.user_fullname || '',
         mobileNumber: d.user_mobile || '',
@@ -75,9 +93,16 @@ const ProfileScreen = () => {
         ref2Name: d.ref2_name || '',
         ref2Mobile: d.ref2_mobile || '',
         city: d.user_city_ids || '',
+        //Landlord Bank Details
+        landlordAccountHolder: landlordBankDetail?.account_holder || '',
+        landlordBankName: landlordBankDetail?.bank_name || '',
+        landlordAccountNumber: landlordBankDetail?.account_number || '',
+        landlordIFSCCode: landlordBankDetail?.ifsc_code || '',
+        landlordUPIID: landlordBankDetail?.upi_id || '',
+        landlordQrCodeImg: landlordBankDetail?.qr_code || null,
       });
     }
-  }, [apiUserData]);
+  }, [apiUserData, userData]);
 
   const handleImageSelect = (key: string, file: any) => {
     console.log('file ===========>>>>>>>>', file);
@@ -85,14 +110,22 @@ const ProfileScreen = () => {
   };
 
   const validateForm = () => {
-    let newErrors = { fullName: '', mobileNumber: '', aadhaarNumber: '' };
+    let newErrors = {
+      fullName: '',
+      mobileNumber: '',
+      aadhaarNumber: '',
+      landlordAccountHolder: '',
+      landlordBankName: '',
+      landlordAccountNumber: '',
+      landlordIFSCCode: '',
+    };
     let valid = true;
-
+    const isLandlord = userData?.user_type?.toLowerCase() === 'landlord';
+    //Common fields (har type ke liye)
     if (!form.fullName.trim()) {
       newErrors.fullName = 'Full Name is required';
       valid = false;
     }
-
     if (!form.mobileNumber.trim()) {
       newErrors.mobileNumber = 'Mobile Number is required';
       valid = false;
@@ -100,15 +133,41 @@ const ProfileScreen = () => {
       newErrors.mobileNumber = 'Enter valid 10-digit number';
       valid = false;
     }
-
-    if (!form.aadhaarNumber.trim()) {
-      newErrors.aadhaarNumber = 'Aadhaar Number is required';
-      valid = false;
-    } else if (!/^\d{12}$/.test(form.aadhaarNumber)) {
-      newErrors.aadhaarNumber = 'Enter valid 12-digit Aadhaar Number';
-      valid = false;
+    //Tenant ke liye Aadhaar validation
+    if (!isLandlord) {
+      if (!form.aadhaarNumber.trim()) {
+        newErrors.aadhaarNumber = 'Aadhaar Number is required';
+        valid = false;
+      } else if (!/^\d{12}$/.test(form.aadhaarNumber)) {
+        newErrors.aadhaarNumber = 'Enter valid 12-digit Aadhaar Number';
+        valid = false;
+      }
     }
-
+    //Landlord ke liye Bank Detail validation
+    if (isLandlord) {
+      if (!form.landlordAccountHolder.trim()) {
+        newErrors.landlordAccountHolder = 'Account Holder Name is required';
+        valid = false;
+      }
+      if (!form.landlordBankName.trim()) {
+        newErrors.landlordBankName = 'Bank Name is required';
+        valid = false;
+      }
+      if (!form.landlordAccountNumber.trim()) {
+        newErrors.landlordAccountNumber = 'Account Number is required';
+        valid = false;
+      } else if (!/^\d{9,18}$/.test(form.landlordAccountNumber)) {
+        newErrors.landlordAccountNumber = 'Enter valid account number';
+        valid = false;
+      }
+      if (!form.landlordIFSCCode.trim()) {
+        newErrors.landlordIFSCCode = 'IFSC Code is required';
+        valid = false;
+      } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.landlordIFSCCode)) {
+        newErrors.landlordIFSCCode = 'Enter valid IFSC Code (e.g. SBIN0001234)';
+        valid = false;
+      }
+    }
     setErrors(newErrors);
     return valid;
   };
@@ -117,39 +176,38 @@ const ProfileScreen = () => {
     if (validateForm()) {
       try {
         const payload = {
-          user_id: userData.user_id,
-          full_name: form.fullName,
-          mobile: form.mobileNumber,
-          user_type: userData.user_type == 'user' ? 'tenant' : 'landlord',
-          aadhar_number: form.aadhaarNumber,
-          ref1_name: form.ref1Name,
-          ref1_mobile: form.ref1Mobile,
-          ref2_name: form.ref2Name,
-          ref2_mobile: form.ref2Mobile,
+          user_id: userData?.user_id,
+          user_type: userData?.user_type === 'user' ? 'tenant' : 'landlord',
+          // 🧾 Basic Details
+          full_name: form.fullName.trim(),
+          mobile: form.mobileNumber.trim(),
+          aadhar_number: form.aadhaarNumber.trim(),
+          ref1_name: form.ref1Name.trim(),
+          ref1_mobile: form.ref1Mobile.trim(),
+          ref2_name: form.ref2Name.trim(),
+          ref2_mobile: form.ref2Mobile.trim(),
           city: form.city,
           aadhar_front: form.aadhaarFront,
           aadhar_back: form.aadhaarBack,
           police_verification: form.policeVerification,
-          // ✅ bank details userData se lenge (kyunki API ke example me bank_detail alag se nahi bhejna)
-          account_holder: JSON.parse(userData.bank_detail)?.account_holder,
-          bank_name: JSON.parse(userData.bank_detail)?.bank_name,
-          account_number: JSON.parse(userData.bank_detail)?.account_number,
-          ifsc_code: JSON.parse(userData.bank_detail)?.ifsc_code,
-          upi_id: JSON.parse(userData.bank_detail)?.upi_id,
-          qr_code: JSON.parse(userData.bank_detail)?.qr_code,
+          // 🏦 Landlord Bank Details (directly from form)
+          account_holder: form.landlordAccountHolder.trim(),
+          bank_name: form.landlordBankName.trim(),
+          account_number: form.landlordAccountNumber.trim(),
+          ifsc_code: form.landlordIFSCCode.trim(),
+          upi_id: form.landlordUPIID?.trim() || '',
+          qr_code: form.landlordQrCodeImg || null,
         };
 
         console.log('🚀 Payload sent:', payload);
-
         const res = await dispatch(updateProfileApi(payload)).unwrap();
         console.log('✅ Profile Update API Response:', res);
-
         if (res?.success) {
           showSuccessMsg(res.message || 'Profile updated successfully');
         } else {
           showErrorMsg(res?.message || 'Something went wrong');
         }
-      } catch (err: any) {
+      } catch (err) {
         console.log('❌ Profile update error:', err);
         showErrorMsg('Failed to update profile.');
       }
@@ -157,10 +215,6 @@ const ProfileScreen = () => {
       Alert.alert('Error', 'Please fill all required fields properly.');
     }
   };
-
-  console.log('apiUserData ===',apiUserData);
-  
-
   return (
     <View style={styles.container}>
       <AppHeader title="Profile" showBack />
@@ -189,79 +243,140 @@ const ProfileScreen = () => {
             onChangeText={text => setForm({ ...form, mobileNumber: text })}
             error={errors.mobileNumber}
           />
+          {userData?.user_type == 'landlord' ? (
+            <>
+              {/* Bank / Payment Details */}
+              <Typography
+                variant="subheading"
+                weight="medium"
+                style={{ marginVertical: 10 }}
+              >
+                Bank / Payment Details
+              </Typography>
+              <AppTextInput
+                label="Account Holder *"
+                placeholder=""
+                value={form.landlordAccountHolder}
+                onChangeText={text =>
+                  setForm({ ...form, landlordAccountHolder: text })
+                }
+                error={errors.landlordAccountHolder}
+              />
+              <AppTextInput
+                label="Bank Name *"
+                placeholder=""
+                value={form.landlordBankName}
+                onChangeText={text =>
+                  setForm({ ...form, landlordBankName: text })
+                }
+                error={errors.landlordBankName}
+              />
+              <AppTextInput
+                label="Account Number *"
+                placeholder=""
+                value={form.landlordAccountNumber}
+                onChangeText={text =>
+                  setForm({ ...form, landlordAccountNumber: text })
+                }
+                error={errors.landlordAccountNumber}
+                keyboardType="number-pad"
+              />
+              <AppTextInput
+                label="IFSC Code *"
+                placeholder=""
+                value={form.landlordIFSCCode}
+                onChangeText={text =>
+                  setForm({ ...form, landlordIFSCCode: text })
+                }
+                error={errors.landlordIFSCCode}
+              />
+              <AppTextInput
+                label="UPI ID"
+                placeholder=""
+                value={form.landlordUPIID}
+                onChangeText={text => setForm({ ...form, landlordUPIID: text })}
+              />
+              <ImagePickerInput
+                label="QR Code Image"
+                value={apiUserData?.aadhaarFront || ''}
+                onSelect={file => handleImageSelect('landlordQrCodeImg', file)}
+              />
+            </>
+          ) : (
+            <>
+              {/* Identity Verification */}
+              <Typography
+                variant="subheading"
+                weight="medium"
+                style={{ marginVertical: 10 }}
+              >
+                Identity Verification
+              </Typography>
 
-          {/* Identity Verification */}
-          <Typography
-            variant="subheading"
-            weight="medium"
-            style={{ marginVertical: 10 }}
-          >
-            Identity Verification
-          </Typography>
+              <AppTextInput
+                label="Aadhaar Number *"
+                placeholder="Enter 12-digit Aadhaar Number"
+                keyboardType="numeric"
+                value={form.aadhaarNumber}
+                onChangeText={text => setForm({ ...form, aadhaarNumber: text })}
+                error={errors.aadhaarNumber}
+              />
 
-          <AppTextInput
-            label="Aadhaar Number *"
-            placeholder="Enter 12-digit Aadhaar Number"
-            keyboardType="numeric"
-            value={form.aadhaarNumber}
-            onChangeText={text => setForm({ ...form, aadhaarNumber: text })}
-            error={errors.aadhaarNumber}
-          />
+              <ImagePickerInput
+                label="Aadhaar Front Photo"
+                value={apiUserData?.aadhaarFront || ''}
+                onSelect={file => handleImageSelect('aadhaarFront', file)}
+              />
 
-          <ImagePickerInput
-            label="Aadhaar Front Photo"
-            value={apiUserData?.aadhaarFront || ''}
-            onSelect={file => handleImageSelect('aadhaarFront', file)}
-          />
+              <ImagePickerInput
+                label="Aadhaar Back Photo"
+                value={apiUserData?.aadhar_back || ''}
+                onSelect={file => handleImageSelect('aadhar_back', file)}
+              />
 
-          <ImagePickerInput
-            label="Aadhaar Back Photo"
-            value={apiUserData?.aadhar_back || ''}
-            onSelect={file => handleImageSelect('aadhar_back', file)}
-          />
+              <ImagePickerInput
+                label="Police Verification Photo"
+                value={apiUserData?.policeVerification || ''}
+                onSelect={file => handleImageSelect('policeVerification', file)}
+              />
 
-          <ImagePickerInput
-            label="Police Verification Photo"
-            value={apiUserData?.policeVerification || ''}
-            onSelect={file => handleImageSelect('policeVerification', file)}
-          />
-
-          {/* References */}
-          <Typography
-            variant="subheading"
-            weight="medium"
-            style={{ marginVertical: 10 }}
-          >
-            References
-          </Typography>
-
-          <AppTextInput
-            label="Reference 1 Name"
-            value={form.ref1Name}
-            onChangeText={text => setForm({ ...form, ref1Name: text })}
-          />
-          <AppTextInput
-            label="Reference 1 Mobile"
-            keyboardType="phone-pad"
-            value={form.ref1Mobile}
-            onChangeText={text => setForm({ ...form, ref1Mobile: text })}
-          />
-          <AppTextInput
-            label="Reference 2 Name"
-            value={form.ref2Name}
-            onChangeText={text => setForm({ ...form, ref2Name: text })}
-          />
-          <AppTextInput
-            label="Reference 2 Mobile"
-            keyboardType="phone-pad"
-            value={form.ref2Mobile}
-            onChangeText={text => setForm({ ...form, ref2Mobile: text })}
-          />
-          <AppTextInput
-            label="City"
-            value={form.city}
-            onChangeText={text => setForm({ ...form, city: text })}
-          />
+              {/* References */}
+              <Typography
+                variant="subheading"
+                weight="medium"
+                style={{ marginVertical: 10 }}
+              >
+                References
+              </Typography>
+              <AppTextInput
+                label="Reference 1 Name"
+                value={form.ref1Name}
+                onChangeText={text => setForm({ ...form, ref1Name: text })}
+              />
+              <AppTextInput
+                label="Reference 1 Mobile"
+                keyboardType="phone-pad"
+                value={form.ref1Mobile}
+                onChangeText={text => setForm({ ...form, ref1Mobile: text })}
+              />
+              <AppTextInput
+                label="Reference 2 Name"
+                value={form.ref2Name}
+                onChangeText={text => setForm({ ...form, ref2Name: text })}
+              />
+              <AppTextInput
+                label="Reference 2 Mobile"
+                keyboardType="phone-pad"
+                value={form.ref2Mobile}
+                onChangeText={text => setForm({ ...form, ref2Mobile: text })}
+              />
+              <AppTextInput
+                label="City"
+                value={form.city}
+                onChangeText={text => setForm({ ...form, city: text })}
+              />
+            </>
+          )}
 
           {/* Submit Button */}
           <View style={{ marginTop: 20, marginBottom: 66 }}>

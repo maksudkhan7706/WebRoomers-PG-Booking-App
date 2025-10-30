@@ -11,11 +11,11 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../constants/colors';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { NAV_KEYS } from '../navigation/NavKeys';
 import { logoutUser } from '../store/authSlice';
-import { AppDispatch } from '../store';
+import { AppDispatch, RootState } from '../store';
 import { showSuccessMsg } from '../utils/appMessages';
 
 const FloatingActions = () => {
@@ -23,7 +23,7 @@ const FloatingActions = () => {
   const animation = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
-
+  const { userRole } = useSelector((state: RootState) => state.auth);
   const toggleOptions = () => {
     setShowOptions(!showOptions);
     Animated.timing(animation, {
@@ -104,7 +104,7 @@ const FloatingActions = () => {
     ],
     opacity: animation,
   };
-
+  console.log('userRole in FloatingActions =========>>>>>', userRole);
   return (
     <>
       {showOptions && (
@@ -115,26 +115,26 @@ const FloatingActions = () => {
         />
       )}
       <View style={styles.container}>
-        {/* WhatsApp */}
-        <Animated.View style={[styles.iconWrapper, whatsappStyle]}>
-          <TouchableOpacity
-            onPress={() => Linking.openURL('https://wa.me/919876543210')}
-            style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
-          >
-            <FontAwesome name="whatsapp" size={22} color="#fff" />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Call */}
-        <Animated.View style={[styles.iconWrapper, callStyle]}>
-          <TouchableOpacity
-            onPress={() => Linking.openURL('tel:+919876543210')}
-            style={[styles.actionBtn, { backgroundColor: '#1E90FF' }]}
-          >
-            <Feather name="phone-call" size={22} color="#fff" />
-          </TouchableOpacity>
-        </Animated.View>
-
+        {userRole == 'landlord' ? null :
+            <>
+              <Animated.View style={[styles.iconWrapper, whatsappStyle]}>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL('https://wa.me/919876543210')}
+                  style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
+                >
+                  <FontAwesome name="whatsapp" size={22} color="#fff" />
+                </TouchableOpacity>
+              </Animated.View>
+              <Animated.View style={[styles.iconWrapper, callStyle]}>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL('tel:+919876543210')}
+                  style={[styles.actionBtn, { backgroundColor: '#1E90FF' }]}
+                >
+                  <Feather name="phone-call" size={22} color="#fff" />
+                </TouchableOpacity>
+              </Animated.View>
+            </>
+        }
         {/* Logout */}
         <Animated.View style={[styles.iconWrapper, logoutStyle]}>
           <TouchableOpacity

@@ -8,6 +8,7 @@ import styles from './styles';
 import images from '../../../assets/images';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppButton from '../../../ui/AppButton';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 type RoleSelectNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -31,7 +32,7 @@ const RoleSelect = () => {
       {/* <AppHeader title="WEBROOMERS" /> */}
       <Image
         source={images.TransparentWebRoomerLogo}
-        style={[styles.logo, { marginTop: 55 }]}
+        style={[styles.logo, { marginTop: 120 }]}
       />
       <View style={styles.content}>
         <View style={styles.cardContainer}>
@@ -45,16 +46,28 @@ const RoleSelect = () => {
               activeOpacity={0.8}
               onPress={() => setSelectedRole(role as 'user' | 'landlord')}
             >
-              <Image
-                source={images.TransparentWebRoomerLogo}
-                style={styles.logo}
-              />
-
               <View style={styles.cardFooter}>
-                <Typography variant="body" weight="bold">
-                  {role.toUpperCase()}
-                </Typography>
-                <AntDesign name="right" size={14} color="black" />
+                <View>
+                  {role == 'user' ? (
+                    <FontAwesome5 name="user" size={30} color="black" />
+                  ) : (
+                    <FontAwesome5 name="user-tie" size={30} color="black" />
+                  )}
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: 30,
+                    justifyContent: 'space-between',
+                    width: '100%',
+                  }}
+                >
+                  <Typography variant="body" weight="bold">
+                    {role.toUpperCase()}
+                  </Typography>
+                  <AntDesign name="right" size={14} color="black" />
+                </View>
               </View>
             </TouchableOpacity>
           ))}
@@ -64,6 +77,9 @@ const RoleSelect = () => {
           title="Continue"
           onPress={handleContinue}
           disabled={!selectedRole}
+          style={{
+            marginBottom: 60,
+          }}
         />
       </View>
     </View>

@@ -19,6 +19,9 @@ import {
   addEditPgRoomUrl,
   getAllRoomFeaturesUrl,
   deletePgRoomUrl,
+  addEditPgUrl,
+  getAllCityLocationUrl,
+  getLandlordEnquiriesUrl,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -32,11 +35,13 @@ interface MainState {
   myPgList: null;
   pgCategories: { label: string; value: string }[];
   pgCities: { label: string; value: string }[];
+  pgCityLocation: { label: string; value: string }[];
   pgFloors: { label: string; value: string }[];
   pgFloorings: { label: string; value: string }[];
   pgWashrooms: { label: string; value: string }[];
   pgExtraFeatures: { label: string; value: string }[];
   allRoomFeatures: { label: string; value: string }[];
+  pgEnquiries: [];
 }
 
 const initialState: MainState = {
@@ -50,11 +55,13 @@ const initialState: MainState = {
   myPgList: null,
   pgCategories: [],
   pgCities: [],
+  pgCityLocation: [],
   pgFloors: [],
   pgFloorings: [],
   pgWashrooms: [],
   pgExtraFeatures: [],
   allRoomFeatures: [],
+  pgEnquiries: [],
 };
 
 //Dashboard API
@@ -228,6 +235,18 @@ export const fetchPgCities = createAsyncThunk(
     }
   },
 );
+// PG City Location
+export const fetchPgCityLocation = createAsyncThunk(
+  'main/fetchPgCityLocation',
+  async (payload: { city_id: any }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getAllCityLocationUrl(), payload);
+      return response.data; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
 // PG Floors
 export const fetchPgFloors = createAsyncThunk(
   'main/fetchPgFloors',
@@ -303,7 +322,7 @@ export const submitPgEnquiry = createAsyncThunk(
     }
   },
 );
- //Add / Edit PG Room
+//Add / Edit PG Room
 export const addEditPgRoom = createAsyncThunk(
   'main/addEditPgRoom',
   async (payload: any, { rejectWithValue }) => {
@@ -332,6 +351,36 @@ export const deletePgRoom = createAsyncThunk(
   },
 );
 
+//Add / Edit PG API
+export const addEditPg = createAsyncThunk(
+  'main/addEditPg',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(addEditPgUrl(), payload, true); // ✅ true = multipart
+      console.log('📡 addEditPg Response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.log('❌ addEditPg API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// Fetch Landlord Enquiries API
+export const fetchLandlordEnquiries = createAsyncThunk(
+  'main/fetchLandlordEnquiries',
+  async (
+    payload: { company_id: string; landlord_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(getLandlordEnquiriesUrl(), payload);
+      return response?.data || [];
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
 const mainSlice = createSlice({
   name: 'main',
   initialState,
@@ -474,6 +523,25 @@ const mainSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      // PG City Location
+      .addCase(fetchPgCityLocation.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPgCityLocation.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgCityLocation = Object.values(action.payload).map(
+          (item: any) => ({
+            ...item,
+            label: item.city_location_name,
+            value: item.city_location_id,
+          }),
+        );
+      })
+      .addCase(fetchPgCityLocation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       // PG Floors
       .addCase(fetchPgFloors.pending, state => {
         state.loading = true;
@@ -595,6 +663,31 @@ const mainSlice = createSlice({
         }
       })
       .addCase(deletePgRoom.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //Add / Edit PG API
+      .addCase(addEditPg.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addEditPg.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(addEditPg.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchLandlordEnquiries.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLandlordEnquiries.fulfilled, (state, action) => {
+        state.loading = false;
+        state.pgEnquiries = action.payload;
+      })
+      .addCase(fetchLandlordEnquiries.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

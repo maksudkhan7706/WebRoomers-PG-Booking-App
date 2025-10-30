@@ -1,4 +1,4 @@
-package com.webroomers
+package com.meharpg
 
 import android.os.Bundle
 import com.facebook.react.ReactActivity
@@ -9,7 +9,7 @@ import com.zoontek.rnbootsplash.RNBootSplash
 
 class MainActivity : ReactActivity() {
 
-  override fun getMainComponentName(): String = "Webroomers"
+  override fun getMainComponentName(): String = "MeharPG"
 
   override fun onCreate(savedInstanceState: Bundle?) {
     RNBootSplash.init(this, R.style.BootSplashTheme)

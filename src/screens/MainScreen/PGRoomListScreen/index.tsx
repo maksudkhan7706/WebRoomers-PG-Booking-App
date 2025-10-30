@@ -155,7 +155,6 @@ const PGRoomListScreen = memo(() => {
     );
   };
 
-  console.log('rooms ==========>>>>', rooms);
 
   return (
     <View style={styles.container}>

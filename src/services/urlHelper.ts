@@ -1,4 +1,4 @@
-export const baseUrl = 'https://main.webroomer.com/Api/v1';
+export const baseUrl = 'https://meharpg.com/Api/v1';
 export const authKey =
   '1c3b8f2f1e4d6a9b8d5f7a6c9b2e3d4f1a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d';
 
@@ -31,10 +31,15 @@ export const getAllFlooringsUrl = () => '/getAllFloorings';
 export const getAllWashroomUrl = () => '/getAllWashroom';
 export const getAllFeaturesUrl = () => '/getAllFeatures';
 export const getAllRoomFeaturesUrl = () => '/getAllRoomFeatures';
+export const getAllCityLocationUrl = () => '/getAllCityLocation';
+
 
 
 
 export const postEnquiry = () => '/postEnquiry';
 export const addEditPgRoomUrl = () => '/addEditPgRoom';
 export const deletePgRoomUrl = () => '/deleteRoom';
+export const addEditPgUrl = () => '/addEditPg';
 
+
+export const getLandlordEnquiriesUrl = () => '/myEnquiries';

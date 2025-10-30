@@ -1,4 +1,4 @@
-import TransparentWebRoomerLogo from './weboomerlogoTr.png';
+import TransparentWebRoomerLogo from './trMeharPG.png';
 import BannerOne from './bannerOne.png';
 import BannerTwo from './bannerTwo.png';
 import PGRoom from './acRoom.jpg';

@@ -86,7 +86,7 @@ const MyPGScreen = () => {
               onPress={() =>
                 navigation.navigate(NAV_KEYS.LandlordAddPG, {
                   type: 'editPG',
-                  propertyId: item.property_id,
+                  propertyData: item,
                 })
               }
             >
