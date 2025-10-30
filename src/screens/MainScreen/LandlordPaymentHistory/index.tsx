@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import {
   View,
   FlatList,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import Typography from '../../../ui/Typography';
@@ -11,37 +12,39 @@ import colors from '../../../constants/colors';
 import styles from './styles';
 import AppButton from '../../../ui/AppButton';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchLandlordEnquiries } from '../../../store/mainSlice';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
-import { useNavigation } from '@react-navigation/native';
+import {
+  fetchLandlordEnquiries,
+  fetchLandlordPaymentHistory,
+} from '../../../store/mainSlice';
+import { useRoute } from '@react-navigation/native';
+import AppImage from '../../../ui/AppImage';
+import { formatDate } from '../../../utils/formatDate';
 
-type EnquiryNavProp = NativeStackNavigationProp<RootStackParamList>;
-
-const LandlordEnquiryScreen = () => {
-  const navigation = useNavigation<EnquiryNavProp>();
+const LandlordPaymentHistory = () => {
   const dispatch = useDispatch<any>();
   const { userData } = useSelector((state: any) => state.auth);
-  const { pgEnquiries, loading } = useSelector((state: any) => state.main);
+  const { landlordPaymentHistory, loading } = useSelector(
+    (state: any) => state.main,
+  );
+  const route = useRoute();
+  const { EnquiryId, companyId }: any = route.params;
 
   useEffect(() => {
     if (userData?.user_type === 'landlord') {
       dispatch(
-        fetchLandlordEnquiries({
-          company_id: userData?.company_id,
-          landlord_id: userData?.user_id,
+        fetchLandlordPaymentHistory({
+          company_id: companyId || userData?.company_id,
+          enquiry_id: EnquiryId || '',
         }),
       );
     }
   }, [userData]);
 
-  const enquiriesList = pgEnquiries ? Object.values(pgEnquiries) : [];
-
   const renderStatusBadge = (status: string) => {
     const bgColor =
-      status === 'Pending'
+      status === 'pending'
         ? '#FFD54F'
-        : status === 'Accepted'
+        : status === 'approved'
         ? '#4CAF50'
         : '#E57373';
 
@@ -57,13 +60,10 @@ const LandlordEnquiryScreen = () => {
   const renderItem = ({ item }: any) => (
     <View style={styles.card}>
       {[
-        { label: 'Name', value: item.name },
-        { label: 'Mobile', value: item.mobile },
-        { label: 'Check In', value: item.check_in_date },
-        { label: 'Check Out', value: item.check_out_date },
-        { label: 'Stay Duration', value: item.stay_duration },
-        { label: 'No. of Persons', value: item.no_of_persons },
-        { label: 'Food Preference', value: item.food_preference },
+        { label: 'Created date', value: formatDate(item?.created_at) },
+        { label: 'Amount', value: item?.amount },
+        { label: 'Start Date', value: formatDate(item?.start_date) },
+        { label: 'End Date', value: formatDate(item?.end_date) },
       ].map((field, index) => (
         <View key={index} style={styles.row}>
           <Typography weight="medium" variant="label" style={styles.label}>
@@ -77,29 +77,24 @@ const LandlordEnquiryScreen = () => {
 
       <View style={[styles.row, { marginTop: 5 }]}>
         <Typography weight="medium" variant="label" style={styles.label}>
-          Status:
+          Payment Status:
         </Typography>
-        {renderStatusBadge('Pending')}
+        {renderStatusBadge(item?.payment_status)}
       </View>
-      <View style={[styles.row, { marginTop: 5, alignItems: 'center' }]}>
+      <View style={[{ marginTop: 5 }]}>
         <Typography weight="medium" variant="label" style={styles.label}>
-          Action:
+          Screenshot:
         </Typography>
-        <View style={styles.actionRight}>
-          <AppButton
-            title="View"
-            onPress={() => console.log('View')}
-            style={styles.viewBtn}
-          />
-          <AppButton
-            title="Payment Detail"
-            onPress={() =>
-              navigation.navigate(NAV_KEYS.LandlordPaymentHistory, {
-                EnquiryId: item?.enquiry_id || '',
-                companyId: userData?.company_id || '41',
-              })
-            }
-            style={styles.paymentBtn}
+        <View
+          style={{
+            height: 100,
+            marginTop: 10,
+          }}
+        >
+          <AppImage
+            source={{ uri: item?.screenshot }}
+            style={styles.screenshotImg}
+            resizeMode="stretch"
           />
         </View>
       </View>
@@ -109,7 +104,8 @@ const LandlordEnquiryScreen = () => {
   return (
     <View style={styles.container}>
       <AppHeader
-        title="Enquiries"
+        title="Payment Detail"
+        showBack
         rightIcon={
           <FontAwesome
             name="user-circle-o"
@@ -125,12 +121,12 @@ const LandlordEnquiryScreen = () => {
             style={{ textAlign: 'center', marginTop: 10 }}
             weight="medium"
           >
-            Loading enquiries...
+            Loading payment...
           </Typography>
         </View>
       ) : (
         <FlatList
-          data={enquiriesList}
+          data={landlordPaymentHistory || []}
           keyExtractor={(item: any, i) =>
             item.enquiry_id?.toString() || i.toString()
           }
@@ -142,7 +138,7 @@ const LandlordEnquiryScreen = () => {
               style={{ textAlign: 'center', marginTop: 50 }}
               weight="medium"
             >
-              No Enquiries Found
+              No Payment History Found!
             </Typography>
           }
         />
@@ -151,4 +147,4 @@ const LandlordEnquiryScreen = () => {
   );
 };
 
-export default LandlordEnquiryScreen;
+export default LandlordPaymentHistory;

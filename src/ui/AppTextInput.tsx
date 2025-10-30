@@ -47,7 +47,7 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           multiline && {
             alignItems: 'flex-start',
             minHeight: inputHeight || 100,
-            paddingVertical: 6,
+            paddingVertical: 0,
           },
         ]}
       >
@@ -56,7 +56,11 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           style={[
             styles.input,
             style,
-            multiline && { textAlignVertical: 'top', paddingVertical: 0 },
+            multiline && {
+              textAlignVertical: 'top',
+              paddingVertical: 0,
+              minHeight: inputHeight || 100,
+            },
           ]}
           multiline={multiline}
           {...props}

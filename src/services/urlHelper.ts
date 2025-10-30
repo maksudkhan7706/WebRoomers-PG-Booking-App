@@ -43,3 +43,5 @@ export const addEditPgUrl = () => '/addEditPg';
 
 
 export const getLandlordEnquiriesUrl = () => '/myEnquiries';
+export const getLandlordPaymentHistoryUrl = () => '/getPaymentHistory';
+

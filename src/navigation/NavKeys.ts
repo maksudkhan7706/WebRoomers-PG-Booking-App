@@ -14,7 +14,7 @@ export type RootStackParamList = {
   //Main
   HomeScreen: undefined;
   PGEnquiryScreen: undefined;
-  LandlordEnquiryScreen:undefined,
+  LandlordEnquiryScreen: undefined;
   ProfileScreen: undefined;
   MainTabs: { role?: 'user' | 'landlord' };
   PGRoomListScreen: { propertyId: string; companyId: string };
@@ -31,7 +31,8 @@ export type RootStackParamList = {
     companyId: string;
   };
   LandlordAddPG: { type: 'addPG' | 'editPG'; propertyData?: any };
-  PGRoomManagement: { roomId?: string,companyId:string };
+  PGRoomManagement: { roomId?: string; companyId: string };
+  LandlordPaymentHistory: { EnquiryId?: string; companyId: string };
 };
 
 export const NAV_KEYS = {
@@ -44,7 +45,7 @@ export const NAV_KEYS = {
   // Main Screens / Bottom Tabs
   HomeScreen: 'HomeScreen',
   PGEnquiryScreen: 'PGEnquiryScreen',
-  LandlordEnquiryScreen:'LandlordEnquiryScreen',
+  LandlordEnquiryScreen: 'LandlordEnquiryScreen',
   ProfileScreen: 'ProfileScreen',
   MAIN_TABS: 'MainTabs',
   PGDetailScreen: 'PGDetailScreen',
@@ -52,5 +53,6 @@ export const NAV_KEYS = {
   PGRoomDetailScreen: 'PGRoomDetailScreen',
   PGBookScreen: 'PGBookScreen',
   LandlordAddPG: 'LandlordAddPG',
-  PGRoomManagement:'PGRoomManagement'
+  PGRoomManagement: 'PGRoomManagement',
+  LandlordPaymentHistory: 'LandlordPaymentHistory',
 } as const;

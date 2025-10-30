@@ -18,6 +18,7 @@ import { fetchMyPgList } from '../../../store/mainSlice';
 import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import AppImagePlaceholder from '../../../ui/AppImagePlaceholder';
 
 type MyPGScreenProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -68,6 +69,7 @@ const MyPGScreen = () => {
         textColor = '#004085';
     }
 
+
     return (
       <View style={styles.card}>
         {/* Header */}
@@ -78,7 +80,7 @@ const MyPGScreen = () => {
               variant="body"
               weight="medium"
             >
-              {item.title || ''}
+              {item?.title || ''}
             </Typography>
             <TouchableOpacity
               activeOpacity={0.6}
@@ -92,11 +94,10 @@ const MyPGScreen = () => {
             >
               <Feather name="edit-3" size={14} color={colors.mainColor} />
               <Typography variant="label" style={{ marginLeft: 6 }}>
-                {item.property_code}
+                {item?.property_code}
               </Typography>
             </TouchableOpacity>
           </View>
-
           <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
             <Typography variant="label" color={textColor}>
               {statusLabel}
@@ -105,53 +106,62 @@ const MyPGScreen = () => {
         </View>
 
         {/* Image Slider */}
-
         <View style={styles.sliderContainer}>
-          {item?.gallery?.living_room?.length > 0 ? (
-            <AppImageSlider
-              data={item.gallery.living_room.map(
-                (img: string, index: number) => ({
-                  id: index.toString(),
-                  image: { uri: img },
-                }),
-              )}
-              bannerImageStyle={{ marginRight: 10 }}
-              showThumbnails={false}
-            />
-          ) : (
-            //if no images return skeleton box
-            <View style={styles.skeletonBox} />
-          )}
+          {(() => {
+            const galleryImages = [
+              ...(item?.gallery?.living_room || []),
+              ...(item?.gallery?.bedroom || []),
+              ...(item?.gallery?.kitchen || []),
+              ...(item?.gallery?.bathroom || []),
+              ...(item?.gallery?.extra || []),
+            ];
+            const imagesToShow =
+              galleryImages.length > 0
+                ? galleryImages
+                : item?.featured_image
+                ? [item.featured_image]
+                : [];
+            if (imagesToShow.length > 0) {
+              return (
+                <AppImageSlider
+                  data={imagesToShow.map((img: string, index: number) => ({
+                    id: index.toString(),
+                    image: { uri: img },
+                  }))}
+                  bannerImageStyle={{ marginRight: 10 }}
+                  showThumbnails={false}
+                />
+              );
+            } else {
+              return <AppImagePlaceholder />;
+            }
+          })()}
         </View>
-
         {/* Details */}
         <View style={styles.cardContent}>
-          {/* <Typography variant="body" weight="medium">
-            {item.title || ''}
-          </Typography> */}
           <View style={styles.rowBetween}>
             <Typography variant="body" weight="medium">
               City
             </Typography>
-            <Typography variant="label">{item.city_name || '-'}</Typography>
+            <Typography variant="label">{item?.city_name || '-'}</Typography>
           </View>
           <View style={styles.rowBetween}>
             <Typography variant="body" weight="medium">
               Type
             </Typography>
-            <Typography variant="label">{item.property_type}</Typography>
+            <Typography variant="label">{item?.property_type}</Typography>
           </View>
           <View style={styles.rowBetween}>
             <Typography variant="body" weight="medium">
               Category
             </Typography>
-            <Typography variant="label">{item.property_category}</Typography>
+            <Typography variant="label">{item?.category_name}</Typography>
           </View>
           <View style={styles.rowBetween}>
             <Typography variant="body" weight="medium">
               Price
             </Typography>
-            <Typography variant="label">₹{item.price}</Typography>
+            <Typography variant="label">₹{item?.price}</Typography>
           </View>
           <View style={[styles.rowBetween, { marginTop: 8 }]}>
             <Typography variant="body" weight="medium">

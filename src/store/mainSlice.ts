@@ -22,6 +22,7 @@ import {
   addEditPgUrl,
   getAllCityLocationUrl,
   getLandlordEnquiriesUrl,
+  getLandlordPaymentHistoryUrl,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -42,6 +43,7 @@ interface MainState {
   pgExtraFeatures: { label: string; value: string }[];
   allRoomFeatures: { label: string; value: string }[];
   pgEnquiries: [];
+  landlordPaymentHistory: [];
 }
 
 const initialState: MainState = {
@@ -62,6 +64,7 @@ const initialState: MainState = {
   pgExtraFeatures: [],
   allRoomFeatures: [],
   pgEnquiries: [],
+  landlordPaymentHistory: [],
 };
 
 //Dashboard API
@@ -381,6 +384,25 @@ export const fetchLandlordEnquiries = createAsyncThunk(
     }
   },
 );
+// Fetch Landlord Payment History API
+export const fetchLandlordPaymentHistory = createAsyncThunk(
+  'main/fetchLandlordPaymentHistory',
+  async (
+    payload: { company_id: string; enquiry_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(
+        getLandlordPaymentHistoryUrl(),
+        payload,
+      );
+      return response?.data || [];
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
 const mainSlice = createSlice({
   name: 'main',
   initialState,
@@ -679,6 +701,7 @@ const mainSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      // Fetch Landlord Enquiries API
       .addCase(fetchLandlordEnquiries.pending, state => {
         state.loading = true;
         state.error = null;
@@ -688,6 +711,19 @@ const mainSlice = createSlice({
         state.pgEnquiries = action.payload;
       })
       .addCase(fetchLandlordEnquiries.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch Landlord Payment History API
+      .addCase(fetchLandlordPaymentHistory.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLandlordPaymentHistory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.landlordPaymentHistory = action.payload;
+      })
+      .addCase(fetchLandlordPaymentHistory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

@@ -66,4 +66,9 @@ export default StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+
+  sliderContainer: {
+    marginHorizontal: 10,
+    marginTop: 10,
+  },
 });

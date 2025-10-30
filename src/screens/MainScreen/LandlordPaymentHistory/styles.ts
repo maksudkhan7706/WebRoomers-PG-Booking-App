@@ -45,25 +45,11 @@ export default StyleSheet.create({
   statusText: {
     color: '#fff',
   },
-
-  // ✅ Action section right side layout
-  actionRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flexShrink: 1,
-    gap: 8,
-  },
-
-  // ✅ Buttons
-  viewBtn: {
-    width: 80,
-    height: 30,
-    backgroundColor: '#1976D2',
-  },
-  paymentBtn: {
-    width: 130,
-    height: 30,
-    backgroundColor: '#19a2b8',
+  screenshotImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.logoBg,
   },
 });

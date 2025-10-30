@@ -42,6 +42,7 @@ export default StyleSheet.create({
   descContainer: {
     marginTop: 20,
     marginBottom: 50,
+    backgroundColor:'red'
   },
   uploadGrid: {
     flexDirection: 'row',

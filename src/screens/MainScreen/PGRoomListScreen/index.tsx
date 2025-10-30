@@ -13,6 +13,7 @@ import styles from './styles';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
+import AppImagePlaceholder from '../../../ui/AppImagePlaceholder';
 
 type RoomListNavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -51,17 +52,22 @@ const PGRoomListScreen = memo(() => {
     const banners = (item.images || []).map((img: string, idx: number) => ({
       id: `${item.id}-${idx}`,
       image: img.replace(/[\[\]\"]/g, ''),
-      screen: NAV_KEYS.PGEnquiryScreen,
     }));
 
     return (
       <View style={styles.card}>
-        <AppImageSlider
-          data={banners}
-          showThumbnails={false}
-          autoScroll
-          contentContainerStyle={{ paddingLeft: 16, marginTop: 10 }}
-        />
+        <View style={styles.sliderContainer}>
+          {banners.length > 0 ? (
+            <AppImageSlider
+              data={banners}
+              showThumbnails={false}
+              autoScroll
+              contentContainerStyle={{ paddingLeft: 16, marginTop: 10 }}
+            />
+          ) : (
+            <AppImagePlaceholder/>
+          )}
+        </View>
 
         <View style={styles.cardBody}>
           <View
@@ -154,7 +160,6 @@ const PGRoomListScreen = memo(() => {
       </View>
     );
   };
-
 
   return (
     <View style={styles.container}>

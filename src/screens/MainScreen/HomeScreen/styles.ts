@@ -13,8 +13,10 @@ export default StyleSheet.create({
     marginTop: 10,
   },
 
-  loaderContainer:{
-    flex: 1, justifyContent: 'center', alignItems: 'center' 
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bannerImage: {
     width: width - 32,

@@ -718,7 +718,7 @@ const LandlordAddPG = () => {
           onSelect={handleWashroomSelect}
         />
         {/* Extra Features */}
-        <View>
+        <View style={{ marginBottom: 10 }}>
           <Typography
             variant="body"
             weight="medium"
@@ -773,10 +773,14 @@ const LandlordAddPG = () => {
           onChangeText={text => setForm({ ...form, description: text })}
           multiline
           numberOfLines={4}
-          containerStyle={styles.descContainer}
+          // containerStyle={styles.descContainer}
         />
         {/* Upload Section in 2 Columns */}
-        <Typography variant="body" weight="medium" style={styles.sectionTitle}>
+        <Typography
+          variant="body"
+          weight="medium"
+          style={[styles.sectionTitle, { marginTop: 55 }]}
+        >
           Upload Property Photos
         </Typography>
         <View style={styles.uploadGrid}>

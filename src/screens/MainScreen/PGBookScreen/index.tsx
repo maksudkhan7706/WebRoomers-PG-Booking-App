@@ -111,9 +111,9 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ }) => {
           food_preference: foodPreference[0],
           check_in_date: startDate?.toISOString().split('T')[0],
           check_out_date: endDate?.toISOString().split('T')[0],
-          message: userMessage,
           type: screenType === 'isRoom' ? 'room' : 'pg',
           ...(screenType === 'isRoom' && { room_id: roomId }), //conditionally add room_id
+          ...(userMessage?.trim() && { message: userMessage.trim() }),
         };
         const res = await dispatch(bookRoomApi(payload)).unwrap();
         console.log('payload sending:', payload);
@@ -246,7 +246,7 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ }) => {
           {/* Message input */}
           <AppTextInput
             placeholder="Your Message"
-            value={userMessage}
+            value={userMessage || ''}
             onChangeText={setUserMessage}
             multiline
             inputHeight={100}

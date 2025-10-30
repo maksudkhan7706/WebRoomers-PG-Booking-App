@@ -44,10 +44,4 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  skeletonBox: {
-    width: '100%',
-    height: 180,
-    borderRadius: 16,
-    backgroundColor: '#f2f0f0ff',
-  },
 });

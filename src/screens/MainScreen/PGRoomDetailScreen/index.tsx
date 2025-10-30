@@ -26,7 +26,6 @@ const PGRoomDetailScreen = memo(() => {
     (state: RootState) => state.main,
   );
 
-
   useEffect(() => {
     if (roomId && pgId && companyId) {
       dispatch(
@@ -59,21 +58,19 @@ const PGRoomDetailScreen = memo(() => {
   const banners =
     roomImages.length > 0
       ? roomImages.map((img: string, idx: number) => ({
-        id: `${idx}`,
-        image: { uri: img },
-      }))
+          id: `${idx}`,
+          image: { uri: img },
+        }))
       : [
-        {
-          id: 'featured',
-          image: {
-            uri: pgRoomDetail?.data?.pg_details?.property_featured_image,
+          {
+            id: 'featured',
+            image: {
+              uri: pgRoomDetail?.data?.pg_details?.property_featured_image,
+            },
           },
-        },
-      ];
+        ];
 
-
-// console.log('PGRoomDetailScreen room',room);
-
+  console.log('PGRoomDetailScreen room facilities', room);
 
   return (
     <View style={styles.container}>
@@ -92,7 +89,6 @@ const PGRoomDetailScreen = memo(() => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Image Slider */}
         <AppImageSlider data={banners} showThumbnails autoScroll />
-
         {/* Room Info */}
         <View style={styles.card}>
           <View style={styles.priceRow}>
@@ -100,7 +96,6 @@ const PGRoomDetailScreen = memo(() => {
               {pg.property_title} - Room {room.room_number}
             </Typography>
           </View>
-
           <View style={styles.rowBetween}>
             <Typography variant="label" weight="medium">
               Room Type:
@@ -109,7 +104,6 @@ const PGRoomDetailScreen = memo(() => {
               {room.room_type.charAt(0).toUpperCase() + room.room_type.slice(1)}
             </Typography>
           </View>
-
           <View style={styles.rowBetween}>
             <Typography variant="label" weight="medium">
               Security Deposit:
@@ -118,7 +112,6 @@ const PGRoomDetailScreen = memo(() => {
               ₹{room.security_deposit}
             </Typography>
           </View>
-
           <View style={styles.rowBetween}>
             <Typography variant="label" weight="medium">
               Price / Month:
@@ -127,7 +120,6 @@ const PGRoomDetailScreen = memo(() => {
               ₹{room.price}
             </Typography>
           </View>
-
           <View style={styles.rowBetween}>
             <Typography variant="label" weight="medium">
               Availability:
@@ -136,7 +128,6 @@ const PGRoomDetailScreen = memo(() => {
               {pg.property_availability || 'N/A'}
             </Typography>
           </View>
-
           {/* Facilities */}
           <View style={{ marginTop: 12 }}>
             <Typography variant="label" weight="medium">

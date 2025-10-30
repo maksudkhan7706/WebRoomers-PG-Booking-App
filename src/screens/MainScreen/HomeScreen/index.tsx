@@ -21,6 +21,7 @@ import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import AppButton from '../../../ui/AppButton';
+import AppImagePlaceholder from '../../../ui/AppImagePlaceholder';
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen = () => {
@@ -58,14 +59,19 @@ const HomeScreen = () => {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Banner Slider */}
           <View style={styles.sliderContainer}>
-            <AppImageSlider
-              data={banners.map((b: any) => ({
-                id: b.banner_id,
-                image: { uri: b.banner_image },
-              }))}
-              showThumbnails={false}
-            />
+            {banners && banners.length > 0 ? (
+              <AppImageSlider
+                data={banners.map((b: any, index: number) => ({
+                  id: b.banner_id || index.toString(),
+                  image: { uri: b.banner_image },
+                }))}
+                showThumbnails={false}
+              />
+            ) : (
+              <AppImagePlaceholder />
+            )}
           </View>
+
           {userRole == 'landlord' ? (
             <View style={{ paddingHorizontal: 40, marginTop: 15 }}>
               <AppButton

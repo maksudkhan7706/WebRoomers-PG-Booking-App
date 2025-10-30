@@ -55,6 +55,17 @@ const PGRoomManagement = () => {
       dispatch(fetchAllRoomFeatures({ company_id: companyId }));
     }
   }, [dispatch, roomId, companyId]);
+
+  useEffect(() => {
+    if (editRoomData && allRoomFeatures?.length > 0) {
+      const matchedFeatures = (allRoomFeatures || []).filter((f: any) =>
+        (editRoomData.facilities || [])
+          .map((fac: string) => fac.trim().toLowerCase())
+          .includes(f.name.trim().toLowerCase()),
+      );
+      setExtraFeatures(matchedFeatures);
+    }
+  }, [editRoomData, allRoomFeatures]);
   //Dropdown options (memoized)
   const roomTypeOptions = useMemo(
     () => [
@@ -88,7 +99,6 @@ const PGRoomManagement = () => {
 
     try {
       setSaving(true);
-
       const payload = {
         company_id: companyId,
         pg_id: roomId,
@@ -161,7 +171,7 @@ const PGRoomManagement = () => {
             {room?.room_number} (
             {room?.room_type
               ? room.room_type.charAt(0).toUpperCase() +
-                room.room_type.slice(1).toLowerCase()
+              room.room_type.slice(1).toLowerCase()
               : ''}
             )
           </Typography>
@@ -199,7 +209,7 @@ const PGRoomManagement = () => {
             <Typography variant="label">
               {room?.room_type
                 ? room.room_type.charAt(0).toUpperCase() +
-                  room.room_type.slice(1).toLowerCase()
+                room.room_type.slice(1).toLowerCase()
                 : ''}
             </Typography>
           </View>
@@ -242,12 +252,7 @@ const PGRoomManagement = () => {
               setMonthlyRent(room.price || '');
               setSecurityDeposit(room.security_deposit || '');
               setRoomDescription(room.description || '');
-              //Match facilities correctly
-              const matchedFeatures = (allRoomFeatures || []).filter((f: any) =>
-                room.facilities?.includes(f.name),
-              );
-              setExtraFeatures(matchedFeatures);
-              setImages({ roomImage: room.images || [] }); // agar multiple images hai
+              setImages({ roomImage: room.images || [] });
               setActiveTab('add');
             }}
             style={{ flex: 1, height: 40 }}
@@ -300,6 +305,8 @@ const PGRoomManagement = () => {
     );
   }, []);
 
+  console.log('allRoomFeatures ===', allRoomFeatures);
+
   return (
     <View style={styles.container}>
       <AppHeader title="PG Room Management" showBack />
@@ -335,8 +342,8 @@ const PGRoomManagement = () => {
               {tab === 'manage'
                 ? 'Manage Rooms'
                 : editRoomData
-                ? 'Edit Room'
-                : 'Add New Room'}
+                  ? 'Edit Room'
+                  : 'Add New Room'}
             </Typography>
           </TouchableOpacity>
         ))}
