@@ -4,7 +4,15 @@ import colors from '../../../constants/colors';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white || '#F8F8F8',
+    backgroundColor: colors.white,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 10,
   },
   listContent: {
     padding: 10,
@@ -15,9 +23,9 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 10,
-    padding: 15,
+    padding: 10,
     marginBottom: 15,
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -25,8 +33,13 @@ export default StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingVertical: 5,
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
   },
   label: {
     width: '30%',
@@ -45,14 +58,49 @@ export default StyleSheet.create({
   statusText: {
     color: '#fff',
   },
+  screenshotContainer: {
+    marginTop: 5,
+  },
   screenshotImg: {
     width: '100%',
-    height: '100%',
+    height: 120,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.logoBg,
+    marginTop: 10,
   },
-
+  photoImg: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.logoBg,
+    marginTop: 10,
+  },
+  mapContainer: {
+    height: 150,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginVertical: 15,
+    backgroundColor: '#f0f0f0',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  mb8: {
+    marginBottom: 8,
+  },
+  featuresWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  featureTag: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)',
@@ -74,26 +122,5 @@ export default StyleSheet.create({
     height: '80%',
     borderRadius: 8,
     resizeMode: 'contain',
-  },
-
-  imageContainer: {
-    backgroundColor: '#fff',
-    width: '95%',
-    height: '50%',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  buttonContainer:{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 10,
-            marginTop: 15,
-  },
-  footerBtn: {
-    width: '32%',
-    height: 35,
   },
 });

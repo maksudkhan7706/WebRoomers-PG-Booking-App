@@ -1,35 +1,46 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   FlatList,
-  TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
 import Typography from '../../../ui/Typography';
 import AppHeader from '../../../ui/AppHeader';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import colors from '../../../constants/colors';
 import styles from './styles';
-import AppButton from '../../../ui/AppButton';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  fetchLandlordEnquiries,
   fetchLandlordPaymentHistory,
+  updatePaymentStatus,
 } from '../../../store/mainSlice';
 import { useRoute } from '@react-navigation/native';
 import AppImage from '../../../ui/AppImage';
 import { formatDate } from '../../../utils/formatDate';
+import AppButton from '../../../ui/AppButton';
+import { showMessage } from 'react-native-flash-message';
+import { showErrorMsg } from '../../../utils/appMessages';
 
 const LandlordPaymentHistory = () => {
   const dispatch = useDispatch<any>();
   const { userData } = useSelector((state: any) => state.auth);
+  const route = useRoute();
+  const { EnquiryId, companyId }: any = route.params;
   const { landlordPaymentHistory, loading } = useSelector(
     (state: any) => state.main,
   );
-  const route = useRoute();
-  const { EnquiryId, companyId }: any = route.params;
+
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
+    loadPaymentHistory();
+  }, [userData]);
+
+  const loadPaymentHistory = () => {
     if (userData?.user_type === 'landlord') {
       dispatch(
         fetchLandlordPaymentHistory({
@@ -38,7 +49,7 @@ const LandlordPaymentHistory = () => {
         }),
       );
     }
-  }, [userData]);
+  };
 
   const renderStatusBadge = (status: string) => {
     const bgColor =
@@ -57,10 +68,50 @@ const LandlordPaymentHistory = () => {
     );
   };
 
+  const handleAction = (action: 'approved' | 'rejected', item: any) => {
+    Alert.alert(
+      `${action === 'approved' ? 'Approve' : 'Reject'} Payment`,
+      `Are you sure you want to ${action} this payment?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'OK',
+          onPress: async () => {
+            const payload = {
+              payment_id: item?.payment_id,
+              action,
+              company_id: companyId || userData?.company_id,
+            };
+            console.log('updatePaymentStatus Payload:', payload);
+            try {
+              const response: any = await dispatch(
+                updatePaymentStatus(payload),
+              );
+              console.log('API Response:', response);
+              if (response?.payload?.success) {
+                showMessage(
+                  response?.payload?.message || 'Payment Update successfully!',
+                );
+                loadPaymentHistory(); //Refresh list automatically
+              } else {
+                showErrorMsg(
+                  response?.payload?.message || 'Something went wrong.',
+                );
+              }
+            } catch (error) {
+              console.log('Error:', error);
+              showErrorMsg('Something went wrong while updating.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const renderItem = ({ item }: any) => (
     <View style={styles.card}>
       {[
-        { label: 'Created date', value: formatDate(item?.created_at) },
+        { label: 'Created Date', value: formatDate(item?.created_at) },
         { label: 'Amount', value: item?.amount },
         { label: 'Start Date', value: formatDate(item?.start_date) },
         { label: 'End Date', value: formatDate(item?.end_date) },
@@ -81,23 +132,44 @@ const LandlordPaymentHistory = () => {
         </Typography>
         {renderStatusBadge(item?.payment_status)}
       </View>
-      <View style={[{ marginTop: 5 }]}>
+
+      {/* Screenshot */}
+      <View style={{ marginTop: 5 }}>
         <Typography weight="medium" variant="label" style={styles.label}>
           Screenshot:
         </Typography>
-        <View
-          style={{
-            height: 100,
-            marginTop: 10,
+        <TouchableOpacity
+          onPress={() => {
+            setPreviewImage(item?.screenshot);
+            setPreviewVisible(true);
           }}
+          style={{ height: 100, marginTop: 10 }}
         >
           <AppImage
             source={{ uri: item?.screenshot }}
             style={styles.screenshotImg}
             resizeMode="stretch"
           />
-        </View>
+        </TouchableOpacity>
       </View>
+
+      {/* Approve / Reject Buttons */}
+      {item?.payment_status === 'pending' && (
+        <View style={styles.buttonContainer}>
+          <AppButton
+            title="Approve"
+            titleSize="label"
+            onPress={() => handleAction('approved', item)}
+            style={[styles.footerBtn, { backgroundColor: colors.succes }]}
+          />
+          <AppButton
+            title="Reject"
+            titleSize="label"
+            onPress={() => handleAction('rejected', item)}
+            style={[styles.footerBtn, { backgroundColor: colors.rejected }]}
+          />
+        </View>
+      )}
     </View>
   );
 
@@ -114,6 +186,7 @@ const LandlordPaymentHistory = () => {
           />
         }
       />
+
       {loading ? (
         <View style={[styles.container, { justifyContent: 'center' }]}>
           <ActivityIndicator size="large" color={colors.mainColor} />
@@ -128,7 +201,7 @@ const LandlordPaymentHistory = () => {
         <FlatList
           data={landlordPaymentHistory || []}
           keyExtractor={(item: any, i) =>
-            item.enquiry_id?.toString() || i.toString()
+            item?.payment_id?.toString() || i.toString()
           }
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
@@ -143,6 +216,34 @@ const LandlordPaymentHistory = () => {
           }
         />
       )}
+
+      {/* Screenshot Preview Modal */}
+      <Modal
+        visible={previewVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            onPress={() => setPreviewVisible(false)}
+            hitSlop={20}
+            style={styles.modalCloseBtn}
+          >
+            <Typography variant="caption" style={styles.modalCloseText}>
+              ✕
+            </Typography>
+          </TouchableOpacity>
+          <View style={styles.imageContainer}>
+            {previewImage && (
+              <AppImage
+                source={{ uri: previewImage }}
+                style={styles.modalImage}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

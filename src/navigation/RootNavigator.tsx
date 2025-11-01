@@ -17,6 +17,9 @@ import EmailVerification from '../screens/AuthScreen/EmailVerification';
 import LandlordAddPG from '../screens/MainScreen/LandlordAddPG';
 import PGRoomManagement from '../screens/MainScreen/PGRoomManagement';
 import LandlordPaymentHistory from '../screens/MainScreen/LandlordPaymentHistory';
+import LandlordViewEnquiryDetails from '../screens/MainScreen/LandlordViewEnquiryDetails';
+import UserBookingDetailScreen from '../screens/MainScreen/UserBookingDetailScreen';
+import UserPaymentScreen from '../screens/MainScreen/UserPaymentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -53,7 +56,9 @@ const RootNavigator = () => {
           <Stack.Screen name={NAV_KEYS.LandlordAddPG} component={LandlordAddPG} />
           <Stack.Screen name={NAV_KEYS.PGRoomManagement} component={PGRoomManagement} />
           <Stack.Screen name={NAV_KEYS.LandlordPaymentHistory} component={LandlordPaymentHistory} />
-
+          <Stack.Screen name={NAV_KEYS.LandlordViewEnquiryDetails} component={LandlordViewEnquiryDetails} />
+          <Stack.Screen name={NAV_KEYS.UserBookingDetailScreen} component={UserBookingDetailScreen} />
+          <Stack.Screen name={NAV_KEYS.UserPaymentScreen} component={UserPaymentScreen} />
         </>
       ) : (
         <>

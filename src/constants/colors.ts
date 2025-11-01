@@ -4,11 +4,14 @@ const colors = {
   black: '#000000',
   gray: '#808080',
   textDark: '#333333',
-  logoBg:'#e4e2e2',
-  mainColor:"#114a82",
-  error:'red',
-  lightGary:"#a4a29f",
-  succes:"#008001"
+  logoBg: '#e4e2e2',
+  mainColor: '#114a82',
+  error: 'red',
+  lightGary: '#a4a29f',
+  succes: '#008001',
+  pending: '#FFD54F',
+  accepted: '#4CAF50',
+  rejected: '#E57373',
 };
 
 export default colors;

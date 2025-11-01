@@ -39,7 +39,7 @@ export default StyleSheet.create({
     backgroundColor: '#b1d3f470',
   },
   logo: {
-    height: 180,
+    height: 200,
     width: '100%',
     resizeMode: 'cover',
   },

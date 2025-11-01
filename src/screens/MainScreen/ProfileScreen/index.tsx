@@ -71,43 +71,58 @@ const ProfileScreen = () => {
     }
   }, [isFocused]);
 
+
   // Update form when latest API data arrives
   useEffect(() => {
     if (apiUserData?.success && apiUserData?.data && userData) {
       const d = apiUserData.data;
-      //Fix: Parse bank_detail if it's a string
       const landlordBankDetail =
-        typeof userData.bank_detail === 'string'
-          ? JSON.parse(userData.bank_detail)
-          : userData.bank_detail;
+        typeof apiUserData?.data?.bank_detail === 'string'
+          ? JSON.parse(apiUserData.data.bank_detail)
+          : apiUserData?.data?.bank_detail;
 
-      console.log('Parsed landlordBankDetail', landlordBankDetail);
+      setForm(prev => ({
+        ...prev,
+        fullName: d.user_fullname || prev.fullName,
+        mobileNumber: d.user_mobile || prev.mobileNumber,
+        aadhaarNumber: d.aadhar_number || prev.aadhaarNumber,
+        //Preserve old images if API sends null or empty
+        aadhaarFront:
+          d.aadhar_front && d.aadhar_front !== 'null'
+            ? d.aadhar_front
+            : prev.aadhaarFront,
+        aadhaarBack:
+          d.aadhar_back && d.aadhar_back !== 'null'
+            ? d.aadhar_back
+            : prev.aadhaarBack,
+        policeVerification:
+          d.police_verification && d.police_verification !== 'null'
+            ? d.police_verification
+            : prev.policeVerification,
 
-      setForm({
-        fullName: d.user_fullname || '',
-        mobileNumber: d.user_mobile || '',
-        aadhaarNumber: d.aadhar_number || '',
-        aadhaarFront: d.aadhar_front || null,
-        aadhaarBack: d.aadhar_back || null,
-        policeVerification: d.police_verification || null,
-        ref1Name: d.ref1_name || '',
-        ref1Mobile: d.ref1_mobile || '',
-        ref2Name: d.ref2_name || '',
-        ref2Mobile: d.ref2_mobile || '',
-        city: d.user_city_ids || '',
-        //Landlord Bank Details
-        landlordAccountHolder: landlordBankDetail?.account_holder || '',
-        landlordBankName: landlordBankDetail?.bank_name || '',
-        landlordAccountNumber: landlordBankDetail?.account_number || '',
-        landlordIFSCCode: landlordBankDetail?.ifsc_code || '',
-        landlordUPIID: landlordBankDetail?.upi_id || '',
-        landlordQrCodeImg: landlordBankDetail?.qr_code || null,
-      });
+        ref1Name: d.ref1_name || prev.ref1Name,
+        ref1Mobile: d.ref1_mobile || prev.ref1Mobile,
+        ref2Name: d.ref2_name || prev.ref2Name,
+        ref2Mobile: d.ref2_mobile || prev.ref2Mobile,
+        city: d.user_city_ids || prev.city,
+
+        landlordAccountHolder:
+          landlordBankDetail?.account_holder || prev.landlordAccountHolder,
+        landlordBankName:
+          landlordBankDetail?.bank_name || prev.landlordBankName,
+        landlordAccountNumber:
+          landlordBankDetail?.account_number || prev.landlordAccountNumber,
+        landlordIFSCCode:
+          landlordBankDetail?.ifsc_code || prev.landlordIFSCCode,
+        landlordUPIID: landlordBankDetail?.upi_id || prev.landlordUPIID,
+        landlordQrCodeImg:
+          landlordBankDetail?.qr_code || prev.landlordQrCodeImg,
+      }));
     }
   }, [apiUserData, userData]);
 
   const handleImageSelect = (key: string, file: any) => {
-    console.log('file ===========>>>>>>>>', file);
+    console.log('handleImageSelect file ===========>>>>>>>>', file);
     setForm(prev => ({ ...prev, [key]: file }));
   };
 
@@ -174,6 +189,7 @@ const ProfileScreen = () => {
     return valid;
   };
 
+  //Profile Submit Handler
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
@@ -206,6 +222,12 @@ const ProfileScreen = () => {
         console.log('✅ Profile Update API Response:', res);
         if (res?.success) {
           showSuccessMsg(res.message || 'Profile updated successfully');
+          dispatch(
+            apiUserDataFetch({
+              user_id: userData.user_id,
+              company_id: userData.company_id,
+            }),
+          );
         } else {
           showErrorMsg(res?.message || 'Something went wrong');
         }
@@ -217,6 +239,7 @@ const ProfileScreen = () => {
       Alert.alert('Error', 'Please fill all required fields properly.');
     }
   };
+
   return (
     <View style={styles.container}>
       <AppHeader title="Profile" showBack />
@@ -313,7 +336,7 @@ const ProfileScreen = () => {
                 />
                 <ImagePickerInput
                   label="QR Code Image"
-                  value={apiUserData?.aadhaarFront || ''}
+                  value={form?.landlordQrCodeImg}
                   onSelect={file =>
                     handleImageSelect('landlordQrCodeImg', file)
                   }
@@ -343,19 +366,19 @@ const ProfileScreen = () => {
 
                 <ImagePickerInput
                   label="Aadhaar Front Photo"
-                  value={apiUserData?.aadhaarFront || ''}
+                  value={form.aadhaarFront}
                   onSelect={file => handleImageSelect('aadhaarFront', file)}
                 />
 
                 <ImagePickerInput
                   label="Aadhaar Back Photo"
-                  value={apiUserData?.aadhar_back || ''}
-                  onSelect={file => handleImageSelect('aadhar_back', file)}
+                  value={form.aadhaarBack}
+                  onSelect={file => handleImageSelect('aadhaarBack', file)}
                 />
 
                 <ImagePickerInput
                   label="Police Verification Photo"
-                  value={apiUserData?.policeVerification || ''}
+                  value={form.policeVerification}
                   onSelect={file =>
                     handleImageSelect('policeVerification', file)
                   }

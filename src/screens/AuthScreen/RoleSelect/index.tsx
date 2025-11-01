@@ -32,7 +32,7 @@ const RoleSelect = () => {
       {/* <AppHeader title="WEBROOMERS" /> */}
       <Image
         source={images.TransparentWebRoomerLogo}
-        style={[styles.logo, { marginTop: 120 }]}
+        style={[styles.logo, { marginTop: 125 }]}
       />
       <View style={styles.content}>
         <View style={styles.cardContainer}>
@@ -78,7 +78,7 @@ const RoleSelect = () => {
           onPress={handleContinue}
           disabled={!selectedRole}
           style={{
-            marginBottom: 60,
+            marginBottom: 120,
           }}
         />
       </View>

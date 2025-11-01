@@ -23,6 +23,12 @@ import {
   getAllCityLocationUrl,
   getLandlordEnquiriesUrl,
   getLandlordPaymentHistoryUrl,
+  getMyBookingUrl,
+  getLandlordBankDetailUrl,
+  payNowUrl,
+  landlordEnquiryDetailUrl,
+  updateEnquiryStatusUrl,
+  changePaymentStatusUrl,
 } from '../services/urlHelper';
 
 interface MainState {
@@ -44,6 +50,9 @@ interface MainState {
   allRoomFeatures: { label: string; value: string }[];
   pgEnquiries: [];
   landlordPaymentHistory: [];
+  landlordEnquiryDetails: [];
+  myBookings: [];
+  landlordBankDetail: any;
 }
 
 const initialState: MainState = {
@@ -65,6 +74,9 @@ const initialState: MainState = {
   allRoomFeatures: [],
   pgEnquiries: [],
   landlordPaymentHistory: [],
+  landlordEnquiryDetails: [],
+  myBookings: [],
+  landlordBankDetail: null,
 };
 
 //Dashboard API
@@ -163,31 +175,47 @@ export const updateProfileApi = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      console.log('formData =======>>>>', formData);
-      // Convert payload to FormData
+
       Object.keys(payload).forEach(key => {
-        if (payload[key] !== null && payload[key] !== undefined) {
+        const value = payload[key];
+
+        if (value !== null && value !== undefined) {
+          // ✅ Check if it's an image field
           if (
             key === 'aadhar_front' ||
             key === 'aadhar_back' ||
             key === 'police_verification' ||
             key === 'qr_code'
           ) {
-            // Agar image hai (uri, name, type)
-            if (typeof payload[key] === 'object' && payload[key]?.uri) {
+            // 🧩 Case 1: value is array (from your Image Picker)
+            if (Array.isArray(value) && value.length > 0) {
+              const file = value[0]; // pick first item
               formData.append(key, {
-                uri: payload[key].uri,
-                name: payload[key].name || 'image.jpg',
-                type: payload[key].type || 'image/jpeg',
+                uri: file.uri,
+                name: file.fileName || file.name || `${key}.jpg`,
+                type: file.type || 'image/jpeg',
+              });
+            }
+            // 🧩 Case 2: value is single object
+            else if (typeof value === 'object' && value?.uri) {
+              formData.append(key, {
+                uri: value.uri,
+                name: value.fileName || value.name || `${key}.jpg`,
+                type: value.type || 'image/jpeg',
               });
             }
           } else {
-            formData.append(key, payload[key]);
+            formData.append(key, value);
           }
         }
       });
 
-      const res = await postRequest(updateProfileUrl(), formData, true); // ✅ 'true' agar multipart supported hai
+      console.log('🧾 Final Profile FormData (debug):');
+      (formData as any)?._parts?.forEach((p: any) =>
+        console.log(`${p[0]}:`, p[1]),
+      );
+
+      const res = await postRequest(updateProfileUrl(), formData, true);
       console.log('PROFILE UPDATE RESPONSE =====>', res);
       return res;
     } catch (err: any) {
@@ -199,6 +227,7 @@ export const updateProfileApi = createAsyncThunk(
     }
   },
 );
+
 // My PG List API
 export const fetchMyPgList = createAsyncThunk(
   'main/fetchMyPgList',
@@ -399,6 +428,94 @@ export const fetchLandlordPaymentHistory = createAsyncThunk(
       return response?.data || [];
     } catch (err: any) {
       return rejectWithValue(err.message);
+    }
+  },
+);
+// Fetch Landlord Enquiry Details API
+export const fetchLandlordEnquiryDetails = createAsyncThunk(
+  'main/fetchLandlordEnquiryDetails',
+  async (
+    payload: { company_id: string; enquiry_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(landlordEnquiryDetailUrl(), payload);
+      return response?.data || [];
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+// Fetch User My Bookings API
+export const fetchUserMyBooking = createAsyncThunk(
+  'main/fetchUserMyBooking',
+  async (
+    payload: { company_id: string; user_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await postRequest(getMyBookingUrl(), payload);
+      return response?.data || [];
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+//Landlord Bank Detail API
+export const fetchLandlordBankDetail = createAsyncThunk(
+  'main/fetchLandlordBankDetail',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getLandlordBankDetailUrl(), payload);
+      console.log('📡 get LandlordBankDetail Response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.log('❌ get LandlordBankDetail API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+// Payment API
+export const payNow = createAsyncThunk(
+  'main/payNow',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(payNowUrl(), payload, true);
+      console.log('📡 payNow Response:', response);
+      return response; //ab poora response return karega
+    } catch (error: any) {
+      console.log('❌ payNow API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// Update Enquiry Status API
+export const updateEnquiryStatus = createAsyncThunk(
+  'main/updateEnquiryStatus',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(updateEnquiryStatusUrl(), payload);
+      console.log('updateEnquiryStatus Response:', response);
+      return response;
+    } catch (error: any) {
+      console.log('updateEnquiryStatus API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// Update Payment Status API
+export const updatePaymentStatus = createAsyncThunk(
+  'main/updatePaymentStatus',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(changePaymentStatusUrl(), payload);
+      console.log('updatePaymentStatus Response:', response);
+      return response;
+    } catch (error: any) {
+      console.log('updatePaymentStatus API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
     }
   },
 );
@@ -724,6 +841,81 @@ const mainSlice = createSlice({
         state.landlordPaymentHistory = action.payload;
       })
       .addCase(fetchLandlordPaymentHistory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch Landlord Enquiry Details API
+      .addCase(fetchLandlordEnquiryDetails.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLandlordEnquiryDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.landlordEnquiryDetails = action.payload;
+      })
+      .addCase(fetchLandlordEnquiryDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch User My Bookings API
+      .addCase(fetchUserMyBooking.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserMyBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myBookings = action.payload;
+      })
+      .addCase(fetchUserMyBooking.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //Landlord Bank Detail API
+      .addCase(fetchLandlordBankDetail.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLandlordBankDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.landlordBankDetail = action.payload;
+      })
+      .addCase(fetchLandlordBankDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Payment API
+      .addCase(payNow.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(payNow.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(payNow.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Update Enquiry Status API
+      .addCase(updateEnquiryStatus.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateEnquiryStatus.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(updateEnquiryStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Update Payment Status API
+      .addCase(updatePaymentStatus.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updatePaymentStatus.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(updatePaymentStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

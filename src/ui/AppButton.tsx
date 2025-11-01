@@ -6,6 +6,7 @@ import {
   View,
   ViewStyle,
   ActivityIndicator,
+  StyleProp,
 } from 'react-native';
 import colors from '../constants/colors';
 import Typography from './Typography';
@@ -15,7 +16,8 @@ interface AppButtonProps {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  titleSize?: 'heading' | 'subheading' | 'body' | 'caption' | 'label';
 }
 
 const AppButton: React.FC<AppButtonProps> = ({
@@ -24,6 +26,7 @@ const AppButton: React.FC<AppButtonProps> = ({
   disabled = false,
   loading = false,
   style,
+  titleSize = 'body',
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -60,7 +63,7 @@ const AppButton: React.FC<AppButtonProps> = ({
         {loading ? (
           <ActivityIndicator color={colors.white} />
         ) : (
-          <Typography variant="body" weight="medium" color={colors.white}>
+          <Typography variant={titleSize} weight="medium" color={colors.white}>
             {title}
           </Typography>
         )}

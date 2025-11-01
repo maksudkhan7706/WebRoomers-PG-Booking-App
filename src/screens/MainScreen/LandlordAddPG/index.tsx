@@ -314,16 +314,9 @@ const LandlordAddPG = () => {
     formData.append('landlord_id', userData?.user_id);
     formData.append('property_type', 'PG');
     formData.append('title', form.pgTitle);
-    formData.append(
-      'category',
-      Array.isArray(form.pgType) ? form.pgType[0] : form.pgType,
-    );
-    formData.append(
-      'city',
-      Array.isArray(form.pgCity) ? form.pgCity[0] : form.pgCity,
-    );
-    formData.append(
-      'city_location',
+    formData.append('category',Array.isArray(form.pgType) ? form.pgType[0] : form.pgType);
+    formData.append('city',Array.isArray(form.pgCity) ? form.pgCity[0] : form.pgCity);
+    formData.append('city_location',
       Array.isArray(form.pgCityLocation)
         ? form.pgCityLocation[0]
         : form.pgCityLocation || '',
@@ -338,29 +331,14 @@ const LandlordAddPG = () => {
     formData.append('availability', availability);
     formData.append('furnished', furniture);
     formData.append('parking', Array.isArray(parking) ? parking[0] : parking);
-    formData.append(
-      'floor',
-      Array.isArray(form.pgFloor) ? form.pgFloor[0] : form.pgFloor,
-    );
-    formData.append(
-      'flooring',
-      Array.isArray(form.flooring) ? form.flooring[0] : form.flooring,
-    );
+    formData.append('floor',Array.isArray(form.pgFloor) ? form.pgFloor[0] : form.pgFloor);
+    formData.append('flooring',Array.isArray(form.flooring) ? form.flooring[0] : form.flooring);
     formData.append('balconies', '1');
-    formData.append(
-      'washroom',
-      Array.isArray(form.washroom) ? form.washroom[0] : form.washroom,
-    );
-    formData.append(
-      'features',
-      Array.isArray(extraFeatures) ? extraFeatures.join(',') : extraFeatures,
-    );
+    formData.append('washroom', Array.isArray(form.washroom) ? form.washroom[0] : form.washroom,);
+    formData.append('features',Array.isArray(extraFeatures) ? extraFeatures.join(',') : extraFeatures,);
     formData.append('description', form.description);
     formData.append('total_rooms', form.totalRooms);
-    formData.append(
-      'pg_for',
-      Array.isArray(form.pgFor) ? form.pgFor[0] : form.pgFor,
-    );
+    formData.append('pg_for', Array.isArray(form.pgFor) ? form.pgFor[0] : form.pgFor);
 
     // 🖼 Featured Image (only append if it's a new local image)
     if (images.mainPicture?.[0]) {
@@ -388,17 +366,16 @@ const LandlordAddPG = () => {
       imgs.forEach(img => formData.append(`${key}[]`, img));
     });
 
-    // 🧩 Add pg_id if editing
+    //Add pg_id if editing
     if (type === 'editPG' && propertyData?.property_id) {
       formData.append('pg_id', propertyData.property_id);
     }
-
-    // 🧠 Debug log
+    //Debug log
     console.log('🧾 Final FormData (debug):');
     (formData as any)._parts?.forEach((part: any) => {
       console.log(part[0], ':', part[1]);
     });
-    // 🚀 API call
+    // API call
     try {
       setLoading(true);
       const resultAction = await dispatch(addEditPg(formData)).unwrap();

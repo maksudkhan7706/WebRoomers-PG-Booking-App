@@ -42,8 +42,8 @@ const LandlordEnquiryScreen = () => {
       status === 'Pending'
         ? '#FFD54F'
         : status === 'Accepted'
-        ? '#4CAF50'
-        : '#E57373';
+          ? '#4CAF50'
+          : '#E57373';
 
     return (
       <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
@@ -88,7 +88,12 @@ const LandlordEnquiryScreen = () => {
         <View style={styles.actionRight}>
           <AppButton
             title="View"
-            onPress={() => console.log('View')}
+            onPress={() =>
+              navigation.navigate(NAV_KEYS.LandlordViewEnquiryDetails, {
+                EnquiryId: item?.enquiry_id || '',
+                companyId: userData?.company_id || '41',
+              })
+            }
             style={styles.viewBtn}
           />
           <AppButton

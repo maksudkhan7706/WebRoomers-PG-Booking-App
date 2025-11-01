@@ -78,6 +78,7 @@ const PGBookScreen: React.FC<{ userData: UserData }> = ({ }) => {
     { label: 'Non-Veg', value: 'nonveg' },
     { label: 'Both', value: 'both' },
   ];
+  console.log('screenType =======', screenType);
 
   const handleRegister = async () => {
     const newErrors: Errors = {};

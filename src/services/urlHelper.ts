@@ -44,4 +44,11 @@ export const addEditPgUrl = () => '/addEditPg';
 
 export const getLandlordEnquiriesUrl = () => '/myEnquiries';
 export const getLandlordPaymentHistoryUrl = () => '/getPaymentHistory';
+export const landlordEnquiryDetailUrl = () => '/enquiryDetail';
 
+export const getMyBookingUrl = () => '/myBookings';
+export const getLandlordBankDetailUrl = () => '/getLandlordBankDetail';
+export const payNowUrl = () => '/payNow';
+
+export const updateEnquiryStatusUrl = () => '/updateEnquiryStatus';
+export const changePaymentStatusUrl = () => '/changePaymentStatus';

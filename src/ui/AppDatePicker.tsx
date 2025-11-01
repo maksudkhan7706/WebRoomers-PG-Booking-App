@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   Platform,
   StyleSheet,
+  ViewStyle,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Typography from './Typography';
@@ -18,6 +19,7 @@ type Props = {
   error?: string;
   minimumDate?: Date; // ✅ New prop added
   maximumDate?: Date; // (optional) if you want to limit future date
+  containerStyle?: ViewStyle
 };
 
 const AppDatePicker: React.FC<Props> = ({
@@ -28,6 +30,7 @@ const AppDatePicker: React.FC<Props> = ({
   error,
   minimumDate,
   maximumDate,
+  containerStyle,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -40,7 +43,7 @@ const AppDatePicker: React.FC<Props> = ({
     <View
       style={[
         styles.container,
-        { marginBottom: error ? 5 : 16 },
+        { marginBottom: error ? 5 : 16 },containerStyle
       ]}
     >
       {label && (
