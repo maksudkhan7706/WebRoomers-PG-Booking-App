@@ -21,7 +21,8 @@ import AppTextInput from '../../../ui/AppTextInput';
 import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
 import { AppDispatch } from '../../../store';
 import { useDispatch } from 'react-redux';
-import { reSendOtp } from '../../../store/authSlice';
+import { registerUser, reSendOtp } from '../../../store/authSlice';
+import { appLog } from '../../../utils/appLog';
 
 type EmailVerificationNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,21 +39,31 @@ interface Props {
 }
 
 const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
-  const { email, otp, role, mobile_number, full_name } = route.params || {};
+  const { email, otp, role, mobile_number, full_name, registerPayload } = route.params || {};
 
   const [enteredOtp, setEnteredOtp] = useState('');
   const [currentOtp, setCurrentOtp] = useState(otp);
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!enteredOtp.trim()) {
       showErrorMsg('Please enter OTP');
       return;
     }
 
     if (enteredOtp.trim() === String(currentOtp)) {
-      showSuccessMsg('Email verified successfully!');
-      navigation.navigate(NAV_KEYS.LOGIN, { role });
+      try {
+        //OTP verified, and user register
+        const resultAction = await dispatch(registerUser(registerPayload)).unwrap();
+        if (resultAction.success) {
+          showSuccessMsg(resultAction?.message ||'Email verified & registration successful!');
+          navigation.navigate(NAV_KEYS.LOGIN, { role });
+        } else {
+          showErrorMsg(resultAction.message || 'Registration failed');
+        }
+      } catch (err) {
+        showErrorMsg('Something went wrong during registration');
+      }
     } else {
       showErrorMsg('Invalid OTP! Please try again.');
     }
@@ -69,16 +80,14 @@ const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
 
     try {
       const resultAction = await dispatch(reSendOtp(payload)).unwrap();
-      console.log('Resend OTP Response ===>>', resultAction);
-
       if (resultAction.success) {
         showSuccessMsg('OTP re-sent successfully!');
-        setCurrentOtp(resultAction.otp); // ✅ update current OTP
+        setCurrentOtp(resultAction.otp); //update current OTP
       } else {
         showErrorMsg(resultAction.message || 'Failed to re-send OTP');
       }
     } catch (err: any) {
-      console.log('Re-send OTP Error ===>', err);
+      appLog('EmailVerification', 'Re-send OTP Error ===>', err);
       showErrorMsg('Something went wrong');
     }
   };
@@ -94,7 +103,25 @@ const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >
-          <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
+          <View
+            style={{
+              height: 180,
+        width: '100%',
+              alignSelf: 'center',
+            }}
+          >
+            <Image
+              source={images.NewAppLogo}
+              style={[
+                {
+                  height: '100%',
+                  width: '100%',
+                  resizeMode: 'contain',
+                },
+              ]}
+            />
+          </View>
+
           <Typography
             variant="heading"
             weight="bold"
@@ -117,7 +144,7 @@ const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
               variant="body"
               weight="bold"
               color={colors.gray}
-              style={{ marginBottom: 15, textAlign: 'center' }}
+              style={{ marginBottom: 15, marginTop: 10, textAlign: 'center' }}
             >
               OTP: {currentOtp}
             </Typography>

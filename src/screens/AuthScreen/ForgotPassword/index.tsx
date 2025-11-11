@@ -69,7 +69,24 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation, route }) => {
     <View style={styles.container}>
       <AppHeader title="" showBack containerStyle={styles.headerContainer} />
       <View style={styles.innerContainer}>
-        <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
+        <View
+          style={{
+            height: 180,
+        width: '100%',
+            alignSelf: 'center',
+          }}
+        >
+          <Image
+            source={images.NewAppLogo}
+            style={[
+              {
+                height: '100%',
+                width: '100%',
+                resizeMode: 'contain',
+              },
+            ]}
+          />
+        </View>
 
         <Typography
           variant="heading"

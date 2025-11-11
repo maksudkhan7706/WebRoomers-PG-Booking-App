@@ -22,8 +22,10 @@ interface PickerFile {
 interface Props {
   label: string;
   value?: string | string[] | PickerFile | PickerFile[] | null;
+  pickerPlachholer?: string;
   multiple?: boolean;
   onSelect: (files: PickerFile[]) => void;
+  onPreview?: (uri: string) => void;
 }
 
 const ImagePickerInput: React.FC<Props> = ({
@@ -31,6 +33,8 @@ const ImagePickerInput: React.FC<Props> = ({
   value,
   multiple = false,
   onSelect,
+  onPreview,
+  pickerPlachholer = 'Upload / Capture Photo',
 }) => {
   const [images, setImages] = useState<string[]>([]);
 
@@ -60,7 +64,6 @@ const ImagePickerInput: React.FC<Props> = ({
       const uri = normalizeImageUri(value);
       setImages(uri ? [uri] : []);
     } else if (typeof value === 'object' && value?.uri) {
-      //Type-safe handling for PickerFile object
       setImages([value.uri]);
     } else {
       setImages([]);
@@ -77,28 +80,39 @@ const ImagePickerInput: React.FC<Props> = ({
       return;
     }
 
-    Alert.alert('Upload Photo', 'Choose an option', [
-      {
-        text: 'Camera',
-        onPress: () =>
-          launchCamera({ mediaType: 'photo', quality: 0.7 }, res =>
-            handlePickerResult(res),
-          ),
-      },
-      {
-        text: 'Gallery',
-        onPress: () =>
-          launchImageLibrary(
-            {
-              mediaType: 'photo',
-              quality: 0.7,
-              selectionLimit: multiple ? 0 : 1,
-            },
-            res => handlePickerResult(res),
-          ),
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    // 🧩 Check if this field is for video
+    const isVideoPicker = label.toLowerCase().includes('video');
+
+    Alert.alert(
+      isVideoPicker ? 'Upload Video' : 'Upload Photo',
+      'Choose an option',
+      [
+        {
+          text: 'Camera',
+          onPress: () =>
+            launchCamera(
+              {
+                mediaType: isVideoPicker ? 'video' : 'photo',
+                quality: 0.7,
+              },
+              res => handlePickerResult(res),
+            ),
+        },
+        {
+          text: 'Gallery',
+          onPress: () =>
+            launchImageLibrary(
+              {
+                mediaType: isVideoPicker ? 'video' : 'photo',
+                quality: 0.7,
+                selectionLimit: multiple ? 0 : 1,
+              },
+              res => handlePickerResult(res),
+            ),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
   };
 
   const handlePickerResult = (res: any) => {
@@ -120,12 +134,13 @@ const ImagePickerInput: React.FC<Props> = ({
       onSelect([files[0]]);
     }
   };
-  // 🧹 Remove selected image
+
   const removeImage = (uri: string) => {
     const updated = images.filter(img => img !== uri);
     setImages(updated);
     onSelect(updated.map(u => ({ uri: u })));
   };
+
   return (
     <View style={styles.container}>
       {label ? (
@@ -134,14 +149,54 @@ const ImagePickerInput: React.FC<Props> = ({
         </Typography>
       ) : null}
 
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={openPicker}
-        style={styles.uploadBox}
-      >
+      <View style={styles.uploadBox}>
         {images.length > 0 ? (
-          images.length === 1 ? (
-            <>
+          // 🔹 For multiple images: show scroll + add-more always
+          multiple ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContainer}
+            >
+              {images.map((uri, index) => (
+                <View key={index} style={{ position: 'relative' }}>
+                  <AppImage
+                    source={{ uri }}
+                    style={styles.multiImage}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    style={styles.removeIcon}
+                    onPress={() => removeImage(uri)}
+                  >
+                    <Icon name="close" size={16} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              {/* 🔹 Always show "Add More" box when multiple=true */}
+              <TouchableOpacity
+                onPress={openPicker}
+                style={styles.addMoreBox}
+                activeOpacity={0.8}
+              >
+                <Icon
+                  name="add-photo-alternate"
+                  size={30}
+                  color={colors.gray}
+                />
+                <Typography variant="label" weight="medium" color={colors.gray}>
+                  Add More
+                </Typography>
+              </TouchableOpacity>
+            </ScrollView>
+          ) : (
+            // 🔹 Single Image UI
+            <TouchableOpacity
+              onPress={() => onPreview?.(images[0])}
+              style={styles.singleImage}
+              activeOpacity={0.8}
+            >
               <AppImage
                 source={{ uri: images[0] }}
                 style={styles.singleImage}
@@ -153,40 +208,22 @@ const ImagePickerInput: React.FC<Props> = ({
               >
                 <Icon name="close" size={18} color="#fff" />
               </TouchableOpacity>
-            </>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContainer}
-            >
-              {images.map((uri, index) => (
-                <>
-                  <AppImage
-                    key={index}
-                    source={{ uri }}
-                    style={styles.multiImage}
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    style={styles.removeIcon}
-                    onPress={() => removeImage(uri)}
-                  >
-                    <Icon name="close" size={16} color="#fff" />
-                  </TouchableOpacity>
-                </>
-              ))}
-            </ScrollView>
+            </TouchableOpacity>
           )
         ) : (
-          <View style={styles.placeholderContainer}>
+          // 🔹 Empty state: upload button
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={openPicker}
+            style={styles.placeholderContainer}
+          >
             <Icon name="photo-camera" size={30} color={colors.gray} />
             <Typography variant="label" weight="medium" color={colors.gray}>
-              Upload / Capture Photo
+              {pickerPlachholer}
             </Typography>
-          </View>
+          </TouchableOpacity>
         )}
-      </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -233,6 +270,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: 10,
     padding: 2,
+  },
+  addMoreBox: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    backgroundColor: '#e9e9f3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: colors.mainColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
 

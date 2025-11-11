@@ -17,6 +17,7 @@ import { NAV_KEYS } from '../navigation/NavKeys';
 import { logoutUser } from '../store/authSlice';
 import { AppDispatch, RootState } from '../store';
 import { showSuccessMsg } from '../utils/appMessages';
+import { appLog } from '../utils/appLog';
 
 const FloatingActions = () => {
   const [showOptions, setShowOptions] = useState(false);
@@ -33,51 +34,51 @@ const FloatingActions = () => {
     }).start();
   };
 
-  const confirmLogout = () => {
-    Alert.alert(
-      'Logout Confirmation',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'OK',
-          onPress: handleLogout,
-        },
-      ],
-      { cancelable: true },
-    );
-  };
+  // const confirmLogout = () => {
+  //   Alert.alert(
+  //     'Logout Confirmation',
+  //     'Are you sure you want to logout?',
+  //     [
+  //       {
+  //         text: 'Cancel',
+  //         style: 'cancel',
+  //       },
+  //       {
+  //         text: 'OK',
+  //         onPress: handleLogout,
+  //       },
+  //     ],
+  //     { cancelable: true },
+  //   );
+  // };
 
-  const handleLogout = async () => {
-    try {
-      toggleOptions();
-      await dispatch(logoutUser());
-      showSuccessMsg('Logout successfully');
-      navigation.reset({
-        index: 0,
-        routes: [{ name: NAV_KEYS.ROLE_SELECT }],
-      });
-    } catch (error) {
-      console.log('Logout error:', error);
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     toggleOptions();
+  //     await dispatch(logoutUser());
+  //     showSuccessMsg('Logout successfully');
+  //     navigation.reset({
+  //       index: 0,
+  //       routes: [{ name: NAV_KEYS.ROLE_SELECT }],
+  //     });
+  //   } catch (error) {
+  //     appLog('Logout', 'error:', error);
+  //   }
+  // };
 
   // Animation styles (bottom to top distance)
-  const logoutStyle = {
-    transform: [
-      { scale: animation },
-      {
-        translateY: animation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -60],
-        }),
-      },
-    ],
-    opacity: animation,
-  };
+  // const logoutStyle = {
+  //   transform: [
+  //     { scale: animation },
+  //     {
+  //       translateY: animation.interpolate({
+  //         inputRange: [0, 1],
+  //         outputRange: [0, -60],
+  //       }),
+  //     },
+  //   ],
+  //   opacity: animation,
+  // };
 
   const callStyle = {
     transform: [
@@ -85,7 +86,7 @@ const FloatingActions = () => {
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -120], // ☎️ Call (Logout ke upar)
+          outputRange: [0, -60], // ☎️ Call (Logout ke upar)
         }),
       },
     ],
@@ -98,13 +99,12 @@ const FloatingActions = () => {
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -180],
+          outputRange: [0, -120],
         }),
       },
     ],
     opacity: animation,
   };
-  console.log('userRole in FloatingActions =========>>>>>', userRole);
   return (
     <>
       {showOptions && (
@@ -115,35 +115,35 @@ const FloatingActions = () => {
         />
       )}
       <View style={styles.container}>
-        {userRole == 'landlord' ? null :
-            <>
-              <Animated.View style={[styles.iconWrapper, whatsappStyle]}>
-                <TouchableOpacity
-                  onPress={() => Linking.openURL('https://wa.me/919876543210')}
-                  style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
-                >
-                  <FontAwesome name="whatsapp" size={22} color="#fff" />
-                </TouchableOpacity>
-              </Animated.View>
-              <Animated.View style={[styles.iconWrapper, callStyle]}>
-                <TouchableOpacity
-                  onPress={() => Linking.openURL('tel:+919876543210')}
-                  style={[styles.actionBtn, { backgroundColor: '#1E90FF' }]}
-                >
-                  <Feather name="phone-call" size={22} color="#fff" />
-                </TouchableOpacity>
-              </Animated.View>
-            </>
-        }
+        {userRole == 'landlord' ? null : (
+          <>
+            <Animated.View style={[styles.iconWrapper, whatsappStyle]}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://wa.me/919876543210')}
+                style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
+              >
+                <FontAwesome name="whatsapp" size={22} color="#fff" />
+              </TouchableOpacity>
+            </Animated.View>
+            <Animated.View style={[styles.iconWrapper, callStyle]}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('tel:+919876543210')}
+                style={[styles.actionBtn, { backgroundColor: '#1E90FF' }]}
+              >
+                <Feather name="phone-call" size={22} color="#fff" />
+              </TouchableOpacity>
+            </Animated.View>
+          </>
+        )}
         {/* Logout */}
-        <Animated.View style={[styles.iconWrapper, logoutStyle]}>
+        {/* <Animated.View style={[styles.iconWrapper, logoutStyle]}>
           <TouchableOpacity
             onPress={confirmLogout}
             style={[styles.actionBtn, { backgroundColor: '#FF3B30' }]}
           >
             <MaterialCommunityIcons name="logout" size={22} color="#fff" />
           </TouchableOpacity>
-        </Animated.View>
+        </Animated.View> */}
 
         {/* Main + Button */}
         <TouchableOpacity onPress={toggleOptions} style={styles.mainButton}>

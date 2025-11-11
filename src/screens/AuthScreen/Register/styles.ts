@@ -15,15 +15,14 @@ export default StyleSheet.create({
     paddingBottom: 40,
   },
   logo: {
-    height: 120,
+    height: 170,
     width: '100%',
     resizeMode: 'cover',
-    marginTop: 55,
-    marginBottom: 30,
+    marginBottom: 10,
   },
   titleText: {
     textAlign: 'center',
-    marginTop: 30,
+    marginTop: 20,
   },
   subtitleText: {
     textAlign: 'center',

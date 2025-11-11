@@ -44,10 +44,22 @@ export const loginUser = createAsyncThunk(
   ) => {
     try {
       const response = await postRequest(loginUrl(), payload);
+
       if (response.success) {
+        const userRoleFromAPI = response?.data?.user_type?.toLowerCase();
+        const selectedRole = payload?.role?.toLowerCase();
+        //Role mismatch check
+        if (userRoleFromAPI !== selectedRole) {
+          return {
+            success: false,
+            message: `Selected role (${selectedRole}) does not match your account role (${userRoleFromAPI}).`,
+          };
+        }
+        //Only save when role matches
         await AsyncStorage.setItem('userData', JSON.stringify(response.data));
         await AsyncStorage.setItem('userRole', payload.role);
       }
+
       return response;
     } catch (err: any) {
       return rejectWithValue(err.message);

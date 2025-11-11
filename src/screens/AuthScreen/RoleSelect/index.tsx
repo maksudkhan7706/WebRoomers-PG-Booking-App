@@ -30,10 +30,26 @@ const RoleSelect = () => {
   return (
     <View style={styles.container}>
       {/* <AppHeader title="WEBROOMERS" /> */}
-      <Image
-        source={images.TransparentWebRoomerLogo}
-        style={[styles.logo, { marginTop: 125 }]}
-      />
+      <View
+        style={{
+          height: 250,
+          width: '100%',
+          alignSelf: 'center',
+          marginTop: 120,
+        }}
+      >
+        <Image
+          source={images.NewAppLogo}
+          style={[
+            {
+              height: '100%',
+              width: '100%',
+              resizeMode: 'contain',
+            },
+          ]}
+        />
+      </View>
+
       <View style={styles.content}>
         <View style={styles.cardContainer}>
           {['user', 'landlord'].map(role => (

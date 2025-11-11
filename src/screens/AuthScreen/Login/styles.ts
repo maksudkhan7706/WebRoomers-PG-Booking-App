@@ -16,11 +16,9 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   logo: {
-    height: 120,
+    height: 200,
     width: '100%',
     resizeMode: 'cover',
-    marginTop: 55,
-    marginBottom: 30,
   },
   titleText: {
     textAlign: 'center',

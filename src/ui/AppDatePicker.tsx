@@ -17,9 +17,10 @@ type Props = {
   onDateChange: (date: Date) => void;
   placeholder?: string;
   error?: string;
-  minimumDate?: Date; // ✅ New prop added
-  maximumDate?: Date; // (optional) if you want to limit future date
-  containerStyle?: ViewStyle
+  minimumDate?: Date;
+  maximumDate?: Date;
+  containerStyle?: ViewStyle;
+  disabled?: boolean; // ✅ Added new prop
 };
 
 const AppDatePicker: React.FC<Props> = ({
@@ -31,6 +32,7 @@ const AppDatePicker: React.FC<Props> = ({
   minimumDate,
   maximumDate,
   containerStyle,
+  disabled = false, // default false
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -43,7 +45,9 @@ const AppDatePicker: React.FC<Props> = ({
     <View
       style={[
         styles.container,
-        { marginBottom: error ? 5 : 16 },containerStyle
+        { marginBottom: error ? 5 : 16 },
+        containerStyle,
+        disabled && { opacity: 0.6 }, // visual effect when disabled
       ]}
     >
       {label && (
@@ -53,6 +57,7 @@ const AppDatePicker: React.FC<Props> = ({
       )}
 
       <TouchableOpacity
+        disabled={disabled} // ✅ Disable touch
         onPress={() => setShowPicker(true)}
         style={[
           styles.inputContainer,
@@ -80,16 +85,17 @@ const AppDatePicker: React.FC<Props> = ({
         </Typography>
       )}
 
-      {showPicker && (
-        <DateTimePicker
-          value={date || new Date()}
-          mode="date"
-          display="default"
-          onChange={handleChange}
-          minimumDate={minimumDate} // ✅ Added here
-          maximumDate={maximumDate} // optional
-        />
-      )}
+      {showPicker &&
+        !disabled && ( // ✅ Prevent showing picker if disabled
+          <DateTimePicker
+            value={date || new Date()}
+            mode="date"
+            display="default"
+            onChange={handleChange}
+            minimumDate={minimumDate}
+            maximumDate={maximumDate}
+          />
+        )}
     </View>
   );
 };

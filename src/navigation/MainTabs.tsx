@@ -2,21 +2,21 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../constants/colors';
-import PGEnquiryScreen from '../screens/MainScreen/PGEnquiryScreen';
-import HomeScreen from '../screens/MainScreen/HomeScreen';
-import ProfileScreen from '../screens/MainScreen/ProfileScreen';
-import MyPGScreen from '../screens/MainScreen/MyPGScreen';
 import FloatingActions from '../ui/FloatingActions';
 import { View } from 'react-native';
-import LandlordEnquiryScreen from '../screens/MainScreen/LandlordEnquiryScreen';
-import UserMyBookingScreen from '../screens/MainScreen/UserMyBookingScreen';
+import UserMyBookingScreen from '../screens/MainScreen/ROLEUSER/UserMyBookingScreen';
+import UserEnquiryScreen from '../screens/MainScreen/ROLEUSER/UserEnquiryScreen';
+import LandlordEnquiryScreen from '../screens/MainScreen/ROLELANDLORD/LandlordEnquiryScreen';
+import LandlordRenewalScreen from '../screens/MainScreen/ROLELANDLORD/LandlordRenewalScreen';
+import LandlordMyPGScreen from '../screens/MainScreen/ROLELANDLORD/LandlordMyPGScreen';
+import HomeScreen from '../screens/MainScreen/COMMON/HomeScreen';
+import ProfileScreen from '../screens/MainScreen/COMMON/ProfileScreen';
+import ProfileMenuSection from '../screens/MainScreen/COMMON/ProfileMenuSection';
 
 const Tab = createBottomTabNavigator();
 
 const MainTabs = ({ route }: any) => {
-  const role = route.params?.role ?? 'user'; // default user
-  console.log('role ==========>>>>>>', role);
-
+  const role = route.params?.role ?? 'user';
   return (
     <>
       <Tab.Navigator
@@ -26,11 +26,13 @@ const MainTabs = ({ route }: any) => {
           tabBarInactiveTintColor: colors.lightGary,
           tabBarIcon: ({ color, size }) => {
             let iconName = 'home';
-            if (route.name === 'PGEnquiryScreen') iconName = 'list';
+            if (route.name === 'UserEnquiryScreen') iconName = 'list';
             else if (route.name === 'LandlordEnquiryScreen') iconName = 'list';
             else if (route.name === 'UserMyBookingScreen') iconName = 'domain';
-            else if (route.name === 'ProfileScreen') iconName = 'person';
-            else if (route.name === 'MyPGScreen') iconName = 'domain';
+            else if (route.name === 'ProfileMenuSection') iconName = 'person';
+            else if (route.name === 'LandlordMyPGScreen') iconName = 'domain';
+            else if (route.name === 'LandlordRenewalScreen')
+              iconName = 'autorenew';
             return <Icon name={iconName} size={size} color={color} />;
           },
           tabBarStyle: {
@@ -58,6 +60,7 @@ const MainTabs = ({ route }: any) => {
           component={HomeScreen}
           options={{ tabBarLabel: 'Home' }}
         />
+
         {role === 'landlord' ? (
           <Tab.Screen
             name="LandlordEnquiryScreen"
@@ -67,8 +70,8 @@ const MainTabs = ({ route }: any) => {
         ) : (
           <>
             <Tab.Screen
-              name="PGEnquiryScreen"
-              component={PGEnquiryScreen}
+              name="UserEnquiryScreen"
+              component={UserEnquiryScreen}
               options={{ tabBarLabel: 'Enquiry' }}
             />
             <Tab.Screen
@@ -77,24 +80,33 @@ const MainTabs = ({ route }: any) => {
               options={{ tabBarLabel: 'My Booking' }}
             />
           </>
-
         )}
 
         {role === 'landlord' && (
           <Tab.Screen
-            name="MyPGScreen"
-            component={MyPGScreen}
+            name="LandlordMyPGScreen"
+            component={LandlordMyPGScreen}
             options={{ tabBarLabel: 'My PG' }}
           />
         )}
+
+        {role === 'landlord' && (
+          <Tab.Screen
+            name="LandlordRenewalScreen"
+            component={LandlordRenewalScreen}
+            options={{ tabBarLabel: 'Renewal' }}
+          />
+        )}
+
         <Tab.Screen
-          name="ProfileScreen"
-          component={ProfileScreen}
+          name="ProfileMenuSection"
+          component={ProfileMenuSection}
           options={{ tabBarLabel: 'Profile' }}
         />
       </Tab.Navigator>
-
-      <FloatingActions />
+      {role === 'landlord' ? null : (
+        <FloatingActions />
+      )}
     </>
   );
 };

@@ -57,15 +57,33 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
 
   const handleValidate = () => {
     const newErrors: { email?: string; password?: string } = {};
-    if (!email) newErrors.email = 'Email or phone is required';
-    else if (!/\S+@\S+\.\S+/.test(email))
+    const trimmedValue = email.trim();
+    //Email & Phone Regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!trimmedValue) {
+      newErrors.email = 'Email or Mobile number is required';
+    } else if (emailRegex.test(trimmedValue)) {
+      // Valid email → no error
+    } else if (phoneRegex.test(trimmedValue)) {
+      // Valid 10-digit phone number → no error
+    } else if (/^[0-9]+$/.test(trimmedValue)) {
+      //  Only digits but not exactly 10
+      newErrors.email = 'Mobile number must be exactly 10 digits';
+    } else {
+      //Invalid email format
       newErrors.email = 'Enter a valid email address';
-
-    if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 6)
+    }
+    // Password validation
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
+    }
 
     setErrors(newErrors);
+
+    //Returns true if no validation errors
     return Object.keys(newErrors).length === 0;
   };
 
@@ -75,19 +93,18 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
       const payload = {
         email_mobile: email.trim(),
         password: password,
-        company_id: '41',
+        company_id: '35',
         role,
       };
-
       const resultAction = await dispatch(loginUser(payload));
       if (loginUser.fulfilled.match(resultAction)) {
         const userData = resultAction.payload;
-        if (userData.success) {
-          showSuccessMsg(userData.message || 'Successfully logged in.');
-          console.log('User Data:', userData.data);
-          console.log('User Role:', payload.role);
+        if (userData?.success) {
+          showSuccessMsg(userData?.message || 'Successfully logged in.');
         } else {
-          showErrorMsg(userData.message || 'Login Failed');
+          //Role mismatch ya API fail message
+          showErrorMsg(userData?.message || 'Login Failed');
+          navigation.goBack();
         }
       } else {
         showErrorMsg('Login Failed');
@@ -96,7 +113,6 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
       showErrorMsg('Login Error Something went wrong!');
     }
   };
-  console.log('role in handleLogin =========>>>>>>', role);
 
   return (
     <View style={styles.container}>
@@ -109,7 +125,24 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >
-          <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
+          <View
+            style={{
+              height: 180,
+              width: '100%',
+              alignSelf: 'center',
+            }}
+          >
+            <Image
+              source={images.NewAppLogo}
+              style={[
+                {
+                  height: '100%',
+                  width: '100%',
+                  resizeMode: 'contain',
+                },
+              ]}
+            />
+          </View>
 
           <Typography
             variant="heading"
@@ -134,7 +167,7 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
             value={email}
             onChangeText={setEmail}
             error={errors.email}
-            keyboardType="email-address"
+            keyboardType="default"
           />
 
           <AppTextInput

@@ -12,6 +12,7 @@ const colors = {
   pending: '#FFD54F',
   accepted: '#4CAF50',
   rejected: '#E57373',
+  red:'red'
 };
 
 export default colors;

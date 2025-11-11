@@ -15,7 +15,7 @@ export default StyleSheet.create({
     paddingBottom: 40,
   },
   logo: {
-    height: 120,
+    height: 155,
     width: '100%',
     resizeMode: 'cover',
     marginTop: 55,

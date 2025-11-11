@@ -29,7 +29,17 @@ import {
   landlordEnquiryDetailUrl,
   updateEnquiryStatusUrl,
   changePaymentStatusUrl,
+  renewalUsersUrl,
+  getComplaintsUrl,
+  getComplaintPurposesUrl,
+  submitComplaintUrl,
+  changePasswordUrl,
+  getLandlordPropertiesurl,
+  updateComplaintStatusUrl,
+  deleteComplaintUrl,
+  getSettingsUrl,
 } from '../services/urlHelper';
+import { appLog } from '../utils/appLog';
 
 interface MainState {
   loading: boolean;
@@ -48,11 +58,17 @@ interface MainState {
   pgWashrooms: { label: string; value: string }[];
   pgExtraFeatures: { label: string; value: string }[];
   allRoomFeatures: { label: string; value: string }[];
+  complaintPurposes: { label: string; value: string }[];
+  landlordProperties: { label: string; value: string }[];
+
   pgEnquiries: [];
   landlordPaymentHistory: [];
   landlordEnquiryDetails: [];
   myBookings: [];
   landlordBankDetail: any;
+  landlordRenewalUsers: [];
+  usersComplaintList: [];
+  settingsData: null;
 }
 
 const initialState: MainState = {
@@ -77,12 +93,20 @@ const initialState: MainState = {
   landlordEnquiryDetails: [],
   myBookings: [],
   landlordBankDetail: null,
+  landlordRenewalUsers: [],
+  usersComplaintList: [],
+  complaintPurposes: [],
+  landlordProperties: [],
+  settingsData: null,
 };
 
 //Dashboard API
 export const fetchDashboardData = createAsyncThunk(
   'main/fetchDashboardData',
-  async (payload: { company_id: string }, { rejectWithValue }) => {
+  async (
+    payload: { company_id: string; user_id?: string },
+    { rejectWithValue },
+  ) => {
     try {
       const response = await postRequest(dashboardUrl(), payload);
       return response;
@@ -210,17 +234,14 @@ export const updateProfileApi = createAsyncThunk(
         }
       });
 
-      console.log('🧾 Final Profile FormData (debug):');
-      (formData as any)?._parts?.forEach((p: any) =>
-        console.log(`${p[0]}:`, p[1]),
-      );
+      (formData as any)?._parts?.forEach((p: any) => appLog(`${p[0]}:`, p[1]));
 
       const res = await postRequest(updateProfileUrl(), formData, true);
-      console.log('PROFILE UPDATE RESPONSE =====>', res);
       return res;
     } catch (err: any) {
-      console.log(
-        'PROFILE UPDATE ERROR =====>',
+      appLog(
+        'updateProfileApi',
+        'PROFILE UPDATE ERROR',
         err.response?.data || err.message,
       );
       return rejectWithValue(err.response?.data || err.message);
@@ -345,7 +366,6 @@ export const submitPgEnquiry = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await postRequest(postEnquiry(), payload);
-      console.log('API response inside thunk:', response);
       return response;
     } catch (error: any) {
       return rejectWithValue(
@@ -359,8 +379,8 @@ export const addEditPgRoom = createAsyncThunk(
   'main/addEditPgRoom',
   async (payload: any, { rejectWithValue }) => {
     try {
-      const response = await postRequest(addEditPgRoomUrl(), payload);
-      return response.data;
+      const response = await postRequest(addEditPgRoomUrl(), payload,true);
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -389,10 +409,9 @@ export const addEditPg = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await postRequest(addEditPgUrl(), payload, true); // ✅ true = multipart
-      console.log('📡 addEditPg Response:', response);
-      return response.data;
+      return response;
     } catch (error: any) {
-      console.log('❌ addEditPg API Error:', error);
+      appLog('addEditPg', 'API Error:', error);
       return rejectWithValue(error.response?.data || error.message);
     }
   },
@@ -467,10 +486,9 @@ export const fetchLandlordBankDetail = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await postRequest(getLandlordBankDetailUrl(), payload);
-      console.log('📡 get LandlordBankDetail Response:', response);
       return response.data;
     } catch (error: any) {
-      console.log('❌ get LandlordBankDetail API Error:', error);
+      appLog('fetchLandlordBankDetail', 'API Error:', error);
       return rejectWithValue(error.response?.data || error.message);
     }
   },
@@ -481,10 +499,9 @@ export const payNow = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await postRequest(payNowUrl(), payload, true);
-      console.log('📡 payNow Response:', response);
       return response; //ab poora response return karega
     } catch (error: any) {
-      console.log('❌ payNow API Error:', error);
+      appLog('payNow', 'API Error:', error);
       return rejectWithValue(error.response?.data || error.message);
     }
   },
@@ -496,10 +513,9 @@ export const updateEnquiryStatus = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await postRequest(updateEnquiryStatusUrl(), payload);
-      console.log('updateEnquiryStatus Response:', response);
       return response;
     } catch (error: any) {
-      console.log('updateEnquiryStatus API Error:', error);
+      appLog('updateEnquiryStatus', 'API Error', error);
       return rejectWithValue(error.response?.data || error.message);
     }
   },
@@ -511,11 +527,139 @@ export const updatePaymentStatus = createAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await postRequest(changePaymentStatusUrl(), payload);
-      console.log('updatePaymentStatus Response:', response);
       return response;
     } catch (error: any) {
-      console.log('updatePaymentStatus API Error:', error);
+      appLog('updatePaymentStatus', 'API Error:', error);
       return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+//Landlord Renewal Users API
+export const fetchRenewalUsersDetail = createAsyncThunk(
+  'main/fetchRenewalUsersDetail',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(renewalUsersUrl(), payload);
+      return response.data;
+    } catch (error: any) {
+      appLog('fetchRenewalUsersDetail', 'API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+//User Complaint List  API
+export const fetchUsersComplaintList = createAsyncThunk(
+  'main/fetchUsersComplaintList',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getComplaintsUrl(), payload);
+      return response.data;
+    } catch (error: any) {
+      appLog('fetchUsersComplaintList', 'API Error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  },
+);
+
+// get Complaint Purposes Api
+export const fetchComplaintPurposes = createAsyncThunk(
+  'main/fetchComplaintPurposes',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getComplaintPurposesUrl(), payload);
+      appLog('mainSlice', 'fetchComplaintPurposes Response', response);
+      return response; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+//  Submit Complaint API
+export const submitUserComplaint = createAsyncThunk(
+  'main/submitUserComplaint',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(submitComplaintUrl(), payload, true); // <- multipart = true
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+// Change Password Api
+export const updateChangePassword = createAsyncThunk(
+  'main/updateChangePassword',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(changePasswordUrl(), payload);
+      appLog('mainSlice', 'updateChangePassword Response', response);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+// Landlord Property List Api
+export const fetchLandlordProperty = createAsyncThunk(
+  'main/fetchLandlordProperty',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(getLandlordPropertiesurl(), payload);
+      appLog('mainSlice', 'fetchLandlordProperty Response', response);
+      return response; //"data" return
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+//  Update Status Complaint API
+export const updateComplaintStatus = createAsyncThunk(
+  'main/updateComplaintStatus',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await postRequest(
+        updateComplaintStatusUrl(),
+        payload,
+        true,
+      ); // <- multipart = true
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+//Delete Complaint API
+export const deleteComplaint = createAsyncThunk(
+  'main/deleteComplaint',
+  async (
+    payload: { company_id: string; complaint_id: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await postRequest(deleteComplaintUrl(), payload);
+      return res;
+    } catch (err: any) {
+      return rejectWithValue(err?.message || 'Delete complaint failed');
+    }
+  },
+);
+
+// Terms and Conditions Privacy Policy API
+export const getSettings = createAsyncThunk(
+  'main/getSettings',
+  async (payload: { company_id: string }, { rejectWithValue }) => {
+    try {
+      const res = await postRequest(getSettingsUrl(), payload);
+      return res;
+    } catch (error: any) {
+      return rejectWithValue(error?.message || 'Failed to fetch settings');
     }
   },
 );
@@ -593,8 +737,8 @@ const mainSlice = createSlice({
       .addCase(apiUserDataFetch.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-    builder
+      })
+      //Room Booking API
       .addCase(bookRoomApi.pending, state => {
         state.loading = true;
       })
@@ -918,6 +1062,129 @@ const mainSlice = createSlice({
       .addCase(updatePaymentStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      //Landlord Renewal Users API
+      .addCase(fetchRenewalUsersDetail.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchRenewalUsersDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.landlordRenewalUsers = action.payload;
+      })
+      .addCase(fetchRenewalUsersDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //User Complaint List  API
+      .addCase(fetchUsersComplaintList.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUsersComplaintList.fulfilled, (state, action) => {
+        state.loading = false;
+        state.usersComplaintList = action.payload;
+      })
+      .addCase(fetchUsersComplaintList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // get Complaint Purposes Api
+      .addCase(fetchComplaintPurposes.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchComplaintPurposes.fulfilled, (state, action) => {
+        state.loading = false;
+        const purposesData = action.payload?.purposes || {}; // safe access
+        state.complaintPurposes = Object.values(purposesData).map(
+          (item: any) => ({
+            label: item.purpose_name,
+            value: item.purpose_id,
+          }),
+        );
+      })
+      .addCase(fetchComplaintPurposes.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //  Submit Complaint API
+      .addCase(submitUserComplaint.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitUserComplaint.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(submitUserComplaint.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Change Password Api
+      .addCase(updateChangePassword.pending, state => {
+        state.loading = true;
+      })
+      .addCase(updateChangePassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateChangePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Landlord Property List Api
+      .addCase(fetchLandlordProperty.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLandlordProperty.fulfilled, (state, action) => {
+        state.loading = false;
+        const propertyData = action.payload?.data || []; // safe access
+        state.landlordProperties = propertyData.map((item: any) => ({
+          label: item.property_title,
+          value: item.property_id,
+        }));
+      })
+      .addCase(fetchLandlordProperty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //  Update Status Complaint API
+      .addCase(updateComplaintStatus.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateComplaintStatus.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(updateComplaintStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //Delete Complaint API
+      .addCase(deleteComplaint.pending, state => {
+        state.loading = true;
+      })
+      .addCase(deleteComplaint.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(deleteComplaint.rejected, state => {
+        state.loading = false;
+      })
+      // Terms and Conditions Privacy Policy API
+      .addCase(getSettings.pending, state => {
+        state.loading = true;
+      })
+      .addCase(getSettings.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload?.success) {
+          state.settingsData = action.payload.data;
+        }
+      })
+      .addCase(getSettings.rejected, state => {
+        state.loading = false;
       });
   },
 });

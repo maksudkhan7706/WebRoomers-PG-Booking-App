@@ -1,3 +1,4 @@
+import { appLog } from '../utils/appLog';
 import { baseUrl, authKey } from './urlHelper';
 
 // export const postRequest = async (
@@ -6,91 +7,97 @@ import { baseUrl, authKey } from './urlHelper';
 //   isMultipart = false,
 // ) => {
 //   const url = baseUrl + endpoint;
-//   console.log('POST API URL:', url);
-//   console.log('POST API Payload:', body);
-
+//   appLog('apiService', 'POST API URL:', url);
+//   appLog('apiService', 'POST API Payload:', body);
 //   try {
+//     let headers: any = {
+//       AuthKey: authKey,
+//     };
+
 //     let options: any = {
 //       method: 'POST',
-//       headers: {
-//         AuthKey: authKey,
-//       },
+//       headers,
 //     };
 
 //     if (isMultipart) {
-//       //Image upload (FormData)
-//       options.body = body; // Directly send FormData
+//       //Multipart request (FormData)
+//       options.body = body;
+//       // ❗ Don't set Content-Type manually
+//       // fetch() will auto-set the boundary for FormData
 //     } else {
 //       //Normal x-www-form-urlencoded
 //       const formBody = new URLSearchParams();
 //       Object.keys(body).forEach(key => formBody.append(key, body[key]));
-//       options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+//       headers['Content-Type'] = 'application/x-www-form-urlencoded';
 //       options.body = formBody.toString();
 //     }
 
 //     const res = await fetch(url, options);
-//     const data = await res.json();
-//     console.log('POST API Response:', data);
+//     const text = await res.text();
+//     //Parse safely
+//     const data = JSON.parse(text);
+//     appLog('apiService', 'POST API Parsed Response:', data);
 //     return data;
 //   } catch (error) {
-//     console.log('POST API Error:', error);
+//     appLog('apiService', 'POST API Error', error);
 //     throw error;
 //   }
 // };
-
 export const postRequest = async (
   endpoint: string,
   body: any,
   isMultipart = false,
 ) => {
   const url = baseUrl + endpoint;
-  console.log('POST API URL:', url);
-  console.log('POST API Payload:', body);
+  appLog('apiService', 'POST API URL:', url);
+  appLog('apiService', 'POST API Payload:', body);
 
   try {
-    let headers: any = {
-      AuthKey: authKey,
-    };
-
-    let options: any = {
-      method: 'POST',
-      headers,
-    };
+    let headers: any = { AuthKey: authKey };
+    let options: any = { method: 'POST', headers };
 
     if (isMultipart) {
-      // ✅ Multipart request (FormData)
-      options.body = body;
-
-      // ❗ Don't set Content-Type manually
-      // fetch() will auto-set the boundary for FormData
+      // Agar body already FormData hai, to direct use karo
+      if (body instanceof FormData) {
+        options.body = body;
+      } else {
+        const formData = new FormData();
+        Object.keys(body).forEach(key => {
+          const value = body[key];
+          // null, undefined, ya empty skip kar do
+          if (value === null || value === undefined) return;
+          if (value && typeof value === 'object' && value.uri) {
+            formData.append(key, value);
+          } else {
+            formData.append(key, value);
+          }
+        });
+        options.body = formData;
+      }
     } else {
-      // ✅ Normal x-www-form-urlencoded
       const formBody = new URLSearchParams();
-      Object.keys(body).forEach(key => formBody.append(key, body[key]));
+      Object.keys(body).forEach(key => {
+        if (body[key] !== null && body[key] !== undefined)
+          formBody.append(key, body[key]);
+      });
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
       options.body = formBody.toString();
     }
 
     const res = await fetch(url, options);
     const text = await res.text();
-
-    console.log('RAW API Response:', text);
-
-    // ✅ Parse safely
     const data = JSON.parse(text);
-    console.log('POST API Parsed Response:', data);
-
+    appLog('apiService', 'POST API Parsed Response:', data);
     return data;
   } catch (error) {
-    console.log('❌ POST API Error:', error);
+    appLog('apiService', 'POST API Error', error);
     throw error;
   }
 };
 
 export const getRequest = async (endpoint: string) => {
   const url = baseUrl + endpoint;
-  console.log('GET API URL:', url);
-
+  appLog('apiService', 'GET API URL', url);
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -103,18 +110,17 @@ export const getRequest = async (endpoint: string) => {
 
     // Try JSON parsing safely
     const text = await res.text();
-    console.log('RAW RESPONSE:', text);
 
     try {
       const data = JSON.parse(text);
-      console.log('GET API Parsed Response:', data);
+      appLog('apiService', 'GET API Parsed Response', data);
       return data;
     } catch (jsonErr) {
-      console.log('JSON parse error:', jsonErr);
+      appLog('apiService', 'JSON parse error:', jsonErr);
       throw new Error('Invalid JSON from server');
     }
   } catch (error) {
-    console.log('GET API Error:', error);
+    appLog('apiService', 'GET API Error:', error);
     throw error;
   }
 };

@@ -9,15 +9,42 @@ export type RootStackParamList = {
     role?: 'user' | 'landlord';
     mobile_number: string;
     full_name: string;
+    registerPayload: any;
   };
   ForgotPassword: { role?: 'user' | 'landlord' };
-  //Main
-  HomeScreen: undefined;
-  PGEnquiryScreen: undefined;
-  LandlordEnquiryScreen: undefined;
+  //User
+  UserEnquiryScreen: undefined;
   UserMyBookingScreen: undefined;
-  ProfileScreen: undefined;
+  UserBookingDetailScreen: { BookingData?: string };
+  UserComplaintScreen: undefined;
+  UserPGBookScreen: {
+    screenType: string;
+    roomId: string;
+    pgId: string;
+    companyId: string;
+    genderType?: string;
+  };
+  UserPaymentScreen: {
+    LandlordId?: string;
+    Amount?: string;
+    EnquiryId?: string;
+    PaymentStartDate?: Date;
+    PaymentStartEnd?: Date;
+  };
+
+  //Landlord
+  LandlordAddPG: { type: 'addPG' | 'editPG'; propertyData?: any };
+  LandlordComplaintScreen: undefined;
+  LandlordEnquiryScreen: undefined;
+  PGRoomManagement: { roomId?: string; companyId: string };
+  LandlordPaymentHistory: { EnquiryId?: string; companyId: string };
+  LandlordViewEnquiryDetails: { EnquiryId?: string; companyId: string };
+  LandlordRenewalScreen: undefined;
+
+  //Common
   MainTabs: { role?: 'user' | 'landlord'; screen?: string };
+  HomeScreen: undefined;
+  ProfileScreen: undefined;
   PGRoomListScreen: { propertyId: string; companyId: string };
   PGDetailScreen: { propertyId: string; companyId: string };
   PGRoomDetailScreen: {
@@ -25,46 +52,44 @@ export type RootStackParamList = {
     pgId: string;
     companyId: string;
   };
-  PGBookScreen: {
-    screenType: string;
-    roomId: string;
-    pgId: string;
-    companyId: string;
-  };
-  LandlordAddPG: { type: 'addPG' | 'editPG'; propertyData?: any };
-  PGRoomManagement: { roomId?: string; companyId: string };
-  LandlordPaymentHistory: { EnquiryId?: string; companyId: string };
-  LandlordViewEnquiryDetails: { EnquiryId?: string; companyId: string };
-  UserBookingDetailScreen: { BookingData?: string };
-  UserPaymentScreen: {
-    LandlordId?: string;
-    Amount?: string;
-    EnquiryId?: string;
-  };
+  ChangePasswordScreen: undefined;
+  PrivacyPolicyScreen: undefined;
+  TermsConditionsScreen: undefined;
 };
 
 export const NAV_KEYS = {
-  // Auth Screens
+  //Auth
   ROLE_SELECT: 'RoleSelect',
   LOGIN: 'Login',
   REGISTER: 'Register',
   FORGOTPASSWORD: 'ForgotPassword',
   EmailVerification: 'EmailVerification',
-  // Main Screens / Bottom Tabs
-  HomeScreen: 'HomeScreen',
-  PGEnquiryScreen: 'PGEnquiryScreen',
-  LandlordEnquiryScreen: 'LandlordEnquiryScreen',
+
+  //User
+  UserEnquiryScreen: 'UserEnquiryScreen',
   UserMyBookingScreen: 'UserMyBookingScreen',
-  ProfileScreen: 'ProfileScreen',
-  MAIN_TABS: 'MainTabs',
-  PGDetailScreen: 'PGDetailScreen',
-  PGRoomListScreen: 'PGRoomListScreen',
-  PGRoomDetailScreen: 'PGRoomDetailScreen',
-  PGBookScreen: 'PGBookScreen',
+  UserBookingDetailScreen: 'UserBookingDetailScreen',
+  UserComplaintScreen: 'UserComplaintScreen',
+  UserPGBookScreen: 'UserPGBookScreen',
+  UserPaymentScreen: 'UserPaymentScreen',
+
+  //Landlord
   LandlordAddPG: 'LandlordAddPG',
+  LandlordComplaintScreen: 'LandlordComplaintScreen',
+  LandlordEnquiryScreen: 'LandlordEnquiryScreen',
   PGRoomManagement: 'PGRoomManagement',
   LandlordPaymentHistory: 'LandlordPaymentHistory',
   LandlordViewEnquiryDetails: 'LandlordViewEnquiryDetails',
-  UserBookingDetailScreen: 'UserBookingDetailScreen',
-  UserPaymentScreen: 'UserPaymentScreen',
+  LandlordRenewalScreen: 'LandlordRenewalScreen',
+
+  //Common
+  MAIN_TABS: 'MainTabs',
+  HomeScreen: 'HomeScreen',
+  ProfileScreen: 'ProfileScreen',
+  PGRoomListScreen: 'PGRoomListScreen',
+  PGDetailScreen: 'PGDetailScreen',
+  PGRoomDetailScreen: 'PGRoomDetailScreen',
+  ChangePasswordScreen: 'ChangePasswordScreen',
+  PrivacyPolicyScreen: 'PrivacyPolicyScreen',
+  TermsConditionsScreen: 'TermsConditionsScreen',
 } as const;

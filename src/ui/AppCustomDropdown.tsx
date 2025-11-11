@@ -30,6 +30,8 @@ interface AppCustomDropdownProps {
   placeholder?: string;
   error?: string;
   inputWrapperStyle?: ViewStyle;
+  editable?: boolean; // ✅ added prop
+  dropdownContainerStyle?:ViewStyle
 }
 
 const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
@@ -42,6 +44,8 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   placeholder = '',
   error,
   inputWrapperStyle,
+  dropdownContainerStyle,
+  editable = true, // ✅ default true
 }) => {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -49,7 +53,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(20));
 
-  // Sync internal state when parent updates (for reset)
+  // Sync internal state when parent updates
   useEffect(() => {
     if (JSON.stringify(selectedValues) !== JSON.stringify(selected)) {
       setSelected(selectedValues);
@@ -58,20 +62,15 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
 
   // Update parent when selected changes
   useEffect(() => {
-    if (onSelect) {
-      onSelect(selected);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (onSelect) onSelect(selected);
   }, [selected]);
 
-  // Handle select by VALUE instead of label
   const handleSelect = (item: DropdownItem) => {
+    if (!editable) return; // ✅ prevent selection if not editable
     if (multiSelect) {
-      if (selected.includes(item.value)) {
+      if (selected.includes(item.value))
         setSelected(selected.filter(i => i !== item.value));
-      } else {
-        setSelected([...selected, item.value]);
-      }
+      else setSelected([...selected, item.value]);
     } else {
       if (selected[0] === item.value) setSelected([]);
       else setSelected([item.value]);
@@ -80,6 +79,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
   };
 
   const openModal = () => {
+    if (!editable) return; // ✅ disable opening
     setVisible(true);
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -137,7 +137,6 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
     );
   };
 
-  // ✅ Display label(s) based on selected value(s)
   const selectedLabels = data
     .filter(i => selected.includes(i.value))
     .map(i => i.label)
@@ -148,14 +147,26 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
       <TouchableOpacity
         style={[
           styles.inputWrapper,
-          { marginBottom: error ? 5 : 16, ...inputWrapperStyle },
+          {
+            marginBottom: error ? 5 : 16,
+            backgroundColor: editable ? colors.white : '#f5f5f5', // grey background if not editable
+            borderColor: editable ? colors.mainColor : '#ccc', //light border if not editable
+            ...inputWrapperStyle,
+          },
         ]}
         onPress={openModal}
+        activeOpacity={editable ? 0.7 : 1} //disable press effect
       >
         <Typography style={{ color: selected.length ? '#000' : '#999' }}>
           {selected.length ? selectedLabels : placeholder || label}
         </Typography>
-        <FontAwesome name="angle-down" size={18} color={colors.lightGary} />
+        {editable ? (
+          <FontAwesome
+            name="angle-down"
+            size={18}
+            color={colors.lightGary} //greyed arrow
+          />
+        ) : null}
       </TouchableOpacity>
 
       {error ? (
@@ -177,7 +188,7 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
         >
           <Animated.View
             style={[
-              styles.dropdownContainer,
+              styles.dropdownContainer, dropdownContainerStyle,
               { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
@@ -223,12 +234,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 0.5,
-    borderColor: colors.mainColor,
     borderRadius: 5,
     paddingHorizontal: 12,
     height: 45,
     justifyContent: 'space-between',
-    marginBottom: 16,
   },
   overlay: {
     flex: 1,

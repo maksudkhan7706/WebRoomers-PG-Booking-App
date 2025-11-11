@@ -76,54 +76,34 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
         mobile: mobile.trim(),
         password: confirmPassword,
         user_type: role,
-        company_id: '41',
+        company_id: '35',
       };
 
-      console.log('Register payload ===>', payload);
+      const otpPayload = {
+        email: email.trim(),
+        mobile_number: mobile.trim(),
+        full_name: fullName.trim(),
+      };
 
-      // ---------------- Register ----------------
-      const resultAction = await dispatch(registerUser(payload));
-
-      if (registerUser.fulfilled.match(resultAction)) {
-        const data = resultAction.payload;
-
-        if (data.success) {
-          showSuccessMsg(data.message || 'Registered successfully!');
-
-          // ---------------- Send OTP via Redux ----------------
-          const otpPayload = {
-            email: email.trim(),
+      try {
+        const otpResponse = await dispatch(sendOtp(otpPayload)).unwrap();
+        if (otpResponse.success) {
+          showSuccessMsg('OTP sent to your email');
+          navigation.navigate(NAV_KEYS.EmailVerification, {
+            email,
+            otp: otpResponse.otp,
+            role,
             mobile_number: mobile.trim(),
-          };
-
-          try {
-            const otpResponse = await dispatch(sendOtp(otpPayload)).unwrap();
-            console.log('otpResponse ============>>>>>', otpResponse?.otp);
-
-            if (otpResponse.success) {
-              showSuccessMsg('OTP sent to your email');
-              navigation.navigate(NAV_KEYS.EmailVerification, {
-                email,
-                otp: otpResponse.otp,
-                role,
-                mobile_number: mobile.trim(),
-                full_name: fullName.trim(),
-              });
-            } else {
-              showErrorMsg(otpResponse.message || 'Failed to send OTP');
-            }
-          } catch (otpErr: any) {
-            console.log('OTP Error ===>', otpErr);
-            showErrorMsg('Failed to send OTP');
-          }
+            full_name: fullName.trim(),
+            registerPayload: payload,
+          });
         } else {
-          showErrorMsg(data.message || 'Registration failed');
+          showErrorMsg(otpResponse.message || 'Failed to send OTP');
         }
-      } else {
-        showErrorMsg('Something went wrong');
+      } catch (otpErr: any) {
+        showErrorMsg('Failed to send OTP');
       }
     } catch (err) {
-      console.log('Register Error ===>', err);
       showErrorMsg('Error: Something went wrong');
     }
   };
@@ -139,7 +119,24 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >
-          <Image source={images.TransparentWebRoomerLogo} style={styles.logo} />
+          <View
+            style={{
+              height: 180,
+             width: '100%',
+              alignSelf: 'center',
+            }}
+          >
+            <Image
+              source={images.NewAppLogo}
+              style={[
+                {
+                  height: '100%',
+                  width: '100%',
+                  resizeMode: 'contain',
+                },
+              ]}
+            />
+          </View>
           <Typography
             variant="heading"
             weight="bold"

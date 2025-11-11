@@ -1,28 +1,22 @@
-export const baseUrl = 'https://meharpg.com/Api/v1';
+export const baseUrl = 'https://main.webroomer.com/Api/v1';
 export const authKey =
   '1c3b8f2f1e4d6a9b8d5f7a6c9b2e3d4f1a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d';
+
 
 export const loginUrl = () => '/login';
 export const registerUrl = () => '/register';
 export const sendOtpUrl = () => '/sendOtp';
 export const reSendOtpUrl = () => '/reSendOtp';
 export const forgotPasswordpUrl = () => '/forgotPassword';
-
 // main api url
 export const dashboardUrl = () => '/dashboard';
-
-export const pgDetailUrl = (pg_id: string, company_id: string) =>
-  `/pgDetails?pg_id=${pg_id}&company_id=${company_id}`;
-
-export const pgRoomsUrl = (pg_id: string, company_id: string) =>
-  `/getPgRooms?pg_id=${pg_id}&company_id=${company_id}`;
-
+export const pgDetailUrl = (pg_id: string, company_id: string) =>`/pgDetails?pg_id=${pg_id}&company_id=${company_id}`;
+export const pgRoomsUrl = (pg_id: string, company_id: string) =>`/getPgRooms?pg_id=${pg_id}&company_id=${company_id}`;
 export const pgRoomDetailUrl = () => '/getPgRoomDetails';
 export const userInfoUrl = () => `/userInfo`;
 export const roomBookingUrl = () => `/roomBooking`;
 export const updateProfileUrl = () => `/updateProfile`;
 export const myPgListUrl = () => `/myPgList`;
-
 //Landlord ADD/EDIT PG DROPDOWN
 export const getAllCategoriesUrl = () => '/getAllCategories';
 export const getAllCitiesUrl = () => '/getAllCities';
@@ -32,23 +26,32 @@ export const getAllWashroomUrl = () => '/getAllWashroom';
 export const getAllFeaturesUrl = () => '/getAllFeatures';
 export const getAllRoomFeaturesUrl = () => '/getAllRoomFeatures';
 export const getAllCityLocationUrl = () => '/getAllCityLocation';
-
-
-
-
 export const postEnquiry = () => '/postEnquiry';
 export const addEditPgRoomUrl = () => '/addEditPgRoom';
 export const deletePgRoomUrl = () => '/deleteRoom';
 export const addEditPgUrl = () => '/addEditPg';
-
-
 export const getLandlordEnquiriesUrl = () => '/myEnquiries';
 export const getLandlordPaymentHistoryUrl = () => '/getPaymentHistory';
 export const landlordEnquiryDetailUrl = () => '/enquiryDetail';
-
 export const getMyBookingUrl = () => '/myBookings';
 export const getLandlordBankDetailUrl = () => '/getLandlordBankDetail';
 export const payNowUrl = () => '/payNow';
-
 export const updateEnquiryStatusUrl = () => '/updateEnquiryStatus';
 export const changePaymentStatusUrl = () => '/changePaymentStatus';
+export const renewalUsersUrl = () => '/renewalUsers';
+export const getComplaintsUrl = () => '/getComplaints';
+export const getComplaintPurposesUrl = () => '/getComplaintPurposes';
+export const submitComplaintUrl = () => '/submitComplaint';
+export const changePasswordUrl = () => '/changePassword';
+export const getLandlordPropertiesurl = () => '/getLandlordProperties';
+export const updateComplaintStatusUrl = () => '/updateComplaintStatus';
+export const deleteComplaintUrl = () => '/deleteComplaint';
+export const getSettingsUrl = () => '/settings';
+
+
+
+
+
+
+
+

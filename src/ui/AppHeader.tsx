@@ -48,16 +48,23 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <Ionicons name="chevron-back" size={24} color={backIconColor} />
           </TouchableOpacity>
         ) : (
-          <AppImage
-            source={images.TransparentWebRoomerLogo}
-            style={{ width: 100, height: 60, right: 10 }}
-            resizeMode="cover"
-          />
+          <View
+            style={{
+              height: 40,
+              width: 40,
+            }}
+          >
+            <AppImage
+              source={images.NewAppLogo}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </View>
         )}
       </View>
       {/* Title */}
       <Typography
-        style={[styles.title, titleStyle, { marginRight: rightIcon ? 60 : 0 }]}
+        style={[styles.title, titleStyle, { marginRight: rightIcon ? 50 : 60 }]}
       >
         {title}
       </Typography>
