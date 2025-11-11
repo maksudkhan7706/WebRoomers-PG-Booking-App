@@ -1,4 +1,4 @@
-package com.meharpg
+package com.webroomerpgbookingapp;
 
 import android.app.Application
 import com.facebook.react.PackageList

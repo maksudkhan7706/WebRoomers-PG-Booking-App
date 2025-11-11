@@ -78,13 +78,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.meharpg"
+    namespace "com.webroomerpgbookingapp"
 
     defaultConfig {
-        applicationId "com.meharpg"
+        applicationId "com.webroomerpgbookingapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        versionCode 3
         versionName "1.0"
     }
 
