@@ -22,7 +22,7 @@ import AppImage from '../../../../ui/AppImage';
 import { formatDate } from '../../../../utils/formatDate';
 import AppButton from '../../../../ui/AppButton';
 import { showMessage } from 'react-native-flash-message';
-import { showErrorMsg } from '../../../../utils/appMessages';
+import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
 import { appLog } from '../../../../utils/appLog';
 
 const LandlordPaymentHistory = () => {
@@ -57,8 +57,8 @@ const LandlordPaymentHistory = () => {
       status === 'pending'
         ? '#FFD54F'
         : status === 'approved'
-          ? '#4CAF50'
-          : '#E57373';
+        ? '#4CAF50'
+        : '#E57373';
 
     return (
       <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
@@ -83,14 +83,12 @@ const LandlordPaymentHistory = () => {
               action,
               company_id: companyId || userData?.company_id,
             };
-            appLog('LandlordPaymentHistory', 'updatePaymentStatus Payload:', payload);
             try {
               const response: any = await dispatch(
                 updatePaymentStatus(payload),
               );
-              appLog('LandlordPaymentHistory', 'API Response:', response);
               if (response?.payload?.success) {
-                showMessage(
+                showSuccessMsg(
                   response?.payload?.message || 'Payment Update successfully!',
                 );
                 loadPaymentHistory(); //Refresh list automatically
@@ -100,7 +98,7 @@ const LandlordPaymentHistory = () => {
                 );
               }
             } catch (error) {
-              appLog('LandlordPaymentHistory','Error:', error);
+              appLog('LandlordPaymentHistory', 'Error:', error);
               showErrorMsg('Something went wrong while updating.');
             }
           },
@@ -110,83 +108,91 @@ const LandlordPaymentHistory = () => {
   };
 
   const renderItem = ({ item }: any) => (
-    <View style={styles.card}>
-      {[
-        { label: 'Created Date', value: formatDate(item?.created_at) },
-        { label: 'Amount', value: item?.amount },
-        { label: 'Start Date', value: formatDate(item?.start_date) },
-        { label: 'End Date', value: formatDate(item?.end_date) },
-      ].map((field, index) => (
-        <View key={index} style={styles.row}>
+    console.log('item ============>>>>>>', item),
+    (
+      <View style={styles.card}>
+        <View style={[styles.row, { marginTop: 5 }]}>
           <Typography weight="medium" variant="label" style={styles.label}>
-            {field.label}:
+            Payment Status:
           </Typography>
-          <Typography weight="regular" variant="label" style={styles.value}>
-            {field.value}
+          {renderStatusBadge(item?.payment_status)}
+        </View>
+
+        {[
+          { label: 'Created Date', value: formatDate(item?.created_at) },
+          {
+            label: 'Discount',
+            value: `₹${item?.discount || '₹0'}`,
+          },
+          { label: 'Amount', value: `₹${item?.amount || '₹0'}` },
+          { label: 'Start Date', value: formatDate(item?.start_date) },
+          { label: 'End Date', value: formatDate(item?.end_date) },
+        ].map((field, index) => (
+          <View key={index} style={styles.row}>
+            <Typography weight="medium" variant="label" style={styles.label}>
+              {field.label}:
+            </Typography>
+            <Typography weight="regular" variant="label" style={styles.value}>
+              {field.value}
+            </Typography>
+          </View>
+        ))}
+
+        {item?.payment_mode && (
+          <View style={styles.row}>
+            <Typography weight="medium" variant="label" style={styles.label}>
+              Payment Mode:
+            </Typography>
+            <Typography weight="regular" variant="label" style={styles.value}>
+              {item?.payment_mode}
+            </Typography>
+          </View>
+        )}
+
+        {/* Screenshot */}
+        <View style={{ marginTop: 5 }}>
+          <Typography weight="medium" variant="label" style={styles.label}>
+            Screenshot:
           </Typography>
+          <TouchableOpacity
+            onPress={() => {
+              setPreviewImage(item?.screenshot);
+              setPreviewVisible(true);
+            }}
+            style={{ height: 100, marginTop: 10, width: 120 }}
+          >
+            <AppImage
+              source={{ uri: item?.screenshot }}
+              style={styles.screenshotImg}
+              resizeMode="center"
+            />
+          </TouchableOpacity>
         </View>
-      ))}
 
-      <View style={[styles.row, { marginTop: 5 }]}>
-        <Typography weight="medium" variant="label" style={styles.label}>
-          Payment Status:
-        </Typography>
-        {renderStatusBadge(item?.payment_status)}
+        {/* Approve / Reject Buttons */}
+        {item?.payment_status === 'pending' && (
+          <View style={styles.buttonContainer}>
+            <AppButton
+              title="Approve"
+              titleSize="label"
+              onPress={() => handleAction('approved', item)}
+              style={[styles.footerBtn, { backgroundColor: colors.succes }]}
+            />
+            <AppButton
+              title="Reject"
+              titleSize="label"
+              onPress={() => handleAction('rejected', item)}
+              style={[styles.footerBtn, { backgroundColor: colors.rejected }]}
+            />
+          </View>
+        )}
       </View>
-
-      {/* Screenshot */}
-      <View style={{ marginTop: 5 }}>
-        <Typography weight="medium" variant="label" style={styles.label}>
-          Screenshot:
-        </Typography>
-        <TouchableOpacity
-          onPress={() => {
-            setPreviewImage(item?.screenshot);
-            setPreviewVisible(true);
-          }}
-          style={{ height: 100, marginTop: 10 }}
-        >
-          <AppImage
-            source={{ uri: item?.screenshot }}
-            style={styles.screenshotImg}
-            resizeMode="stretch"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Approve / Reject Buttons */}
-      {item?.payment_status === 'pending' && (
-        <View style={styles.buttonContainer}>
-          <AppButton
-            title="Approve"
-            titleSize="label"
-            onPress={() => handleAction('approved', item)}
-            style={[styles.footerBtn, { backgroundColor: colors.succes }]}
-          />
-          <AppButton
-            title="Reject"
-            titleSize="label"
-            onPress={() => handleAction('rejected', item)}
-            style={[styles.footerBtn, { backgroundColor: colors.rejected }]}
-          />
-        </View>
-      )}
-    </View>
+    )
   );
 
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="Payment Detail"
-        showBack
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
-      />
+      <AppHeader title="Payment Detail" showBack />
 
       {loading ? (
         <View style={[styles.container, { justifyContent: 'center' }]}>
@@ -224,6 +230,7 @@ const LandlordPaymentHistory = () => {
         transparent
         animationType="fade"
         onRequestClose={() => setPreviewVisible(false)}
+        statusBarTranslucent
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity
@@ -240,6 +247,7 @@ const LandlordPaymentHistory = () => {
               <AppImage
                 source={{ uri: previewImage }}
                 style={styles.modalImage}
+                resizeMode="center"
               />
             )}
           </View>

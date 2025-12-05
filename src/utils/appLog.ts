@@ -12,7 +12,7 @@ export const appLog = (screenName: string, message: string, data?: any) => {
 
   const time = new Date().toLocaleTimeString(); //timestamp
   const tag = screenName ? `[${screenName}]` : '';
-  const formattedMessage = `🟢 ${time} ${tag} → ${message} ===>>>>`;
+  const formattedMessage = `🟢 ${time} ${tag} → ${message}`;
 
   if (data !== undefined) {
     console.log(formattedMessage, data);

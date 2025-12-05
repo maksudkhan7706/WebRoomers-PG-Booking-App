@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
-  Image,
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
@@ -14,7 +13,6 @@ import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
 import colors from '../../../constants/colors';
 import styles from './styles';
 import AppHeader from '../../../ui/AppHeader';
-import images from '../../../assets/images';
 import Typography from '../../../ui/Typography';
 import AppButton from '../../../ui/AppButton';
 import AppTextInput from '../../../ui/AppTextInput';
@@ -23,6 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { loginUser } from '../../../store/authSlice';
 import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
+import AppLogo from '../../../ui/AppLogo';
 
 type LoginNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -125,33 +124,25 @@ const Login: React.FC<LoginProps & { setRole: (role: string) => void }> = ({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >
-          <View
-            style={{
-              height: 180,
+          <AppLogo
+            containerStyle={{
+              height: 300,
               width: '100%',
               alignSelf: 'center',
+              marginTop: -100,
             }}
-          >
-            <Image
-              source={images.NewAppLogo}
-              style={[
-                {
-                  height: '100%',
-                  width: '100%',
-                  resizeMode: 'contain',
-                },
-              ]}
-            />
-          </View>
+          />
 
-          <Typography
-            variant="heading"
-            weight="bold"
-            color={colors.mainColor}
-            style={styles.titleText}
-          >
-            Login
-          </Typography>
+          <View style={{ marginTop: -40 }}>
+            <Typography
+              variant="heading"
+              weight="bold"
+              color={colors.mainColor}
+              style={styles.titleText}
+            >
+              Login
+            </Typography>
+          </View>
 
           <Typography
             variant="body"

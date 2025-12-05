@@ -13,6 +13,7 @@ interface AppTextInputProps extends TextInputProps {
   error?: string;
   containerStyle?: object;
   rightIcon?: React.ReactNode;
+  leftIcon?: React.ReactNode;
   inputHeight?: number; // custom height for multiline
 }
 
@@ -22,6 +23,7 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
   style,
   containerStyle,
   rightIcon,
+  leftIcon,
   inputHeight,
   multiline = false,
   ...props
@@ -51,6 +53,9 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           },
         ]}
       >
+        {leftIcon && (
+          <View style={styles.leftIconContainer}>{leftIcon}</View>
+        )}
         <TextInput
           placeholderTextColor={colors.gray}
           style={[
@@ -65,7 +70,9 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           multiline={multiline}
           {...props}
         />
-        {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
+        {rightIcon && (
+          <View style={styles.rightIconContainer}>{rightIcon}</View>
+        )}
       </View>
 
       {error && (
@@ -98,7 +105,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textDark,
   },
-  iconContainer: {
+  leftIconContainer: {
+    marginRight: 8,
+  },
+  rightIconContainer: {
     marginLeft: 8,
   },
   inputError: {

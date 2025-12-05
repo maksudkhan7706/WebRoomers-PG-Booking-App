@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Image } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NAV_KEYS, RootStackParamList } from '../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Typography from '../../../ui/Typography';
 import styles from './styles';
-import images from '../../../assets/images';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppButton from '../../../ui/AppButton';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import AppLogo from '../../../ui/AppLogo';
 
 type RoleSelectNavProp = NativeStackNavigationProp<
   RootStackParamList,
   typeof NAV_KEYS.ROLE_SELECT
 >;
+
+const roleLabelMap: Record<string, string> = {
+  user: 'TENANT',
+  landlord: 'LANDLORD',
+};
 
 const RoleSelect = () => {
   const [selectedRole, setSelectedRole] = useState<'user' | 'landlord' | null>(
@@ -29,26 +34,14 @@ const RoleSelect = () => {
 
   return (
     <View style={styles.container}>
-      {/* <AppHeader title="WEBROOMERS" /> */}
-      <View
-        style={{
-          height: 250,
+      <AppLogo
+        containerStyle={{
+          height: 300,
           width: '100%',
           alignSelf: 'center',
-          marginTop: 120,
+          marginTop: 50,
         }}
-      >
-        <Image
-          source={images.NewAppLogo}
-          style={[
-            {
-              height: '100%',
-              width: '100%',
-              resizeMode: 'contain',
-            },
-          ]}
-        />
-      </View>
+      />
 
       <View style={styles.content}>
         <View style={styles.cardContainer}>
@@ -80,7 +73,7 @@ const RoleSelect = () => {
                   }}
                 >
                   <Typography variant="body" weight="bold">
-                    {role.toUpperCase()}
+                    {roleLabelMap[role]}
                   </Typography>
                   <AntDesign name="right" size={14} color="black" />
                 </View>

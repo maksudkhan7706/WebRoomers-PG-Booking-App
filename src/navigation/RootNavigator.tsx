@@ -21,10 +21,20 @@ import PGDetailScreen from '../screens/MainScreen/COMMON/PGDetailScreen';
 import PGRoomListScreen from '../screens/MainScreen/COMMON/PGRoomListScreen';
 import PGRoomDetailScreen from '../screens/MainScreen/COMMON/PGRoomDetailScreen';
 import UserComplaintScreen from '../screens/MainScreen/ROLEUSER/UserComplaintScreen';
+import UserPaymentDetailScreen from '../screens/MainScreen/ROLEUSER/UserPaymentDetailScreen';
 import LandlordComplaintScreen from '../screens/MainScreen/ROLELANDLORD/LandlordComplaintScreen';
 import ChangePasswordScreen from '../screens/MainScreen/COMMON/ChangePasswordScreen';
 import PrivacyPolicyScreen from '../screens/MainScreen/COMMON/PrivacyPolicyScreen';
 import TermsConditionsScreen from '../screens/MainScreen/COMMON/TermsConditionsScreen';
+import SubUserScreen from '../screens/MainScreen/ROLELANDLORD/SubUserScreen';
+import AddEditSubUserScreen from '../screens/MainScreen/ROLELANDLORD/AddEditSubUserScreen';
+import TenantsScreen from '../screens/MainScreen/ROLELANDLORD/TenantsScreen';
+import AddNewTenantScreen from '../screens/MainScreen/ROLELANDLORD/AddNewTenantScreen';
+import PGTermsConditionScreen from '../screens/MainScreen/COMMON/PGTermsConditionScreen';
+import LandlordBankDetailScreen from '../screens/MainScreen/ROLELANDLORD/LandlordBankDetailScreen';
+import LandlordEnquiryScreen from '../screens/MainScreen/ROLELANDLORD/LandlordEnquiryScreen';
+import UserEnquiryScreen from '../screens/MainScreen/ROLEUSER/UserEnquiryScreen';
+import LandlordTenantsPaymentScreen from '../screens/MainScreen/ROLELANDLORD/LandlordTenantsPaymentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -92,6 +102,10 @@ const RootNavigator = () => {
             name={NAV_KEYS.UserComplaintScreen}
             component={UserComplaintScreen}
           />
+          <Stack.Screen
+            name={NAV_KEYS.UserPaymentDetailScreen}
+            component={UserPaymentDetailScreen}
+          />
 
           <Stack.Screen
             name={NAV_KEYS.LandlordComplaintScreen}
@@ -108,6 +122,44 @@ const RootNavigator = () => {
           <Stack.Screen
             name={NAV_KEYS.TermsConditionsScreen}
             component={TermsConditionsScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.SubUserScreen}
+            component={SubUserScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.AddEditSubUserScreen}
+            component={AddEditSubUserScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.TenantsScreen}
+            component={TenantsScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.AddNewTenantScreen}
+            component={AddNewTenantScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.PGTermsConditionScreen}
+            component={PGTermsConditionScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.LandlordBankDetailScreen}
+            component={LandlordBankDetailScreen}
+          />
+
+          <Stack.Screen
+            name={NAV_KEYS.LandlordEnquiryScreen}
+            component={LandlordEnquiryScreen}
+          />
+
+          <Stack.Screen
+            name={NAV_KEYS.UserEnquiryScreen}
+            component={UserEnquiryScreen}
+          />
+          <Stack.Screen
+            name={NAV_KEYS.LandlordTenantsPaymentScreen}
+            component={LandlordTenantsPaymentScreen}
           />
         </>
       ) : (

@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Modal,
 } from 'react-native';
 import Typography from '../../../../ui/Typography';
 import AppHeader from '../../../../ui/AppHeader';
@@ -26,6 +27,7 @@ import {
 } from '../../../../store/mainSlice';
 import { useRoute } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Video from 'react-native-video';
 import { formatDate } from '../../../../utils/formatDate';
 import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
 import { appLog } from '../../../../utils/appLog';
@@ -45,9 +47,14 @@ const PGRoomManagement = () => {
   const [securityDeposit, setSecurityDeposit] = useState('');
   const [roomDescription, setRoomDescription] = useState('');
   const [extraFeatures, setExtraFeatures] = useState<any[]>([]);
-  const [images, setImages] = useState<any>({});
+  const [images, setImages] = useState<any>({
+    roomImage: [],
+    roomVideo: [],
+  });
   const [editRoomData, setEditRoomData] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [showVideoPreview, setShowVideoPreview] = useState(false);
+  const [videoPreviewUri, setVideoPreviewUri] = useState<string | null>(null);
   const rooms = pgRooms?.data || [];
 
   //Fetch rooms when component mounts
@@ -72,10 +79,10 @@ const PGRoomManagement = () => {
   //Dropdown options (memoized)
   const roomTypeOptions = useMemo(
     () => [
-      { label: 'Single Occupancy', value: 'single' },
-      { label: 'Double Occupancy', value: 'double' },
-      { label: 'Triple Occupancy', value: 'triple' },
-      { label: 'Dormitory', value: 'dormitory' },
+      { label: 'Single Occupancy', value: '1' },
+      { label: 'Double Occupancy', value: '2' },
+      { label: 'Triple Occupancy', value: '3' },
+      { label: 'Dormitory', value: '50' },
     ],
     [],
   );
@@ -93,6 +100,12 @@ const PGRoomManagement = () => {
     setImages((prev: any) => ({ ...prev, [key]: file }));
   }, []);
 
+  const handleVideoPreview = useCallback((uri?: string) => {
+    if (!uri) return;
+    setVideoPreviewUri(uri);
+    setShowVideoPreview(true);
+  }, []);
+
   //Handle Add/Edit Room
   const handleSaveRoom = useCallback(async () => {
     const facilityIds = extraFeatures.map(item => item?.id).join(',');
@@ -101,13 +114,13 @@ const PGRoomManagement = () => {
       Alert.alert('Missing Fields', 'Please fill all required fields.');
       return;
     }
-
     try {
       setSaving(true);
       const formData = new FormData();
       formData.append('company_id', companyId.toString());
       formData.append('pg_id', roomId.toString());
       formData.append('landlord_id', userData?.user_id?.toString() || '');
+      formData.append('user_type', userData?.user_type || 'landlord');
       formData.append('room_number', roomName);
       formData.append('room_type', roomType[0]);
       formData.append('room_price', monthlyRent.toString());
@@ -129,6 +142,24 @@ const PGRoomManagement = () => {
         );
       }
 
+      const selectedVideo =
+        Array.isArray(images?.roomVideo) && images.roomVideo.length > 0
+          ? images.roomVideo[0]
+          : null;
+      if (
+        selectedVideo &&
+        typeof selectedVideo === 'object' &&
+        selectedVideo?.uri &&
+        !selectedVideo.uri.startsWith('http')
+      ) {
+        formData.append('video', {
+          uri: selectedVideo.uri,
+          name:
+            selectedVideo.fileName || selectedVideo.name || 'room_video.mp4',
+          type: selectedVideo.type || 'video/mp4',
+        });
+      }
+
       if (editRoomData?.id) {
         formData.append('room_id', editRoomData.id.toString());
       }
@@ -147,7 +178,7 @@ const PGRoomManagement = () => {
           setSecurityDeposit('');
           setRoomDescription('');
           setExtraFeatures([]);
-          setImages({});
+          setImages({ roomImage: [], roomVideo: [] });
         }
 
         setActiveTab('manage');
@@ -176,147 +207,172 @@ const PGRoomManagement = () => {
   ]);
 
   //Render Room Item
-  const renderRoom = useCallback(({ item: room }: any) => {
-    return (
-      <View style={styles.roomCard}>
-        <View style={styles.roomHeader}>
-          <Typography variant="body" weight="bold" style={styles.roomTitle}>
-            {room?.room_number} (
-            {room?.room_type
-              ? room.room_type.charAt(0).toUpperCase() +
-                room.room_type.slice(1).toLowerCase()
-              : ''}
-            )
-          </Typography>
-          <View style={styles.statusRow}>
-            <View style={styles.statusDot} />
-            <Typography
-              variant="body"
-              weight="medium"
-              style={{ color: colors.succes }}
-            >
-              Available
-            </Typography>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <View style={styles.infoCol}>
-            <Typography variant="label" color={colors.gray}>
-              Monthly Rent:
-            </Typography>
-            <Typography variant="label">{room?.price}</Typography>
-          </View>
-          <View style={styles.infoCol}>
-            <Typography variant="label" color={colors.gray}>
-              Security Deposit:
-            </Typography>
-            <Typography variant="label">{room?.security_deposit}</Typography>
-          </View>
-        </View>
-        <View style={styles.infoRow}>
-          <View style={styles.infoCol}>
-            <Typography variant="label" color={colors.gray}>
-              Room Type:
-            </Typography>
-            <Typography variant="label">
+  const renderRoom = useCallback(
+    ({ item: room }: any) => {
+      return (
+        <View style={styles.roomCard}>
+          <View style={styles.roomHeader}>
+            <Typography variant="body" weight="bold" style={styles.roomTitle}>
+              {room?.room_number} (
               {room?.room_type
                 ? room.room_type.charAt(0).toUpperCase() +
                   room.room_type.slice(1).toLowerCase()
                 : ''}
+              )
             </Typography>
-          </View>
-          <View style={styles.infoCol}>
-            <Typography variant="label" color={colors.gray}>
-              Added On:
-            </Typography>
-            <Typography variant="label">
-              {formatDate(room?.created_at)}
-            </Typography>
-          </View>
-        </View>
-        <Typography style={{ marginTop: 10 }} color={colors.gray}>
-          Description:
-        </Typography>
-        <Typography variant="label">{room?.description}</Typography>
-        <Typography color={colors.gray} style={{ marginTop: 10 }}>
-          Facilities:
-        </Typography>
-        <View style={styles.facilityWrap}>
-          {(room?.facilities || []).map((item: any, index: number) => (
-            <View key={index} style={styles.facilityItem}>
-              <Icon name="check" size={16} color={colors.mainColor} />
+            <View style={styles.statusRow}>
+              <View style={styles.statusDot} />
               <Typography
-                variant="label"
-                style={{ color: colors.mainColor, marginLeft: 4 }}
+                variant="body"
+                weight="medium"
+                style={{ color: colors.succes }}
               >
-                {item}
+                Available
               </Typography>
             </View>
-          ))}
-        </View>
-        <View style={styles.buttonRow}>
-          <AppButton
-            title="Edit"
-            onPress={() => {
-              setEditRoomData(room);
-              setRoomName(room?.room_number || '');
-              setRoomType(room?.room_type ? [room.room_type] : []);
-              setMonthlyRent(room.price || '');
-              setSecurityDeposit(room.security_deposit || '');
-              setRoomDescription(room.description || '');
-              setImages({ roomImage: room.images || [] });
-              setActiveTab('add');
-            }}
-            style={{ flex: 1, height: 40 }}
-          />
-          <AppButton
-            title="Delete"
-            onPress={() => {
-              Alert.alert(
-                'Confirm Delete',
-                `Are you sure you want to delete "${room?.room_number}"?`,
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                      try {
-                        const payload = {
-                          room_id: room.id,
-                          company_id: companyId,
-                        };
-                        const result = await dispatch(deletePgRoom(payload));
-                        if (deletePgRoom.fulfilled.match(result)) {
-                          showSuccessMsg('Room deleted successfully.');
-                          // Refresh room list
-                          dispatch(
-                            fetchPgRooms({
-                              pg_id: roomId,
-                              company_id: companyId,
-                            }),
+          </View>
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoCol}>
+              <Typography variant="label" color={colors.gray}>
+                Monthly Rent:
+              </Typography>
+              <Typography variant="label">₹{room?.price}</Typography>
+            </View>
+            <View style={styles.infoCol}>
+              <Typography variant="label" color={colors.gray}>
+                Security Deposit:
+              </Typography>
+              <Typography variant="label">
+                {' '}
+                ₹{room?.security_deposit}
+              </Typography>
+            </View>
+          </View>
+          <View style={styles.infoRow}>
+            <View style={styles.infoCol}>
+              <Typography variant="label" color={colors.gray}>
+                Room Type:
+              </Typography>
+              <Typography variant="label">
+                {room?.room_type
+                  ? room.room_type.charAt(0).toUpperCase() +
+                    room.room_type.slice(1).toLowerCase()
+                  : ''}
+              </Typography>
+            </View>
+            <View style={styles.infoCol}>
+              <Typography variant="label" color={colors.gray}>
+                Added On:
+              </Typography>
+              <Typography variant="label">
+                {formatDate(room?.created_at)}
+              </Typography>
+            </View>
+          </View>
+          <Typography color={colors.gray} style={{ marginTop: 10 }}>
+            Facilities:
+          </Typography>
+          <View style={styles.facilityWrap}>
+            {(room?.facilities || []).map((item: any, index: number) => (
+              <View key={index} style={styles.facilityItem}>
+                <Icon name="check" size={16} color={colors.mainColor} />
+                <Typography
+                  variant="label"
+                  style={{ color: colors.mainColor, marginLeft: 4 }}
+                >
+                  {item}
+                </Typography>
+              </View>
+            ))}
+          </View>
+          <View style={styles.buttonRow}>
+            <AppButton
+              title="Edit"
+              onPress={() => {
+                setEditRoomData(room);
+                setRoomName(room?.room_number || '');
+                setRoomType(() => {
+                  if (!room?.room_type) {
+                    return [];
+                  }
+                  const normalizedType = room.room_type.trim().toLowerCase();
+                  const matchedOption = roomTypeOptions.find(
+                    option =>
+                      option.value === room.room_type ||
+                      option.label.trim().toLowerCase() === normalizedType,
+                  );
+                  return matchedOption ? [matchedOption.value] : [];
+                });
+                setMonthlyRent(room.price || '');
+                setSecurityDeposit(room.security_deposit || '');
+                setRoomDescription(room.description || '');
+                const existingVideo =
+                  room?.video ||
+                  room?.room_video ||
+                  room?.video_url ||
+                  (Array.isArray(room?.videos) ? room.videos[0] : null);
+                setImages({
+                  roomImage: room.images || [],
+                  roomVideo: existingVideo
+                    ? Array.isArray(existingVideo)
+                      ? existingVideo
+                      : [existingVideo]
+                    : [],
+                });
+                setActiveTab('add');
+              }}
+              style={{ flex: 1, height: 40 }}
+            />
+            <AppButton
+              title="Delete"
+              onPress={() => {
+                Alert.alert(
+                  'Confirm Delete',
+                  `Are you sure you want to delete "${room?.room_number}"?`,
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          const payload = {
+                            room_id: room.id,
+                            company_id: companyId,
+                          };
+                          const result = await dispatch(deletePgRoom(payload));
+                          if (deletePgRoom.fulfilled.match(result)) {
+                            showSuccessMsg('Room deleted successfully.');
+                            // Refresh room list
+                            dispatch(
+                              fetchPgRooms({
+                                pg_id: roomId,
+                                company_id: companyId,
+                              }),
+                            );
+                          } else {
+                            showErrorMsg('Unable to delete room.');
+                          }
+                        } catch (err: any) {
+                          showErrorMsg(
+                            'Error',
+                            err.message || 'Something went wrong.',
                           );
-                        } else {
-                          showErrorMsg('Unable to delete room.');
                         }
-                      } catch (err: any) {
-                        showErrorMsg(
-                          'Error',
-                          err.message || 'Something went wrong.',
-                        );
-                      }
+                      },
                     },
-                  },
-                ],
-              );
-            }}
-            style={{ flex: 1, height: 40, backgroundColor: colors.error }}
-          />
+                  ],
+                );
+              }}
+              style={{ flex: 1, height: 40, backgroundColor: colors.error }}
+            />
+          </View>
         </View>
-      </View>
-    );
-  }, []);
+      );
+    },
+    [roomTypeOptions],
+  );
 
   return (
     <View style={styles.container}>
@@ -337,7 +393,7 @@ const PGRoomManagement = () => {
                 setSecurityDeposit('');
                 setRoomDescription('');
                 setExtraFeatures([]);
-                setImages({});
+                setImages({ roomImage: [], roomVideo: [] });
               }
               if (tab === 'manage') setEditRoomData(null);
             }}
@@ -438,7 +494,6 @@ const PGRoomManagement = () => {
                 Room Type
               </Typography>
               <AppCustomDropdown
-                label="Select Room Type"
                 data={roomTypeOptions}
                 selectedValues={roomType}
                 onSelect={setRoomType}
@@ -466,10 +521,13 @@ const PGRoomManagement = () => {
             />
           </View>
           {/* Facilities */}
-          <Typography weight="medium" style={{ marginTop: 10 }}>
-            Room Facilities
-          </Typography>
-          <View style={[styles.facilityRow, { flexWrap: 'wrap' }]}>
+          <View style={styles.facilityHeader}>
+            <Typography weight="medium">Room Facilities</Typography>
+            <Typography variant="caption" color={colors.gray}>
+              Tap to select the amenities available in this room
+            </Typography>
+          </View>
+          <View style={styles.facilityGrid}>
             {(allRoomFeatures || []).map((feature: any) => {
               const isSelected = extraFeatures.some(
                 item => item?.id === feature.id,
@@ -478,24 +536,31 @@ const PGRoomManagement = () => {
                 <TouchableOpacity
                   key={feature.id}
                   onPress={() => toggleMultiSelect(feature)}
-                  activeOpacity={0.7}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginRight: 30,
-                    marginBottom: 10,
-                  }}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.facilityOption,
+                    isSelected && styles.facilityOptionSelected,
+                  ]}
                 >
-                  <Icon
-                    name={isSelected ? 'check-box' : 'check-box-outline-blank'}
-                    size={20}
-                    color={isSelected ? colors.mainColor : colors.gray}
-                  />
+                  <View
+                    style={[
+                      styles.facilityIconWrap,
+                      isSelected && styles.facilityIconWrapSelected,
+                    ]}
+                  >
+                    <Icon
+                      name={isSelected ? 'check' : 'add'}
+                      size={16}
+                      color={isSelected ? colors.white : colors.mainColor}
+                    />
+                  </View>
                   <Typography
-                    style={{
-                      marginLeft: 6,
-                      color: isSelected ? colors.mainColor : colors.gray,
-                    }}
+                    variant="label"
+                    weight="medium"
+                    style={[
+                      styles.facilityLabel,
+                      isSelected && styles.facilityLabelSelected,
+                    ]}
                   >
                     {feature.name}
                   </Typography>
@@ -516,15 +581,23 @@ const PGRoomManagement = () => {
             containerStyle={styles.descContainer}
           />
           {/* Images */}
-          <Typography weight="medium" style={{ marginTop: 20 }}>
-            Room Images
-          </Typography>
           <ImagePickerInput
-            label=""
+            label="Room Images"
+            labelStyle={{ fontSize: 16, marginTop: 5 }}
             value={images.roomImage}
             onSelect={file => handleImageSelect('roomImage', file)}
             multiple={true}
           />
+          <ImagePickerInput
+            label="Room Video"
+            labelStyle={{ fontSize: 16 }}
+            pickerPlachholer="Upload / Capture Video"
+            value={images.roomVideo}
+            onSelect={file => handleImageSelect('roomVideo', file)}
+            mediaType="video"
+            onPreview={handleVideoPreview}
+          />
+
           <AppButton
             title={editRoomData ? 'Update Room' : 'Save Room'}
             style={{
@@ -537,6 +610,33 @@ const PGRoomManagement = () => {
           />
         </ScrollView>
       )}
+      <Modal
+        visible={showVideoPreview}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowVideoPreview(false)}
+        statusBarTranslucent
+      >
+        <View style={styles.videoPreviewOverlay}>
+          <View style={styles.videoPreviewCard}>
+            <TouchableOpacity
+              style={styles.videoPreviewClose}
+              onPress={() => setShowVideoPreview(false)}
+            >
+              <Icon name="close" size={22} color="#fff" />
+            </TouchableOpacity>
+            {videoPreviewUri ? (
+              <Video
+                source={{ uri: videoPreviewUri }}
+                style={styles.videoPlayer}
+                controls
+                resizeMode="contain"
+                paused={!showVideoPreview}
+              />
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

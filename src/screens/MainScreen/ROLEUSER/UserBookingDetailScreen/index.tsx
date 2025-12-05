@@ -7,27 +7,24 @@ import {
   Modal,
 } from 'react-native';
 import AppHeader from '../../../../ui/AppHeader';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import colors from '../../../../constants/colors';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import styles from './styles';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { formatDate } from '../../../../utils/formatDate';
 import AppImage from '../../../../ui/AppImage';
 import AppButton from '../../../../ui/AppButton';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NAV_KEYS, RootStackParamList } from '../../../../navigation/NavKeys';
 import Typography from '../../../../ui/Typography';
+import { appLog } from '../../../../utils/appLog';
 
 type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const UserBookingDetailScreen = () => {
   const route = useRoute();
   const { BookingData }: any = route.params;
-  const dispatch = useDispatch<any>();
   const navigation = useNavigation<BookingDetailNavProp>();
-  const { userData } = useSelector((state: any) => state.auth);
   const { loading } = useSelector((state: any) => state.main);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -53,8 +50,8 @@ const UserBookingDetailScreen = () => {
       status === 'Pending'
         ? '#FFD54F'
         : status === 'Active'
-        ? '#4CAF50'
-        : '#E57373';
+          ? '#4CAF50'
+          : '#E57373';
 
     return (
       <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
@@ -76,20 +73,34 @@ const UserBookingDetailScreen = () => {
     );
   }
 
+  const securityCharges =
+    BookingData?.room?.security_deposit ??
+    BookingData?.property?.property_security_charges ??
+    0;
+  const maintainanceCharges =
+    BookingData?.room?.mantinance_deposit ??
+    BookingData?.property?.property_maintainance_charges ??
+    0;
+
+  const isRoom = !!BookingData?.room;
+
+  const landlordId = isRoom
+    ? BookingData?.room?.landlord_id
+    : BookingData?.property?.landlord_id;
+
+  const pgId = isRoom
+    ? BookingData?.room?.pg_id
+    : BookingData?.property?.property_id;
+
+  const totalAmount = BookingData?.amount ?? 0;
+
+  const RoomRent = isRoom
+    ? BookingData?.room?.room_rent ?? 0
+    : BookingData?.property?.room_rent ?? 0;
 
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="Booking Details"
-        showBack
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
-      />
+      <AppHeader title="Booking Details" showBack />
 
       <ScrollView
         contentContainerStyle={styles.listContent}
@@ -108,8 +119,8 @@ const UserBookingDetailScreen = () => {
                   BookingData?.status === 'Pending'
                     ? colors.pending
                     : BookingData?.status === 'Accepted'
-                    ? colors.accepted
-                    : colors.rejected,
+                      ? colors.accepted
+                      : colors.rejected,
               },
             ]}
           >
@@ -117,20 +128,19 @@ const UserBookingDetailScreen = () => {
               {BookingData?.status === 'Pending'
                 ? 'Pending'
                 : BookingData?.status === 'Accepted'
-                ? 'Accepted'
-                : 'Rejected'}
+                  ? 'Accepted'
+                  : 'Rejected'}
             </Typography>
           </View>
         </View>
 
-        {/* Basic Information */}
+        {/* PG Address */}
         <View style={styles.card}>
           <Typography variant="body" weight="medium">
-            Basic Information
+            PG Address
           </Typography>
           {[
             ['PG Name', BookingData?.property?.property_title],
-            ['PG For', BookingData?.property?.pg_for],
             [
               'City',
               BookingData?.property?.city_location_name,
@@ -242,6 +252,7 @@ const UserBookingDetailScreen = () => {
             Pricing & Details
           </Typography>
           {[
+            ['PG For', BookingData?.property?.pg_for],
             ['Price (per room)', `₹${BookingData?.property?.property_price}`],
             [
               'Security Deposit',
@@ -254,13 +265,14 @@ const UserBookingDetailScreen = () => {
             ['Total Rooms', BookingData?.property?.total_rooms],
             [
               'Area',
-              `${BookingData?.property?.property_area_sqft || ''} ${
-                BookingData?.property?.property_area_type || ''
+              `${BookingData?.property?.property_area_sqft || ''} ${BookingData?.property?.property_area_type || ''
               }`,
             ],
-            ['Availability', BookingData?.property?.property_availability],
             ['Furniture', BookingData?.property?.property_furnished],
             ['Parking', BookingData?.property?.property_parking],
+
+            ['Lock In Period', BookingData?.property?.lock_in_period],
+            ['Notice Period', BookingData?.property?.notice_period],
           ].map(([label, value], i) => (
             <View key={i} style={styles.row}>
               <Typography variant="label" weight="medium">
@@ -273,11 +285,11 @@ const UserBookingDetailScreen = () => {
           ))}
         </View>
 
-        {/* Property Features */}
+        {/* PG  Features */}
         {BookingData?.property?.property_features?.length > 0 && (
           <View style={styles.card}>
             <Typography variant="body" weight="medium" style={styles.mb8}>
-              Property Features
+              PG Features
             </Typography>
             <View style={styles.featuresWrap}>
               {BookingData.property.property_features.map(
@@ -309,7 +321,7 @@ const UserBookingDetailScreen = () => {
         )}
 
         {/* Payment Details */}
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Typography variant="body" weight="medium">
             Payment Details
           </Typography>
@@ -336,7 +348,6 @@ const UserBookingDetailScreen = () => {
             {renderPaymentStatusBadge(BookingData?.payment_status_text)}
           </View>
 
-          {/* Screenshot */}
           <View style={styles.screenshotContainer}>
             <Typography weight="medium" variant="label" style={styles.label}>
               Screenshot:
@@ -357,7 +368,7 @@ const UserBookingDetailScreen = () => {
               />
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* Property Photos */}
         <View style={styles.card}>
@@ -385,11 +396,18 @@ const UserBookingDetailScreen = () => {
             titleSize="label"
             onPress={() =>
               navigation.navigate(NAV_KEYS.UserPaymentScreen, {
-                LandlordId: BookingData?.property?.landlord_id,
-                Amount: BookingData?.amount || '0',
+                LandlordId: landlordId,
+                PgId: pgId,
+                Amount: totalAmount,
                 EnquiryId: BookingData?.enquiry_id,
-                PaymentStartDate: BookingData?.payment_start_date,
-                PaymentStartEnd: BookingData?.payment_end_date,
+                PaymentStartDate: BookingData?.check_in_date,
+                PaymentStartEnd: BookingData?.check_out_date,
+                SecurityCharges: securityCharges,
+                MaintainanceCharges: maintainanceCharges,
+                RoomRent: RoomRent,
+                LandlordName: BookingData?.property?.property_user_name,
+                LandlordEmail: BookingData?.property?.property_user_email,
+                LandlordMobile: BookingData?.property?.property_user_mobile,
               })
             }
             style={{ backgroundColor: colors.succes }}
@@ -402,6 +420,7 @@ const UserBookingDetailScreen = () => {
         transparent
         animationType="fade"
         onRequestClose={() => setPreviewVisible(false)}
+        statusBarTranslucent
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity

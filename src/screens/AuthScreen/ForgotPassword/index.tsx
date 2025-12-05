@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Image } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
 import colors from '../../../constants/colors';
 import AppHeader from '../../../ui/AppHeader';
-import images from '../../../assets/images';
 import Typography from '../../../ui/Typography';
 import AppButton from '../../../ui/AppButton';
 import AppTextInput from '../../../ui/AppTextInput';
@@ -14,6 +13,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../store';
 import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
 import { forgotPassword } from '../../../store/authSlice';
+import AppLogo from '../../../ui/AppLogo';
 
 type ForgotNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -69,34 +69,25 @@ const ForgotPassword: React.FC<ForgotProps> = ({ navigation, route }) => {
     <View style={styles.container}>
       <AppHeader title="" showBack containerStyle={styles.headerContainer} />
       <View style={styles.innerContainer}>
-        <View
-          style={{
-            height: 180,
-        width: '100%',
+        <AppLogo
+          containerStyle={{
+            height: 300,
+            width: '100%',
             alignSelf: 'center',
+            marginTop: -100,
           }}
-        >
-          <Image
-            source={images.NewAppLogo}
-            style={[
-              {
-                height: '100%',
-                width: '100%',
-                resizeMode: 'contain',
-              },
-            ]}
-          />
+        />
+        <View style={{ marginTop: -40 }}>
+          <Typography
+            variant="heading"
+            weight="bold"
+            align="center"
+            color={colors.mainColor}
+            style={styles.titleText}
+          >
+            Forgot Password
+          </Typography>
         </View>
-
-        <Typography
-          variant="heading"
-          weight="bold"
-          align="center"
-          color={colors.mainColor}
-          style={styles.titleText}
-        >
-          Forgot Password
-        </Typography>
 
         <Typography
           variant="body"

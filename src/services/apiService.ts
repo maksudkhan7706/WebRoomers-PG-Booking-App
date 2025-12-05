@@ -47,6 +47,7 @@ export const postRequest = async (
   endpoint: string,
   body: any,
   isMultipart = false,
+  isJson = false,
 ) => {
   const url = baseUrl + endpoint;
   appLog('apiService', 'POST API URL:', url);
@@ -74,6 +75,9 @@ export const postRequest = async (
         });
         options.body = formData;
       }
+    } else if (isJson) {
+      headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
     } else {
       const formBody = new URLSearchParams();
       Object.keys(body).forEach(key => {

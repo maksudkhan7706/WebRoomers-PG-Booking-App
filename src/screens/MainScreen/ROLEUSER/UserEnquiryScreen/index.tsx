@@ -24,7 +24,6 @@ import {
   submitPgEnquiry,
 } from '../../../../store/mainSlice';
 import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
-import { appLog } from '../../../../utils/appLog';
 
 const UserEnquiryScreen = () => {
   const { pgCategories, pgCities, loading } = useSelector(
@@ -44,8 +43,8 @@ const UserEnquiryScreen = () => {
   //Drop-down Apis
   useEffect(() => {
     // Dropdown API calls
-    dispatch(fetchPgCategories({ company_id: userData?.company_id}));
-    dispatch(fetchPgCities({ company_id: userData?.company_id}));
+    dispatch(fetchPgCategories({ company_id: userData?.company_id  }));
+    dispatch(fetchPgCities({ company_id: userData?.company_id  }));
     //Default user details fill
     if (userData) {
       setUserFullName(userData?.user_fullname || '');
@@ -71,7 +70,6 @@ const UserEnquiryScreen = () => {
         user_id: userData?.user_id || 1,
         company_id: userData?.company_id,
       };
-      appLog('UserEnquiryScreen', 'Enquiry payload:', payload);
       const res = await dispatch(submitPgEnquiry(payload)).unwrap();
       if (res?.success) {
         showSuccessMsg('Enquiry submitted successfully!');
@@ -90,16 +88,7 @@ const UserEnquiryScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="Enquiry"
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
-      />
+      <AppHeader title="Enquiry" showBack/>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
@@ -172,7 +161,7 @@ const UserEnquiryScreen = () => {
             onPress={handleRegister}
             disabled={!isActive}
             loading={loading}
-            style={{ marginTop: 50 }}
+            style={{ marginTop: 10 }}
           />
         </KeyboardAwareScrollView>
       </TouchableWithoutFeedback>

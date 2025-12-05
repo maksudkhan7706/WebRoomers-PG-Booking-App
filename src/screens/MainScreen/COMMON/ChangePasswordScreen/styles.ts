@@ -23,9 +23,4 @@ export default StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 16,
-  },
 });

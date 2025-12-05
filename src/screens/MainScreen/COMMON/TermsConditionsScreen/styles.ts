@@ -11,4 +11,10 @@ export default StyleSheet.create({
     paddingVertical: 24,
     alignItems: 'center',
   },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
 });

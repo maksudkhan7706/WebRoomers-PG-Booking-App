@@ -18,6 +18,10 @@ interface AppButtonProps {
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
   titleSize?: 'heading' | 'subheading' | 'body' | 'caption' | 'label';
+  titleIcon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
+  gap?: number;
+  titleColor?: string;
 }
 
 const AppButton: React.FC<AppButtonProps> = ({
@@ -27,6 +31,10 @@ const AppButton: React.FC<AppButtonProps> = ({
   loading = false,
   style,
   titleSize = 'body',
+  titleIcon,
+  iconPosition = 'left',
+  gap = 8,
+  titleColor = colors.white,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -63,9 +71,13 @@ const AppButton: React.FC<AppButtonProps> = ({
         {loading ? (
           <ActivityIndicator color={colors.white} />
         ) : (
-          <Typography variant={titleSize} weight="medium" color={colors.white}>
-            {title}
-          </Typography>
+          <View style={[styles.content, { gap }]}>
+            {titleIcon && iconPosition === 'left' ? titleIcon : null}
+            <Typography variant={titleSize} weight="medium" numberOfLines={1} color={titleColor}>
+              {title}
+            </Typography>
+            {titleIcon && iconPosition === 'right' ? titleIcon : null}
+          </View>
         )}
       </Animated.View>
     </TouchableWithoutFeedback>
@@ -80,6 +92,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     height: 45,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

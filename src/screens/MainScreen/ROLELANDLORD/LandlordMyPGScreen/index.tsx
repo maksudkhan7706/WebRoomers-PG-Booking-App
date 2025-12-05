@@ -11,34 +11,67 @@ import Typography from '../../../../ui/Typography';
 import AppHeader from '../../../../ui/AppHeader';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import colors from '../../../../constants/colors';
 import AppImageSlider from '../../../../ui/AppImageSlider';
 import AppButton from '../../../../ui/AppButton';
 import styles from './styles';
-import { fetchMyPgList } from '../../../../store/mainSlice';
+import {
+  apiUserDataFetch,
+  fetchMyPgList,
+  fetchAllUserPermissions,
+} from '../../../../store/mainSlice';
 import { NAV_KEYS, RootStackParamList } from '../../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import AppImagePlaceholder from '../../../../ui/AppImagePlaceholder';
-import { appLog } from '../../../../utils/appLog';
+import {
+  handlePermissionAction,
+  hasPermission,
+} from '../../../../utils/permissions';
+import AccessDeniedModal from '../../../../ui/AccessDeniedModal';
+import AccessDeniedScreenView from '../../../../ui/AccessDeniedScreenView';
 
 type LandlordMyPGSProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LandlordMyPGScreen = () => {
   const dispatch = useDispatch<any>();
+  const isFocused = useIsFocused();
   const navigation = useNavigation<LandlordMyPGSProp>();
-  const { loading, myPgList } = useSelector((state: any) => state.main);
+  const { loading, myPgList, apiUserData, userAllPermissions } = useSelector(
+    (state: any) => state.main,
+  );
   const { userData } = useSelector((state: any) => state.auth);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [accessMessage, setAccessMessage] = useState('');
 
   const fetchData = useCallback(() => {
     dispatch(
       fetchMyPgList({
-        company_id: userData?.company_id || '35',
-        landlord_id: userData?.user_id || '197',
+        company_id: userData?.company_id,
+        landlord_id: userData?.user_id,
+        user_type: userData?.user_type,
+        property_id: userData?.assigned_pg_ids,
       }),
     );
   }, [dispatch, userData]);
+
+  useEffect(() => {
+    if (userData?.user_id && userData?.company_id) {
+      dispatch(
+        apiUserDataFetch({
+          user_id: userData?.user_id,
+          company_id: userData?.company_id,
+        }),
+      );
+      dispatch(
+        fetchAllUserPermissions({
+          company_id: userData?.company_id,
+        }),
+      );
+    }
+  }, [isFocused, dispatch, userData]);
 
   useEffect(() => {
     fetchData();
@@ -46,8 +79,44 @@ const LandlordMyPGScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchData();
+    if (userData?.user_id && userData?.company_id) {
+      await Promise.all([
+        fetchData(),
+        dispatch(
+          apiUserDataFetch({
+            user_id: userData?.user_id,
+            company_id: userData?.company_id,
+          }),
+        ),
+        dispatch(
+          fetchAllUserPermissions({
+            company_id: userData?.company_id,
+          }),
+        ),
+      ]);
+    } else {
+      await fetchData();
+    }
     setRefreshing(false);
+  };
+
+  const handleEditPress = (item: any) => {
+    handlePermissionAction({
+      userData,
+      apiUserData,
+      key: 'edit_pg',
+      userAllPermissions,
+      onAllow: () => {
+        navigation.navigate(NAV_KEYS.LandlordAddPG, {
+          type: 'editPG',
+          propertyData: item,
+        });
+      },
+      onDeny: () => {
+        setAccessMessage('You do not have permission to edit this PG.');
+        setShowAccessDenied(true);
+      },
+    });
   };
 
   const renderItem = ({ item }: any) => {
@@ -81,106 +150,152 @@ const LandlordMyPGScreen = () => {
         bgColor = '#CCE5FF';
         textColor = '#004085';
     }
-
     return (
       <View style={styles.card}>
-        {/* Header */}
-        <View
-          style={[
-            styles.card,
-            {
-              borderTopLeftRadius: 10,
-              borderTopRightRadius: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 10,
-              borderRadius: 0,
-              marginBottom: 0,
-            },
-          ]}
-        >
-          <View>
-            <View style={styles.roomContainer}>
-              <View style={styles.roomCommon}>
-                <Typography
-                  color={colors.mainColor}
-                  variant="label"
-                  weight="medium"
-                >
-                  Total Room:
-                </Typography>
-                <Typography
-                  color={colors.mainColor}
-                  variant="label"
-                  weight="medium"
-                >
-                  {item?.total_room}
-                </Typography>
-              </View>
+        {/* Room Statistics Header */}
+        <View style={styles.roomStatsHeader}>
+          <View style={styles.roomStatItem}>
+            <View
+              style={[styles.statIconContainer, { backgroundColor: '#E3F2FD' }]}
+            >
+              <MaterialIcons
+                name="meeting-room"
+                size={16}
+                color={colors.mainColor}
+              />
+            </View>
+            <View style={styles.statContent}>
+              <Typography
+                variant="caption"
+                color="#666"
+                style={styles.statLabel}
+              >
+                Total Room
+              </Typography>
+              <Typography
+                variant="label"
+                weight="bold"
+                color={colors.mainColor}
+                style={{ fontSize: 14 }}
+              >
+                {item?.total_room || 0}
+              </Typography>
+            </View>
+          </View>
 
-              <View style={styles.roomCommon}>
-                <Typography
-                  color={colors.succes}
-                  variant="label"
-                  weight="medium"
-                >
-                  Available:
-                </Typography>
-                <Typography
-                  color={colors.succes}
-                  variant="label"
-                  weight="medium"
-                >
-                  {item?.available_room}
-                </Typography>
-              </View>
+          <View style={styles.roomStatItem}>
+            <View
+              style={[styles.statIconContainer, { backgroundColor: '#E8F5E9' }]}
+            >
+              <MaterialIcons
+                name="check-circle"
+                size={16}
+                color={colors.succes}
+              />
+            </View>
+            <View style={styles.statContent}>
+              <Typography
+                variant="caption"
+                color="#666"
+                style={styles.statLabel}
+              >
+                Available
+              </Typography>
+              <Typography
+                variant="label"
+                weight="bold"
+                color={colors.succes}
+                style={{ fontSize: 14 }}
+              >
+                {item?.available_room || 0}
+              </Typography>
+            </View>
+          </View>
 
-              <View style={styles.roomCommon}>
-                <Typography color={colors.red} variant="label" weight="medium">
-                  Booked:
-                </Typography>
-                <Typography color={colors.red} variant="label" weight="medium">
-                  {item?.booked_room}
-                </Typography>
-              </View>
+          <View style={styles.roomStatItem}>
+            <View
+              style={[styles.statIconContainer, { backgroundColor: '#FFEBEE' }]}
+            >
+              <MaterialIcons name="event-busy" size={16} color={colors.red} />
+            </View>
+            <View style={styles.statContent}>
+              <Typography
+                variant="caption"
+                color="#666"
+                style={styles.statLabel}
+              >
+                Booked
+              </Typography>
+              <Typography
+                variant="label"
+                weight="bold"
+                color={colors.red}
+                style={{ fontSize: 14 }}
+              >
+                {item?.booked_room || 0}
+              </Typography>
             </View>
           </View>
         </View>
+
+        {/* Card Header */}
         <View style={styles.cardHeader}>
-          <View style={styles.titleContainer}>
-            <View
-              style={{
-                width: '78%',
-              }}
+          <View style={styles.titleSection}>
+            <Typography
+              numberOfLines={2}
+              variant="body"
+              weight="bold"
+              style={styles.pgTitle}
             >
+              {item?.title || '-'}
+            </Typography>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.editButton}
+              onPress={() => handleEditPress(item)}
+            >
+              <Feather name="edit-3" size={14} color={colors.mainColor} />
               <Typography
-                numberOfLines={2}
-                style={{ marginBottom: 3 }}
-                variant="body"
-                weight="medium"
+                variant="label"
+                color={colors.mainColor}
+                style={styles.propertyCode}
               >
-                {item?.title || '-'}
+                {item?.property_code}
               </Typography>
-              <TouchableOpacity
-                activeOpacity={0.6}
-                style={styles.headerLeft}
-                onPress={() =>
-                  navigation.navigate(NAV_KEYS.LandlordAddPG, {
-                    type: 'editPG',
-                    propertyData: item,
-                  })
-                }
-              >
-                <Feather name="edit-3" size={14} color={colors.mainColor} />
-                <Typography variant="label" style={{ marginLeft: 6 }}>
-                  {item?.property_code}
-                </Typography>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
+          </View>
+
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              // backgroundColor: 'red'
+            }}
+          >
             <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
-              <Typography variant="label" color={textColor}>
+              <Typography variant="caption" weight="medium" color={textColor}>
                 {statusLabel}
               </Typography>
             </View>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate(NAV_KEYS.PGTermsConditionScreen, {
+                  pgId: item?.property_id,
+                  companyId: userData?.company_id,
+                  isLandlord: true,
+                });
+              }}
+              style={{ alignSelf: 'flex-end', marginTop: 10 }}
+            >
+              <Typography
+                variant="caption"
+                weight="bold"
+                color={textColor}
+                style={{ textDecorationLine: 'underline' }}
+              >
+                Terms & Conditions
+              </Typography>
+            </TouchableOpacity>
           </View>
         </View>
         {/* Image Slider */}
@@ -217,38 +332,113 @@ const LandlordMyPGScreen = () => {
         </View>
         {/* Details */}
         <View style={styles.cardContent}>
-          <View style={styles.rowBetween}>
-            <Typography variant="label" weight="medium">
-              City
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabelContainer}>
+              <MaterialIcons
+                name="location-city"
+                size={14}
+                color={colors.mainColor}
+              />
+              <Typography
+                variant="label"
+                weight="medium"
+                style={styles.detailLabel}
+              >
+                City
+              </Typography>
+            </View>
+            <Typography variant="label" color="#333" style={{ fontSize: 13 }}>
+              {item?.city_name || '-'}
             </Typography>
-            <Typography variant="label">{item?.city_name || '-'}</Typography>
           </View>
-          <View style={styles.rowBetween}>
-            <Typography variant="label" weight="medium">
-              Type
+
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabelContainer}>
+              <MaterialIcons
+                name="category"
+                size={14}
+                color={colors.mainColor}
+              />
+              <Typography
+                variant="label"
+                weight="medium"
+                style={styles.detailLabel}
+              >
+                Type
+              </Typography>
+            </View>
+            <Typography variant="label" color="#333" style={{ fontSize: 13 }}>
+              {item?.property_type || '-'}
             </Typography>
-            <Typography variant="label">{item?.property_type}</Typography>
           </View>
-          <View style={styles.rowBetween}>
-            <Typography variant="label" weight="medium">
-              Category
-            </Typography>
-            <Typography variant="label">{item?.category_name}</Typography>
+
+          <View style={[styles.detailRow, styles.categoryRow]}>
+            <View style={styles.detailLabelContainer}>
+              <MaterialIcons name="label" size={14} color={colors.mainColor} />
+              <Typography
+                variant="label"
+                weight="medium"
+                style={styles.detailLabel}
+              >
+                Category
+              </Typography>
+            </View>
+            <View style={styles.categoryContainer}>
+              <Typography
+                variant="label"
+                color="#333"
+                numberOfLines={2}
+                style={{ fontSize: 13 }}
+              >
+                {item?.categories && item.categories.length > 0
+                  ? item.categories
+                      .map((cat: any) => cat.category_title)
+                      .join(', ')
+                  : '-'}
+              </Typography>
+            </View>
           </View>
-          <View style={styles.rowBetween}>
-            <Typography variant="label" weight="medium">
-              Price
+
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabelContainer}>
+              <MaterialIcons
+                name="currency-rupee"
+                size={14}
+                color={colors.mainColor}
+              />
+              <Typography
+                variant="label"
+                weight="medium"
+                style={styles.detailLabel}
+              >
+                Price
+              </Typography>
+            </View>
+            <Typography
+              variant="label"
+              weight="bold"
+              color={colors.mainColor}
+              style={{ fontSize: 14 }}
+            >
+              ₹{item?.price || '0'}
             </Typography>
-            <Typography variant="label">₹{item?.price}</Typography>
           </View>
-          <View style={[styles.rowBetween, { marginTop: 8 }]}>
-            <Typography variant="label" weight="medium">
-              Rooms
-            </Typography>
+
+          <View style={styles.roomsActionRow}>
+            <View style={styles.detailLabelContainer}>
+              <MaterialIcons name="hotel" size={14} color={colors.mainColor} />
+              <Typography
+                variant="label"
+                weight="medium"
+                style={styles.detailLabel}
+              >
+                Rooms
+              </Typography>
+            </View>
             <AppButton
-              style={{ width: 100, height: 35}}
+              style={styles.addRoomsButton}
               title={'Add Rooms'}
-              titleSize='label'
+              titleSize="label"
               onPress={() => {
                 navigation.navigate(NAV_KEYS.PGRoomManagement, {
                   roomId: item?.property_id,
@@ -262,20 +452,11 @@ const LandlordMyPGScreen = () => {
     );
   };
 
-
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="My PG"
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
-      />
-      {loading && !refreshing ? (
+      <AppHeader title="My PG" />
+      {/*Show loader if loading or refreshing */}
+      {loading || refreshing ? (
         <View
           style={[
             styles.container,
@@ -283,13 +464,26 @@ const LandlordMyPGScreen = () => {
           ]}
         >
           <ActivityIndicator size="large" color={colors.mainColor} />
+          <Typography
+            style={{ textAlign: 'center', marginTop: 10 }}
+            weight="medium"
+          >
+            Loading PG details...
+          </Typography>
         </View>
+      ) : apiUserData?.data?.user_permissions &&
+        !hasPermission(userData, apiUserData, 'pg_list', userAllPermissions) ? (
+        <AccessDeniedScreenView
+          message="Your account doesn't have access to view your PG list."
+          onBackPress={() => navigation?.goBack()}
+        />
       ) : (
+        //Main Data View
         <FlatList
           data={myPgList?.data || []}
           renderItem={renderItem}
           keyExtractor={item => item.property_id.toString()}
-          contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -299,15 +493,21 @@ const LandlordMyPGScreen = () => {
             />
           }
           ListEmptyComponent={
-            <Typography
-              style={{ textAlign: 'center', marginTop: 50 }}
-              weight="medium"
-            >
-              No PGs Found!
-            </Typography>
+            <View style={styles.emptyContainer}>
+              <MaterialIcons name="inbox" size={64} color="#ccc" />
+              <Typography style={styles.emptyText} weight="medium" color="#999">
+                No PGs Found!
+              </Typography>
+            </View>
           }
         />
       )}
+
+      <AccessDeniedModal
+        visible={showAccessDenied}
+        onClose={() => setShowAccessDenied(false)}
+        message={accessMessage}
+      />
     </View>
   );
 };

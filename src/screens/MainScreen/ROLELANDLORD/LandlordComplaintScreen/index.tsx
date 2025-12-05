@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   FlatList,
   RefreshControl,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import Typography from '../../../../ui/Typography';
 import styles from './styles';
 import AppHeader from '../../../../ui/AppHeader';
 import colors from '../../../../constants/colors';
-import AppImage from '../../../../ui/AppImage';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store';
 import { appLog } from '../../../../utils/appLog';
@@ -20,9 +18,13 @@ import {
   fetchUsersComplaintList,
   updateComplaintStatus,
 } from '../../../../store/mainSlice';
-import { useIsFocused } from '@react-navigation/native';
 import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
 import AppCustomDropdown from '../../../../ui/AppCustomDropdown';
+import AppButton from '../../../../ui/AppButton';
+import DeleteModal from '../../../../ui/DeleteModal';
+import { statusList } from '../../../../constants/dummyData';
+import AppTextInput from '../../../../ui/AppTextInput';
+import Feather from 'react-native-vector-icons/Feather';
 
 const LandlordComplaintScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,6 +33,10 @@ const LandlordComplaintScreen = () => {
     (state: RootState) => state.main,
   );
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   //Fetch complaints
   const fetchData = async () => {
@@ -39,6 +45,7 @@ const LandlordComplaintScreen = () => {
         company_id: userData?.company_id,
         id: userData?.user_id,
         user_type: userData?.user_type,
+        property_id: userData?.assigned_pg_ids,
       };
       await dispatch(fetchUsersComplaintList(payload));
     } catch (error) {
@@ -52,16 +59,32 @@ const LandlordComplaintScreen = () => {
     fetchData();
   }, []);
 
-  const listData = Array.isArray(usersComplaintList)
-    ? usersComplaintList
-    : Object.values(usersComplaintList || {});
+  const listData = useMemo(
+    () =>
+      Array.isArray(usersComplaintList)
+        ? usersComplaintList
+        : Object.values(usersComplaintList || {}),
+    [usersComplaintList],
+  );
 
-  const statusList = [
-    { label: 'Pending', value: 'Pending' },
-    { label: 'In Progress', value: 'In Progress' },
-    { label: 'Resolved', value: 'Resolved' },
-    { label: 'Rejected', value: 'Rejected' },
-  ];
+  const filteredComplaints = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return listData;
+    }
+    return listData.filter((item: any) => {
+      const property = item?.property_title?.toLowerCase() || '';
+      const purpose = item?.purpose_name?.toLowerCase() || '';
+      const description = item?.description?.toLowerCase() || '';
+      const status = item?.status?.toLowerCase() || '';
+      return (
+        property.includes(query) ||
+        purpose.includes(query) ||
+        description.includes(query) ||
+        status.includes(query)
+      );
+    });
+  }, [listData, searchQuery]);
 
   //Ye har card ke liye individual dropdown value store karega
   const [selectedStatuses, setSelectedStatuses] = useState<{
@@ -76,11 +99,6 @@ const LandlordComplaintScreen = () => {
         ?.status;
     //Agar status same hai to API call mat karo
     if (currentStatus === newStatus) {
-      appLog(
-        'updateComplaintStatus',
-        'Skipped duplicate call for',
-        complaintId,
-      );
       return;
     }
     try {
@@ -89,9 +107,7 @@ const LandlordComplaintScreen = () => {
         complaint_id: complaintId,
         status: newStatus,
       };
-      appLog('updateComplaintStatus', 'payload', payload);
       const res = await dispatch(updateComplaintStatus(payload)).unwrap();
-      appLog('updateComplaintStatus', 'response', res);
       if (res?.success) {
         showSuccessMsg(res?.message || 'Status updated successfully');
         setSelectedStatuses(prev => ({
@@ -106,119 +122,180 @@ const LandlordComplaintScreen = () => {
     }
   };
 
-  const handleDeleteComplaint = (complaintId: string) => {
-    Alert.alert(
-      'Delete Complaint',
-      'Are you sure you want to delete this complaint?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const payload = {
-                company_id: userData?.company_id,
-                complaint_id: complaintId,
-              };
-              const res = await dispatch(deleteComplaint(payload)).unwrap();
-              if (res?.success) {
-                showSuccessMsg(
-                  res?.message || 'Complaint deleted successfully',
-                );
-                fetchData(); // refresh list
-              } else {
-                showErrorMsg(res?.message || 'Failed to delete complaint');
-              }
-            } catch (error) {
-              showErrorMsg('Something went wrong while deleting complaint.');
-            }
-          },
-        },
-      ],
-    );
+  const openDeleteModal = (complaint: any) => {
+    setSelectedComplaint(complaint);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteComplaint = async () => {
+    if (!selectedComplaint?.complaint_id) {
+      setDeleteModalVisible(false);
+      return;
+    }
+    try {
+      setDeleting(true);
+      const payload = {
+        company_id: userData?.company_id,
+        complaint_id: selectedComplaint.complaint_id,
+      };
+      const res = await dispatch(deleteComplaint(payload)).unwrap();
+      if (res?.success) {
+        showSuccessMsg(res?.message || 'Complaint deleted successfully');
+        setDeleteModalVisible(false);
+        fetchData();
+      } else {
+        showErrorMsg(res?.message || 'Failed to delete complaint');
+      }
+    } catch (error) {
+      showErrorMsg('Something went wrong while deleting complaint.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const renderItem = ({ item }: any) => {
     const currentStatus =
       selectedStatuses[item.complaint_id] ?? item.status ?? 'Pending';
+    const statusColor =
+      currentStatus === 'Resolved'
+        ? colors.succes
+        : currentStatus === 'Rejected'
+        ? colors.red
+        : colors.pending;
 
     return (
       <View style={styles.card}>
-        <Typography
-          variant="body"
-          weight="medium"
-          numberOfLines={2}
-          style={{ width: '60%' }}
-        >
-          {item.property_title}
-        </Typography>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderInfo}>
+            <Typography
+              variant="subheading"
+              weight="bold"
+              style={styles.cardTitle}
+              numberOfLines={2}
+            >
+              {item.property_title || 'Unnamed Property'}
+            </Typography>
+            <Typography
+              variant="caption"
+              weight="medium"
+              style={styles.cardSubTitle}
+            >
+              Purpose: {item.purpose_name || '-'}
+            </Typography>
+          </View>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: `${statusColor}30` },
+            ]}
+          >
+            <Typography
+              variant="caption"
+              weight="bold"
+              style={[styles.statusText, { color: statusColor }]}
+            >
+              {currentStatus}
+            </Typography>
+          </View>
+        </View>
 
-        <View style={styles.infoRow}>
-          <Typography variant="label" weight="medium">
-            Purpose:
+        <View style={styles.descriptionWrapper}>
+          <Typography variant="caption" style={styles.descriptionLabel}>
+            Description
           </Typography>
-          <Typography variant="label" weight="regular" color={colors.gray}>
-            {' '}
-            {item.purpose_name}
+          <Typography variant="body" style={styles.descriptionText}>
+            {item.description || 'No description provided.'}
           </Typography>
         </View>
 
-        <View style={styles.infoRow}>
-          <Typography variant="label" weight="medium">
-            Description:
-          </Typography>
-          <Typography variant="label" weight="regular" color={colors.gray}>
-            {' '}
-            {item.description}
-          </Typography>
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Typography variant="caption" style={styles.metaLabel}>
+              Submitted By
+            </Typography>
+            <Typography
+              variant="label"
+              weight="medium"
+              style={styles.metaValue}
+            >
+              {item.user_name || 'Tenant'}
+            </Typography>
+          </View>
+          <View style={styles.metaItem}>
+            <Typography variant="caption" style={styles.metaLabel}>
+              Date
+            </Typography>
+            <Typography
+              variant="label"
+              weight="medium"
+              style={styles.metaValue}
+            >
+              {item.created_at || '--'}
+            </Typography>
+          </View>
         </View>
 
-        <View style={styles.infoRow}>
-          <Typography variant="label" weight="medium">
-            Status:
-          </Typography>
-          <Typography variant="label" weight="regular" color={colors.gray}>
-            {' '}
-            {currentStatus}
-          </Typography>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            onPress={() => openDeleteModal(item)}
+            style={styles.deleteButton}
+            activeOpacity={0.8}
+          >
+            <Feather name="trash-2" size={16} color={colors.error} />
+            <Typography
+              color={colors.white}
+              weight="medium"
+              style={styles.deleteText}
+            >
+              Delete Complaint
+            </Typography>
+          </TouchableOpacity>
+          <View style={styles.dropdownWrapper}>
+            <Typography variant="caption" style={styles.dropdownLabel}>
+              Update Status
+            </Typography>
+            <AppCustomDropdown
+              data={statusList}
+              selectedValues={[currentStatus]}
+              onSelect={value => {
+                const newVal = Array.isArray(value) ? value[0] : value;
+                if (newVal !== currentStatus) {
+                  handleStatusChange(item.complaint_id, newVal);
+                }
+              }}
+              inputWrapperStyle={styles.dropdownInput}
+            />
+          </View>
         </View>
-        <TouchableOpacity
-          onPress={() => handleDeleteComplaint(item.complaint_id)}
-          style={{
-            marginTop: 22,
-            backgroundColor: colors.red,
-            paddingVertical: 6,
-            borderRadius: 5,
-            alignItems: 'center',
-          }}
-        >
-          <Typography color={colors.white} weight="medium">
-            Delete Complaint
-          </Typography>
-        </TouchableOpacity>
-        
-        <AppCustomDropdown
-          label="Update Status"
-          data={statusList}
-          selectedValues={[currentStatus]} //directly pass array
-          onSelect={value => {
-            const newVal = Array.isArray(value) ? value[0] : value;
-            // prevent same value API call
-            if (newVal !== currentStatus) {
-              handleStatusChange(item.complaint_id, newVal);
-            }
-          }}
-          inputWrapperStyle={styles.dropdownConatiner}
-        />
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Complaint" showBack />
+      <AppHeader title="Complaint" showBack rightIcon={false} />
 
+      <View style={styles.searchContainer}>
+        <AppTextInput
+          placeholder="Search by property, purpose, status, or description"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          containerStyle={styles.searchInputContainer}
+          style={styles.searchInput}
+          leftIcon={<Feather name="search" size={20} color={colors.gray} />}
+          rightIcon={
+            searchQuery.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                hitSlop={10}
+                activeOpacity={0.7}
+              >
+                <Feather name="x" size={20} color={colors.gray} />
+              </TouchableOpacity>
+            ) : undefined
+          }
+        />
+      </View>
       {loading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.mainColor} />
@@ -228,18 +305,20 @@ const LandlordComplaintScreen = () => {
         </View>
       ) : (
         <FlatList
-          data={listData}
+          data={filteredComplaints}
           renderItem={renderItem}
           keyExtractor={(item: any) => String(item?.complaint_id ?? '')}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContainer,
-            listData.length === 0 && styles.emptyContentContainer,
+            filteredComplaints.length === 0 && styles.emptyContentContainer,
           ]}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Typography color={colors.gray} weight="medium">
-                No complaints found.
+                {searchQuery
+                  ? 'No complaints match your search.'
+                  : 'No complaints found.'}
               </Typography>
             </View>
           }
@@ -257,6 +336,14 @@ const LandlordComplaintScreen = () => {
           }
         />
       )}
+      <DeleteModal
+        visible={deleteModalVisible}
+        title="Delete Complaint?"
+        subtitle="Are you sure you want to delete this complaint?"
+        onCancel={() => setDeleteModalVisible(false)}
+        onConfirm={confirmDeleteComplaint}
+        loading={deleting}
+      />
     </View>
   );
 };

@@ -4,12 +4,10 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AppHeader from '../../../../ui/AppHeader';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import colors from '../../../../constants/colors';
 import AppTextInput from '../../../../ui/AppTextInput';
 import AppCustomDropdown from '../../../../ui/AppCustomDropdown';
 import AppDatePicker from '../../../../ui/AppDatePicker';
@@ -47,8 +45,6 @@ const UserPGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
   const { userData } = useSelector((state: RootState) => state.auth);
   const { loading } = useSelector((state: RootState) => state.main);
   const [selectedGender, setSelectedGender] = useState<string[]>([]);
-  const [stayDuration, setStayDuration] = useState<string[]>([]);
-  const [numPersons, setNumPersons] = useState<string[]>([]);
   const [foodPreference, setFoodPreference] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -61,25 +57,7 @@ const UserPGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
     { label: 'Other', value: 'other' },
   ];
 
-  const stayDurations = [
-    { label: '1 Month', value: '1' },
-    { label: '3 Months', value: '3' },
-    { label: '6 Months', value: '6' },
-    { label: '12 Months', value: '12' },
-  ];
-
-  const personCounts = [
-    { label: '1 Person', value: '1' },
-    { label: '2 Persons', value: '2' },
-    { label: '3 Persons', value: '3' },
-    { label: '4+ Persons', value: '4+' },
-  ];
-
-  const foodOptions = [
-    { label: 'Veg', value: 'veg' },
-    { label: 'Non-Veg', value: 'nonveg' },
-    { label: 'Both', value: 'both' },
-  ];
+  const foodOptions = [{ label: 'Veg', value: 'veg' }];
 
   const handleRegister = async () => {
     const newErrors: Errors = {};
@@ -124,8 +102,6 @@ const UserPGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
         };
 
         const res = await dispatch(bookRoomApi(payload)).unwrap();
-        appLog('UserPGBookScreen', 'payload sending:', payload);
-        appLog('UserPGBookScreen', 'API response:', res);
 
         if (res?.success) {
           showSuccessMsg(res.message);
@@ -140,22 +116,12 @@ const UserPGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
     }
   };
 
-  appLog('UserPGBookScreen', 'genderType', genderType);
-
   return (
     <View style={styles.container}>
       <AppHeader
-        title="Book PG"
+        title={screenType === 'isRoom' ? 'Book Room' : 'Book PG'}
         showBack
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
       />
-
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
@@ -195,7 +161,7 @@ const UserPGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
             />
           ) : (
             <AppCustomDropdown
-              label="Gender"
+              label=""
               data={genderOptions}
               selectedValues={[
                 genderType === 'Boys'
@@ -208,34 +174,13 @@ const UserPGBookScreen: React.FC<{ userData: UserData }> = ({}) => {
             />
           )}
 
-          {/* <AppCustomDropdown
-            label="Stay Duration *"
-            data={stayDurations}
-            selectedValues={stayDuration}
-            onSelect={val => {
-              setStayDuration(val);
-              if (val.length)
-                setErrors(prev => ({ ...prev, stayDuration: '' }));
-            }}
-            error={errors.stayDuration}
-          /> */}
-          {/* <AppCustomDropdown
-            label="Number of Persons *"
-            data={personCounts}
-            selectedValues={numPersons}
-            onSelect={val => {
-              setNumPersons(val);
-              if (val.length) setErrors(prev => ({ ...prev, numPersons: '' }));
-            }}
-            error={errors.numPersons}
-          /> */}
           <AppTextInput
             placeholder="Number of Persons"
             value={'1 Person'}
             editable={false}
           />
           <AppCustomDropdown
-            label="Food Preference *"
+            placeholder="Select Food Preference"
             data={foodOptions}
             selectedValues={foodPreference}
             onSelect={val => {

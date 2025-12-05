@@ -8,23 +8,24 @@ import {
 } from 'react-native';
 import Typography from '../../../../ui/Typography';
 import AppHeader from '../../../../ui/AppHeader';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import colors from '../../../../constants/colors';
 import styles from './styles';
 import AppButton from '../../../../ui/AppButton';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLandlordEnquiryDetails } from '../../../../store/mainSlice';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import AppImage from '../../../../ui/AppImage';
 import { formatDate } from '../../../../utils/formatDate';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { updateEnquiryStatus } from '../../../../store/mainSlice';
 import { Linking, Alert } from 'react-native';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import { showSuccessMsg } from '../../../../utils/appMessages';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/NavKeys';
-import AppImagePlaceholder from '../../../../ui/AppImagePlaceholder';
 import { appLog } from '../../../../utils/appLog';
 
 type EnquiryDetailsNavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -38,23 +39,23 @@ const LandlordViewEnquiryDetails = () => {
   );
   const route = useRoute();
   const { EnquiryId, companyId }: any = route.params;
+  const isFocused = useIsFocused();
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmType, setConfirmType] = useState<'accept' | 'reject' | null>(
     null,
   );
+  const roomData = landlordEnquiryDetails?.room;
 
   useEffect(() => {
-    if (userData?.user_type === 'landlord') {
-      dispatch(
-        fetchLandlordEnquiryDetails({
-          company_id: companyId || userData?.company_id,
-          enquiry_id: EnquiryId || '',
-        }),
-      );
-    }
-  }, [userData]);
+    dispatch(
+      fetchLandlordEnquiryDetails({
+        company_id: companyId || userData?.company_id,
+        enquiry_id: EnquiryId,
+      }),
+    );
+  }, [dispatch, isFocused, EnquiryId]);
 
   const renderPaymentStatusBadge = (status: string) => {
     const bgColor =
@@ -79,7 +80,6 @@ const LandlordViewEnquiryDetails = () => {
       setPreviewVisible(true);
     }
   };
-
   //Contact User function
   const handleContactUser = () => {
     const phone = landlordEnquiryDetails?.user?.mobile;
@@ -89,7 +89,6 @@ const LandlordViewEnquiryDetails = () => {
       Alert.alert('Error', 'User mobile number not available.');
     }
   };
-
   // Accept / Reject handler
   const handleConfirmAction = async () => {
     if (!confirmType) return;
@@ -102,7 +101,6 @@ const LandlordViewEnquiryDetails = () => {
     try {
       const res = await dispatch(updateEnquiryStatus(payload)).unwrap();
       setConfirmModalVisible(false);
-      appLog('LandlordViewEnquiryDetails', 'updateEnquiryStatus Success:', res);
       showSuccessMsg(res?.message || 'Status updated successfully.');
       navigation.goBack();
     } catch (error: any) {
@@ -115,22 +113,9 @@ const LandlordViewEnquiryDetails = () => {
     }
   };
 
-  const roomData = landlordEnquiryDetails?.room;
-  appLog('roomData', 'roomData', roomData);
-
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="Enquiry Details"
-        showBack
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
-      />
+      <AppHeader title="Enquiry Details" showBack />
 
       {loading ? (
         <View style={[styles.container, styles.centerContent]}>
@@ -299,30 +284,27 @@ const LandlordViewEnquiryDetails = () => {
                 PG Information
               </Typography>
 
-              {landlordEnquiryDetails?.property?.property_featured_image ==
-              null ? (
-                <AppImagePlaceholder />
-              ) : (
-                <AppImage
-                  source={{
-                    uri: landlordEnquiryDetails?.property
-                      ?.property_featured_image,
-                  }}
-                  style={styles.photoImg}
-                  resizeMode="stretch"
-                />
-              )}
+              <AppImage
+                source={{
+                  uri: landlordEnquiryDetails?.property
+                    ?.property_featured_image,
+                }}
+                style={styles.photoImg}
+                resizeMode="stretch"
+              />
 
               <Typography variant="body" weight="medium" style={styles.pgTitle}>
                 {landlordEnquiryDetails?.property?.property_title}
               </Typography>
 
-              <Typography variant="caption" weight="regular">
-                📍 {landlordEnquiryDetails?.property?.property_address}
-              </Typography>
+              {landlordEnquiryDetails?.property?.property_address ? (
+                <Typography variant="caption" weight="regular">
+                  📍 {landlordEnquiryDetails?.property?.property_address}
+                </Typography>
+              ) : null}
 
               <Typography variant="label" weight="regular">
-                {landlordEnquiryDetails?.property?.property_description || '-'}
+                {landlordEnquiryDetails?.property?.property_description}
               </Typography>
 
               {landlordEnquiryDetails?.property?.features?.length > 0 && (
@@ -486,6 +468,7 @@ const LandlordViewEnquiryDetails = () => {
         transparent
         animationType="fade"
         onRequestClose={() => setConfirmModalVisible(false)}
+        statusBarTranslucent
       >
         <View style={styles.modalOverlay}>
           <View style={styles.confirmBox}>
@@ -537,13 +520,13 @@ const LandlordViewEnquiryDetails = () => {
           </View>
         </View>
       </Modal>
-
       {/* Screenshot Preview Modal */}
       <Modal
         visible={previewVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setPreviewVisible(false)}
+        statusBarTranslucent
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity

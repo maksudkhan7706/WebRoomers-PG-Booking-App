@@ -12,29 +12,18 @@ import { useWindowDimensions } from 'react-native';
 const PrivacyPolicyScreen = () => {
   const dispatch = useDispatch<any>();
   const { width } = useWindowDimensions();
-  const { userData } = useSelector((state: any) => state.auth);
-  const { settingsData, loading } = useSelector((state: any) => state.main);
+  const { userData, settingsData, loading } = useSelector((state: any) => state.main);
+  const privacyPolicy = settingsData?.privacy_policy?.content || '';
 
   useEffect(() => {
     dispatch(getSettings({ company_id: userData?.company_id }));
   }, []);
 
-  const privacyPolicy = settingsData?.privacy_policy?.content || '';
-  console.log('PrivacyPolicyScreen userData ============', userData);
-
   return (
     <View style={styles.container}>
-      <AppHeader title="Privacy Policy" showBack />
-
+      <AppHeader title="Privacy Policy" showBack rightIcon={false}/>
       {loading ? (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: colors.white,
-          }}
-        >
+        <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (

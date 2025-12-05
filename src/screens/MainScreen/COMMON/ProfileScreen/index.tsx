@@ -6,8 +6,6 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Modal,
-  TouchableOpacity,
 } from 'react-native';
 import Typography from '../../../../ui/Typography';
 import styles from './styles';
@@ -20,31 +18,27 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store';
 import {
   apiUserDataFetch,
-  fetchPgCities,
   updateProfileApi,
 } from '../../../../store/mainSlice';
 import { useIsFocused } from '@react-navigation/native';
 import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
 import colors from '../../../../constants/colors';
-import AppImage from '../../../../ui/AppImage';
-import RNFetchBlob from 'rn-fetch-blob';
 import { appLog } from '../../../../utils/appLog';
-import AppCustomDropdown from '../../../../ui/AppCustomDropdown';
+import ProfilePhotoPicker from '../../../../ui/ProfilePhotoPicker';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isFocused = useIsFocused();
   const { userData } = useSelector((state: RootState) => state.auth);
-  const { apiUserData, loading, pgCities } = useSelector(
+  const { apiUserData, loading } = useSelector(
     (state: RootState) => state.main,
   );
-  const [qrPreviewVisible, setQrPreviewVisible] = useState(false);
-  const [qrPreviewImage, setQrPreviewImage] = useState('');
-  const [qrImageLoading, setQrImageLoading] = useState(false);
-
   const [form, setForm] = useState({
+    profilePhoto: null,
     fullName: '',
+    fatherName: '',
     mobileNumber: '',
+    emailAddress: '',
     aadhaarNumber: '',
     aadhaarFront: null,
     aadhaarBack: null,
@@ -53,23 +47,17 @@ const ProfileScreen = () => {
     ref1Mobile: '',
     ref2Name: '',
     ref2Mobile: '',
-    city: [] as string[],
-    landlordAccountHolder: '',
-    landlordBankName: '',
-    landlordAccountNumber: '',
-    landlordIFSCCode: '',
-    landlordUPIID: '',
-    landlordQrCodeImg: null,
+    address: '',
+    policeStation: '',
   });
 
   const [errors, setErrors] = useState({
     fullName: '',
+    fatherName: '',
     mobileNumber: '',
     aadhaarNumber: '',
-    landlordAccountHolder: '',
-    landlordBankName: '',
-    landlordAccountNumber: '',
-    landlordIFSCCode: '',
+    emailAddress: '',
+    address: '',
   });
 
   //Fetch latest user info from API
@@ -81,25 +69,28 @@ const ProfileScreen = () => {
           company_id: userData.company_id,
         }),
       );
-      dispatch(fetchPgCities({ company_id: userData?.company_id || '35' }));
     }
   }, [isFocused]);
 
-  // Update form when latest API data arrives
+  //Update form when latest API data arrives
   useEffect(() => {
     if (apiUserData?.success && apiUserData?.data && userData) {
       const d = apiUserData.data;
-      const landlordBankDetail =
-        typeof apiUserData?.data?.bank_detail === 'string'
-          ? JSON.parse(apiUserData.data.bank_detail)
-          : apiUserData?.data?.bank_detail;
+      console.log('apiUserData', apiUserData?.data);
 
       setForm(prev => ({
         ...prev,
         fullName: d.user_fullname || prev.fullName,
+        fatherName: d.user_father_name || prev.fatherName,
         mobileNumber: d.user_mobile || prev.mobileNumber,
+        emailAddress: d.user_email || prev.emailAddress,
         aadhaarNumber: d.aadhar_number || prev.aadhaarNumber,
-        //Preserve old images if API sends null or empty
+        profilePhoto:
+          d.profile_photo &&
+          d.profile_photo !== 'null' &&
+          d.profile_photo !== ''
+            ? d.profile_photo
+            : prev.profilePhoto || null,
         aadhaarFront:
           d.aadhar_front && d.aadhar_front !== 'null'
             ? d.aadhar_front
@@ -117,19 +108,8 @@ const ProfileScreen = () => {
         ref1Mobile: d.ref1_mobile || prev.ref1Mobile,
         ref2Name: d.ref2_name || prev.ref2Name,
         ref2Mobile: d.ref2_mobile || prev.ref2Mobile,
-        city: d.user_city_ids ? [d.user_city_ids.toString()] : prev.city,
-
-        landlordAccountHolder:
-          landlordBankDetail?.account_holder || prev.landlordAccountHolder,
-        landlordBankName:
-          landlordBankDetail?.bank_name || prev.landlordBankName,
-        landlordAccountNumber:
-          landlordBankDetail?.account_number || prev.landlordAccountNumber,
-        landlordIFSCCode:
-          landlordBankDetail?.ifsc_code || prev.landlordIFSCCode,
-        landlordUPIID: landlordBankDetail?.upi_id || prev.landlordUPIID,
-        landlordQrCodeImg:
-          landlordBankDetail?.qr_code || prev.landlordQrCodeImg,
+        address: d.address || prev.address,
+        policeStation: d.police_station || prev.policeStation,
       }));
     }
   }, [apiUserData, userData]);
@@ -138,19 +118,21 @@ const ProfileScreen = () => {
     setForm(prev => ({ ...prev, [key]: file }));
   };
 
+  const handleProfilePhotoSelect = (file: any) => {
+    setForm(prev => ({ ...prev, profilePhoto: file }));
+  };
+
   const validateForm = () => {
     let newErrors = {
       fullName: '',
+      fatherName: '',
       mobileNumber: '',
+      emailAddress: '',
       aadhaarNumber: '',
-      landlordAccountHolder: '',
-      landlordBankName: '',
-      landlordAccountNumber: '',
-      landlordIFSCCode: '',
+      address: '',
     };
     let valid = true;
     const isLandlord = userData?.user_type?.toLowerCase() === 'landlord';
-    //Common fields (har type ke liye)
     if (!form.fullName.trim()) {
       newErrors.fullName = 'Full Name is required';
       valid = false;
@@ -162,7 +144,18 @@ const ProfileScreen = () => {
       newErrors.mobileNumber = 'Enter valid 10-digit number';
       valid = false;
     }
-    //Tenant ke liye Aadhaar validation
+    if (!form.fatherName.trim()) {
+      newErrors.fatherName = 'Father Name is required';
+      valid = false;
+    }
+    if (!form.emailAddress.trim()) {
+      newErrors.emailAddress = 'Email is required';
+      valid = false;
+    }
+    if (!form.address.trim()) {
+      newErrors.address = 'Address is required';
+      valid = false;
+    }
     if (!isLandlord) {
       if (!form.aadhaarNumber.trim()) {
         newErrors.aadhaarNumber = 'Aadhaar Number is required';
@@ -171,31 +164,6 @@ const ProfileScreen = () => {
         newErrors.aadhaarNumber = 'Enter valid 12-digit Aadhaar Number';
         valid = false;
       }
-    }
-    //Landlord ke liye Bank Detail validation
-    if (isLandlord) {
-      if (!form.landlordAccountHolder.trim()) {
-        newErrors.landlordAccountHolder = 'Account Holder Name is required';
-        valid = false;
-      }
-      // if (!form.landlordBankName.trim()) {
-      //   newErrors.landlordBankName = 'Bank Name is required';
-      //   valid = false;
-      // }
-      // if (!form.landlordAccountNumber.trim()) {
-      //   newErrors.landlordAccountNumber = 'Account Number is required';
-      //   valid = false;
-      // } else if (!/^\d{9,18}$/.test(form.landlordAccountNumber)) {
-      //   newErrors.landlordAccountNumber = 'Enter valid account number';
-      //   valid = false;
-      // }
-      // if (!form.landlordIFSCCode.trim()) {
-      //   newErrors.landlordIFSCCode = 'IFSC Code is required';
-      //   valid = false;
-      // } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.landlordIFSCCode)) {
-      //   newErrors.landlordIFSCCode = 'Enter valid IFSC Code (e.g. SBIN0001234)';
-      //   valid = false;
-      // }
     }
     setErrors(newErrors);
     return valid;
@@ -207,30 +175,37 @@ const ProfileScreen = () => {
       try {
         const payload = {
           user_id: userData?.user_id,
-          user_type: userData?.user_type === 'user' ? 'tenant' : 'landlord',
-          //Basic Details
+          user_type: userData?.user_type,
           full_name: form.fullName.trim(),
+          father_name: form.fatherName.trim(),
           mobile: form.mobileNumber.trim(),
+          user_email: form.emailAddress.trim(),
           aadhar_number: form.aadhaarNumber.trim(),
           ref1_name: form.ref1Name.trim(),
           ref1_mobile: form.ref1Mobile.trim(),
           ref2_name: form.ref2Name.trim(),
           ref2_mobile: form.ref2Mobile.trim(),
-          city: form.city,
+          address: form.address.trim(),
+          police_station: form.policeStation.trim(),
+          // Include profile_image if it's a new file (object with uri) OR existing photo (string URL)
+          // This ensures existing photos are preserved when updating other fields
+          ...(form.profilePhoto
+            ? typeof form.profilePhoto === 'object' &&
+              !Array.isArray(form.profilePhoto) &&
+              form.profilePhoto !== null &&
+              'uri' in form.profilePhoto &&
+              (form.profilePhoto as any).uri
+              ? { profile_image: form.profilePhoto } // New file object
+              : typeof form.profilePhoto === 'string' &&
+                (form.profilePhoto as string).trim() !== ''
+              ? { profile_image: form.profilePhoto } // Existing photo URL
+              : {}
+            : {}),
           aadhar_front: form.aadhaarFront,
           aadhar_back: form.aadhaarBack,
           police_verification: form.policeVerification,
-          // Landlord Bank Details (directly from form)
-          account_holder: form.landlordAccountHolder.trim(),
-          bank_name: form.landlordBankName.trim(),
-          account_number: form.landlordAccountNumber.trim(),
-          ifsc_code: form.landlordIFSCCode.trim(),
-          upi_id: form.landlordUPIID?.trim() || '',
-          qr_code: form.landlordQrCodeImg || null,
         };
-        appLog('ProfileScreen', 'Payload sent:', payload);
         const res = await dispatch(updateProfileApi(payload)).unwrap();
-        appLog('ProfileScreen', 'Profile Update API Response:', res);
         if (res?.success) {
           showSuccessMsg(res.message || 'Profile updated successfully');
           dispatch(
@@ -251,42 +226,9 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleDownload = async (url: string) => {
-    try {
-      const { fs } = RNFetchBlob;
-      const PictureDir = fs.dirs.PictureDir;
-      const filePath = `${PictureDir}/QRCode_${Date.now()}.png`;
-      setQrImageLoading(true);
-      if (url.startsWith('file://')) {
-        //Local file hai — copy karenge
-        const sourcePath = url.replace('file://', '');
-        await fs.cp(sourcePath, filePath);
-      } else {
-        // Remote URL hai — fetch karenge
-        await RNFetchBlob.config({
-          fileCache: true,
-          appendExt: 'png',
-          path: filePath,
-        }).fetch('GET', url);
-      }
-      setQrPreviewVisible(false);
-      setQrImageLoading(false);
-      showSuccessMsg(`Download Complete. File saved to: ${filePath}`);
-    } catch (error: any) {
-      appLog('ProfileScreen', 'handleDownload error:', error);
-      showErrorMsg('Download Failed', error.message);
-      setQrPreviewVisible(false);
-      setQrImageLoading(false);
-    }
-  };
-
-  const handlePgCitySelect = React.useCallback((value: string[]) => {
-    setForm(prev => ({ ...prev, city: value }));
-  }, []);
-
   return (
     <View style={styles.container}>
-      <AppHeader title="Profile" showBack />
+      <AppHeader title="Profile" showBack rightIcon={false} />
       {loading ? (
         <View style={[styles.container, { justifyContent: 'center' }]}>
           <ActivityIndicator size="large" color={colors.mainColor} />
@@ -306,6 +248,13 @@ const ProfileScreen = () => {
             contentContainerStyle={styles.contentContainer}
             keyboardShouldPersistTaps="handled"
           >
+            {/* Profile Photo */}
+            <ProfilePhotoPicker
+              value={form.profilePhoto}
+              userName={form.fullName || userData?.user_fullname || ''}
+              onSelect={handleProfilePhotoSelect}
+            />
+
             {/* Basic Info */}
             <AppTextInput
               label="Full Name *"
@@ -314,7 +263,13 @@ const ProfileScreen = () => {
               onChangeText={text => setForm({ ...form, fullName: text })}
               error={errors.fullName}
             />
-
+            <AppTextInput
+              label="Father Name *"
+              placeholder="Enter your father name"
+              value={form.fatherName}
+              onChangeText={text => setForm({ ...form, fatherName: text })}
+              error={errors.fatherName}
+            />
             <AppTextInput
               label="Mobile Number *"
               placeholder="Enter your mobile number"
@@ -324,74 +279,34 @@ const ProfileScreen = () => {
               error={errors.mobileNumber}
               maxLength={10}
             />
-            {userData?.user_type == 'landlord' ? (
-              <>
-                {/* Bank / Payment Details */}
-                <Typography
-                  variant="subheading"
-                  weight="medium"
-                  style={{ marginVertical: 10 }}
-                >
-                  Bank / Payment Details
-                </Typography>
-                <AppTextInput
-                  label="Account Holder *"
-                  placeholder=""
-                  value={form.landlordAccountHolder}
-                  onChangeText={text =>
-                    setForm({ ...form, landlordAccountHolder: text })
-                  }
-                  error={errors.landlordAccountHolder}
-                />
-                <AppTextInput
-                  label="Bank Name"
-                  placeholder=""
-                  value={form.landlordBankName}
-                  onChangeText={text =>
-                    setForm({ ...form, landlordBankName: text })
-                  }
-                  error={errors.landlordBankName}
-                />
-                <AppTextInput
-                  label="Account Number"
-                  placeholder=""
-                  value={form.landlordAccountNumber}
-                  onChangeText={text =>
-                    setForm({ ...form, landlordAccountNumber: text })
-                  }
-                  error={errors.landlordAccountNumber}
-                  keyboardType="number-pad"
-                />
-                <AppTextInput
-                  label="IFSC Code"
-                  placeholder=""
-                  value={form.landlordIFSCCode}
-                  onChangeText={text =>
-                    setForm({ ...form, landlordIFSCCode: text })
-                  }
-                  error={errors.landlordIFSCCode}
-                />
-                <AppTextInput
-                  label="UPI ID"
-                  placeholder=""
-                  value={form.landlordUPIID}
-                  onChangeText={text =>
-                    setForm({ ...form, landlordUPIID: text })
-                  }
-                />
-                <ImagePickerInput
-                  label="QR Code Image"
-                  value={form?.landlordQrCodeImg}
-                  onSelect={file =>
-                    handleImageSelect('landlordQrCodeImg', file)
-                  }
-                  onPreview={imgUri => {
-                    setQrPreviewImage(imgUri);
-                    setQrPreviewVisible(true);
-                  }}
-                />
-              </>
-            ) : (
+
+            <AppTextInput
+              label="Email *"
+              placeholder="Enter your email"
+              value={form.emailAddress}
+              onChangeText={text => setForm({ ...form, emailAddress: text })}
+              error={errors.emailAddress}
+            />
+            {/* Police Station - Show only for normal users */}
+            {userData?.user_type == 'user' && (
+              <AppTextInput
+                label="Police Station"
+                placeholder="Enter your police station"
+                value={form.policeStation}
+                onChangeText={text => setForm({ ...form, policeStation: text })}
+              />
+            )}
+            {/* Address field - Show for all user types (user, landlord, subuser) */}
+            <AppTextInput
+              label="Address *"
+              placeholder="Enter your address"
+              value={form.address}
+              onChangeText={text => setForm({ ...form, address: text })}
+              error={errors.address}
+            />
+
+            {userData?.user_type == 'landlord' ? null : userData?.user_type ==
+              'user' ? (
               <>
                 {/* Identity Verification */}
                 <Typography
@@ -414,26 +329,31 @@ const ProfileScreen = () => {
                   maxLength={12}
                 />
 
-                <ImagePickerInput
-                  label="Aadhaar Front Photo"
-                  value={form.aadhaarFront}
-                  onSelect={file => handleImageSelect('aadhaarFront', file)}
-                />
-
-                <ImagePickerInput
-                  label="Aadhaar Back Photo"
-                  value={form.aadhaarBack}
-                  onSelect={file => handleImageSelect('aadhaarBack', file)}
-                />
-
-                <ImagePickerInput
-                  label="Police Verification Photo"
-                  value={form.policeVerification}
-                  onSelect={file =>
-                    handleImageSelect('policeVerification', file)
-                  }
-                />
-
+                <View style={styles.imagePickerRow}>
+                  <View style={styles.imagePickerItem}>
+                    <ImagePickerInput
+                      label="Aadhaar Front Photo"
+                      value={form.aadhaarFront}
+                      onSelect={file => handleImageSelect('aadhaarFront', file)}
+                    />
+                  </View>
+                  <View style={styles.imagePickerItem}>
+                    <ImagePickerInput
+                      label="Aadhaar Back Photo"
+                      value={form.aadhaarBack}
+                      onSelect={file => handleImageSelect('aadhaarBack', file)}
+                    />
+                  </View>
+                  <View style={styles.imagePickerItemLast}>
+                    <ImagePickerInput
+                      label="Police Verification Photo"
+                      value={form.policeVerification}
+                      onSelect={file =>
+                        handleImageSelect('policeVerification', file)
+                      }
+                    />
+                  </View>
+                </View>
                 {/* References */}
                 <Typography
                   variant="subheading"
@@ -466,12 +386,19 @@ const ProfileScreen = () => {
                   onChangeText={text => setForm({ ...form, ref2Mobile: text })}
                   maxLength={10}
                 />
-
-                <AppCustomDropdown
-                  label="City"
-                  data={pgCities}
-                  selectedValues={form.city}
-                  onSelect={handlePgCitySelect}
+              </>
+            ) : (
+              <>
+                <AppTextInput
+                  label="Aadhaar Number *"
+                  placeholder="Enter 12-digit Aadhaar Number"
+                  keyboardType="numeric"
+                  value={form.aadhaarNumber}
+                  onChangeText={text =>
+                    setForm({ ...form, aadhaarNumber: text })
+                  }
+                  error={errors.aadhaarNumber}
+                  maxLength={12}
                 />
               </>
             )}
@@ -485,46 +412,6 @@ const ProfileScreen = () => {
                 onPress={handleSubmit}
               />
             </View>
-            {/* Or Code Imgae Preview Mode */}
-            <Modal
-              visible={qrPreviewVisible}
-              transparent
-              animationType="fade"
-              onRequestClose={() => setQrPreviewVisible(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <TouchableOpacity
-                  onPress={() => setQrPreviewVisible(false)}
-                  hitSlop={20}
-                  style={styles.modalCloseBtn}
-                >
-                  <Typography variant="caption" style={styles.modalCloseText}>
-                    ✕
-                  </Typography>
-                </TouchableOpacity>
-
-                <View style={styles.imageContainer}>
-                  {qrPreviewImage ? (
-                    <>
-                      <AppImage
-                        source={{ uri: qrPreviewImage }}
-                        style={styles.modalImage}
-                        resizeMode="contain"
-                      />
-                      <AppButton
-                        style={styles.downloadBtn}
-                        title={
-                          qrImageLoading ? 'Download Loading...' : '⬇️ Download'
-                        }
-                        loading={loading}
-                        disabled={loading}
-                        onPress={() => handleDownload(qrPreviewImage)}
-                      />
-                    </>
-                  ) : null}
-                </View>
-              </View>
-            </Modal>
           </KeyboardAwareScrollView>
         </TouchableWithoutFeedback>
       )}

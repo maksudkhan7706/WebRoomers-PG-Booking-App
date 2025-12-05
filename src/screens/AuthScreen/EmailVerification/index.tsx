@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   TouchableOpacity,
-  Image,
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
@@ -14,7 +13,6 @@ import { RootStackParamList, NAV_KEYS } from '../../../navigation/NavKeys';
 import colors from '../../../constants/colors';
 import styles from './styles';
 import AppHeader from '../../../ui/AppHeader';
-import images from '../../../assets/images';
 import Typography from '../../../ui/Typography';
 import AppButton from '../../../ui/AppButton';
 import AppTextInput from '../../../ui/AppTextInput';
@@ -23,6 +21,7 @@ import { AppDispatch } from '../../../store';
 import { useDispatch } from 'react-redux';
 import { registerUser, reSendOtp } from '../../../store/authSlice';
 import { appLog } from '../../../utils/appLog';
+import AppLogo from '../../../ui/AppLogo';
 
 type EmailVerificationNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -39,7 +38,8 @@ interface Props {
 }
 
 const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
-  const { email, otp, role, mobile_number, full_name, registerPayload } = route.params || {};
+  const { email, otp, role, mobile_number, full_name, registerPayload } =
+    route.params || {};
 
   const [enteredOtp, setEnteredOtp] = useState('');
   const [currentOtp, setCurrentOtp] = useState(otp);
@@ -54,9 +54,14 @@ const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
     if (enteredOtp.trim() === String(currentOtp)) {
       try {
         //OTP verified, and user register
-        const resultAction = await dispatch(registerUser(registerPayload)).unwrap();
+        const resultAction = await dispatch(
+          registerUser(registerPayload),
+        ).unwrap();
         if (resultAction.success) {
-          showSuccessMsg(resultAction?.message ||'Email verified & registration successful!');
+          showSuccessMsg(
+            resultAction?.message ||
+              'Email verified & registration successful!',
+          );
           navigation.navigate(NAV_KEYS.LOGIN, { role });
         } else {
           showErrorMsg(resultAction.message || 'Registration failed');
@@ -103,83 +108,75 @@ const EmailVerification: React.FC<Props> = ({ navigation, route }) => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >
-          <View
-            style={{
-              height: 180,
-        width: '100%',
+          <AppLogo
+            containerStyle={{
+              height: 300,
+              width: '100%',
               alignSelf: 'center',
+              marginTop: -100,
             }}
-          >
-            <Image
-              source={images.NewAppLogo}
-              style={[
-                {
-                  height: '100%',
-                  width: '100%',
-                  resizeMode: 'contain',
-                },
-              ]}
-            />
-          </View>
-
-          <Typography
-            variant="heading"
-            weight="bold"
-            color={colors.mainColor}
-            style={styles.titleText}
-          >
-            Verify your Email Address
-          </Typography>
-
-          <Typography
-            variant="body"
-            weight="light"
-            color={colors.mainColor}
-            style={styles.subtitleText}
-          >
-            {email}
-          </Typography>
-          {currentOtp ? (
-            <Typography
-              variant="body"
-              weight="bold"
-              color={colors.gray}
-              style={{ marginBottom: 15, marginTop: 10, textAlign: 'center' }}
-            >
-              OTP: {currentOtp}
-            </Typography>
-          ) : null}
-
-          <AppTextInput
-            placeholder="Enter OTP"
-            keyboardType="number-pad"
-            value={enteredOtp}
-            onChangeText={setEnteredOtp}
           />
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={{ marginBottom: 20 }}
-            onPress={handleResendOtp}
-          >
+          <View style={{ marginTop: -40 }}>
+            <Typography
+              variant="heading"
+              weight="bold"
+              color={colors.mainColor}
+              style={styles.titleText}
+            >
+              Verify your Email Address
+            </Typography>
+
             <Typography
               variant="body"
               weight="light"
-              align="right"
               color={colors.mainColor}
-              style={{
-                textDecorationLine: 'underline',
-              }}
+              style={styles.subtitleText}
             >
-              Re-send OTP
+              {email}
             </Typography>
-          </TouchableOpacity>
+            {currentOtp ? (
+              <Typography
+                variant="body"
+                weight="bold"
+                color={colors.gray}
+                style={{ marginBottom: 15, marginTop: 10, textAlign: 'center' }}
+              >
+                OTP: {currentOtp}
+              </Typography>
+            ) : null}
 
-          <AppButton
-            title="Verify & Continue"
-            onPress={handleVerify}
-            disabled={!enteredOtp.trim()}
-          />
+            <AppTextInput
+              placeholder="Enter OTP"
+              keyboardType="number-pad"
+              value={enteredOtp}
+              onChangeText={setEnteredOtp}
+            />
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={{ marginBottom: 20 }}
+              onPress={handleResendOtp}
+            >
+              <Typography
+                variant="body"
+                weight="light"
+                align="right"
+                color={colors.mainColor}
+                style={{
+                  textDecorationLine: 'underline',
+                }}
+              >
+                Re-send OTP
+              </Typography>
+            </TouchableOpacity>
+
+            <AppButton
+              title="Verify & Continue"
+              onPress={handleVerify}
+              disabled={!enteredOtp.trim()}
+            />
+          </View>
         </KeyboardAwareScrollView>
       </TouchableWithoutFeedback>
     </View>

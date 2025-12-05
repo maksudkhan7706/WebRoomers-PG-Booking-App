@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -9,22 +9,20 @@ import {
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { NAV_KEYS } from '../navigation/NavKeys';
-import { logoutUser } from '../store/authSlice';
 import { AppDispatch, RootState } from '../store';
-import { showSuccessMsg } from '../utils/appMessages';
 import { appLog } from '../utils/appLog';
+import { getSettings } from '../store/mainSlice';
 
 const FloatingActions = () => {
   const [showOptions, setShowOptions] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
-  const { userRole } = useSelector((state: RootState) => state.auth);
+  const { userRole, userData } = useSelector((state: RootState) => state.auth);
+  const { settingsData } = useSelector((state: any) => state.main);
   const toggleOptions = () => {
     setShowOptions(!showOptions);
     Animated.timing(animation, {
@@ -33,6 +31,10 @@ const FloatingActions = () => {
       useNativeDriver: true,
     }).start();
   };
+
+  useEffect(() => {
+    dispatch(getSettings({ company_id: userData?.company_id}));
+  }, []);
 
   // const confirmLogout = () => {
   //   Alert.alert(
@@ -105,6 +107,7 @@ const FloatingActions = () => {
     ],
     opacity: animation,
   };
+
   return (
     <>
       {showOptions && (
@@ -119,15 +122,34 @@ const FloatingActions = () => {
           <>
             <Animated.View style={[styles.iconWrapper, whatsappStyle]}>
               <TouchableOpacity
-                onPress={() => Linking.openURL('https://wa.me/919876543210')}
+                onPress={() => {
+                  const whatsappNumber = settingsData?.whatsapp_number
+                    ?.replace(/\s+/g, '') // space hata de
+                    ?.replace('+', ''); // + symbol bhi hata de (wa.me me + nahi chalta)
+                  if (whatsappNumber) {
+                    Linking.openURL(`https://wa.me/${whatsappNumber}`);
+                  } else {
+                    appLog('FloatingActions', 'No WhatsApp number found');
+                  }
+                }}
                 style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
               >
                 <FontAwesome name="whatsapp" size={22} color="#fff" />
               </TouchableOpacity>
             </Animated.View>
+
             <Animated.View style={[styles.iconWrapper, callStyle]}>
               <TouchableOpacity
-                onPress={() => Linking.openURL('tel:+919876543210')}
+                onPress={() => {
+                  const callNumber = settingsData?.mobile_number
+                    ?.replace(/\s+/g, '')
+                    ?.replace('+', '');
+                  if (callNumber) {
+                    Linking.openURL(`tel:+${callNumber}`);
+                  } else {
+                    appLog('FloatingActions', 'No mobile number found');
+                  }
+                }}
                 style={[styles.actionBtn, { backgroundColor: '#1E90FF' }]}
               >
                 <Feather name="phone-call" size={22} color="#fff" />

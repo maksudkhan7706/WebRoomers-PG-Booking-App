@@ -9,29 +9,6 @@ export default StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 120,
-  },
-  imageSection: {
-    marginTop: 10,
-    marginBottom: 15,
-  },
-  imagePicker: {
-    marginTop: 8,
-    height: 100,
-    borderWidth: 1,
-    borderColor: colors.logoBg,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.logoBg,
-  },
-  imagePlaceholder: {
-    alignItems: 'center',
-  },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
   },
 
   modalOverlay: {
@@ -52,7 +29,7 @@ export default StyleSheet.create({
     zIndex: 10,
   },
   modalCloseText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 20,
   },
   downloadBtn: {
@@ -60,17 +37,25 @@ export default StyleSheet.create({
     marginHorizontal: 40,
     width: '80%',
   },
-  downloadText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
 
   imageContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     width: '95%',
     height: '60%',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  imagePickerRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  imagePickerItem: {
+    flex: 1,
+    marginRight: 10,
+  },
+  imagePickerItemLast: {
+    flex: 1,
+    marginRight: 0,
   },
 });

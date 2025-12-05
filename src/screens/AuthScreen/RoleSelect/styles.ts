@@ -9,7 +9,7 @@ export default StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 30,
-    marginTop: 30,
+    marginTop: -30,
     justifyContent: 'space-between',
     paddingVertical: 30,
   },

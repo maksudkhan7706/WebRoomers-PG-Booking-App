@@ -4,7 +4,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
-  Image,
 } from 'react-native';
 import Typography from '../../../../ui/Typography';
 import AppHeader from '../../../../ui/AppHeader';
@@ -13,9 +12,7 @@ import colors from '../../../../constants/colors';
 import styles from './styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store';
-import { appLog } from '../../../../utils/appLog';
 import AppButton from '../../../../ui/AppButton';
-import images from '../../../../assets/images';
 import { updateChangePassword } from '../../../../store/mainSlice';
 import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -23,6 +20,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/NavKeys';
+import AppLogo from '../../../../ui/AppLogo';
 
 type ChangePasswordScreenNavProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -38,15 +36,13 @@ const ChangePasswordScreen = () => {
   });
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
-
-  // 👁️ password visibility states
+  //password visibility states
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const validateForm = () => {
     const newErrors: any = {};
-
     if (!form.currentPassword.trim())
       newErrors.currentPassword = 'Please enter current password';
     if (!form.newPassword.trim())
@@ -62,7 +58,6 @@ const ChangePasswordScreen = () => {
 
   const onChangePassword = async () => {
     if (!validateForm()) return;
-
     setLoading(true);
     try {
       const payload = {
@@ -71,7 +66,6 @@ const ChangePasswordScreen = () => {
         new_password: form.confirmPassword,
       };
       const response = await dispatch(updateChangePassword(payload)).unwrap();
-      appLog('onChangePassword', 'response', response);
       if (response?.success) {
         showSuccessMsg(response?.message);
         navigation.goBack();
@@ -93,7 +87,7 @@ const ChangePasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Change Password" showBack />
+      <AppHeader title="Change Password" showBack rightIcon={false} />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
@@ -102,25 +96,22 @@ const ChangePasswordScreen = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContainer}
         >
-          <View
-            style={{
-              height: 150,
-        width: '100%',
+          <AppLogo
+            containerStyle={{
+              height: 300,
+              width: '100%',
               alignSelf: 'center',
               marginBottom: 30,
+              marginTop: -100,
             }}
-          >
-            <Image
-              source={images.NewAppLogo}
-              style={{ height: '100%', width: '100%', resizeMode: 'contain' }}
-            />
+          />
+
+          <View style={{ marginTop: -40 }}>
+            <Typography variant="body" style={styles.heading}>
+              Change Your Password
+            </Typography>
           </View>
 
-          <Typography variant="body" style={styles.heading}>
-            Change Your Password
-          </Typography>
-
-          {/* Current Password */}
           <AppTextInput
             label="Current Password *"
             placeholder="Enter current password"
@@ -137,8 +128,6 @@ const ChangePasswordScreen = () => {
               />
             }
           />
-
-          {/* New Password */}
           <AppTextInput
             label="New Password *"
             placeholder="Enter new password"
@@ -155,8 +144,6 @@ const ChangePasswordScreen = () => {
               />
             }
           />
-
-          {/* Confirm Password */}
           <AppTextInput
             label="Confirm Password *"
             placeholder="Re-enter new password"

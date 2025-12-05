@@ -1,6 +1,5 @@
-import { Dimensions, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import colors from '../../../../constants/colors';
-const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
@@ -18,21 +17,16 @@ export default StyleSheet.create({
     marginTop: 16,
     borderRadius: 8,
     overflow: 'hidden',
-    // shadow for iOS
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 6,
-    // shadow for Android
     elevation: 3,
     borderWidth: 0.1,
     borderColor: colors.mainColor,
-    marginBottom:16
+    marginBottom: 16,
   },
-  slider: {
-    width: '100%',
-    height: width * 0.45,
-  },
+
   cardBody: {
     padding: 12,
   },
@@ -53,14 +47,7 @@ export default StyleSheet.create({
     paddingVertical: 4,
     margin: 3,
   },
-  button: {
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: colors.mainColor,
-    borderRadius: 8,
-    paddingVertical: 6,
-    alignItems: 'center',
-  },
+
   listEmpty: {
     flex: 1,
     justifyContent: 'center',
@@ -70,5 +57,22 @@ export default StyleSheet.create({
 
   sliderContainer: {
     marginHorizontal: 10,
+  },
+  commonStyle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  availabilityCard: {
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 25,
+    top: 25,
   },
 });

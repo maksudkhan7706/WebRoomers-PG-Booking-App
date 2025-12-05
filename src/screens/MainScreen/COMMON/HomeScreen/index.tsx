@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 import {
   View,
   FlatList,
@@ -7,168 +13,297 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store';
-import AppHeader from '../../../../ui/AppHeader';
 import Typography from '../../../../ui/Typography';
 import colors from '../../../../constants/colors';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles';
 import AppImageSlider from '../../../../ui/AppImageSlider';
-import { fetchDashboardData } from '../../../../store/mainSlice';
+import {
+  apiUserDataFetch,
+  fetchAllUserPermissions,
+  fetchDashboardData,
+} from '../../../../store/mainSlice';
 import AppImage from '../../../../ui/AppImage';
 import { NAV_KEYS, RootStackParamList } from '../../../../navigation/NavKeys';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import AppButton from '../../../../ui/AppButton';
 import AppImagePlaceholder from '../../../../ui/AppImagePlaceholder';
 import { appLog } from '../../../../utils/appLog';
+import { hasPermission } from '../../../../utils/permissions';
+import AccessDeniedModal from '../../../../ui/AccessDeniedModal';
+import AppLogo from '../../../../ui/AppLogo';
+import AnimatedCounter from './components/AnimatedCounter';
+import CategoriesSection from './components/CategoriesSection';
+import BookPGStepsSection from './components/BookPGStepsSection';
+import WhyChooseUsSection from './components/WhyChooseUsSection';
+import DashboardReviewsSection from './components/DashboardReviewsSection';
+import RecentPGSection from './components/RecentPGSection';
 
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
-
-const { width } = Dimensions.get('window');
-
-const steps = [
-  {
-    id: 1,
-    title: 'Sign Up',
-    desc: 'Create your account in less than a minute with just your basic details.',
-    btnText: 'Sign Up Now',
-    icon: 'user-plus',
-  },
-  {
-    id: 2,
-    title: 'Select PG Room',
-    desc: 'Browse through our verified PG listings and choose your perfect room.',
-    btnText: 'Browse Rooms',
-    icon: 'home',
-  },
-  {
-    id: 3,
-    title: 'Pay Rent Online',
-    desc: 'Secure online payment with multiple options. No hidden charges.',
-    btnText: 'Pay Now',
-    icon: 'credit-card',
-  },
-];
-
-const whyChooseUs = [
-  {
-    title: 'Why We Exist',
-    desc: 'Our company stands out for quality, trust, and innovation. We ensure every client receives the best service experience possible.',
-  },
-  {
-    title: 'Our Mission',
-    desc: 'To deliver innovative and reliable solutions that help our customers grow and achieve their goals.',
-  },
-  {
-    title: 'Our Vision',
-    desc: 'To be the leading brand in our industry, recognized for excellence, integrity, and customer satisfaction.',
-  },
-];
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeNavProp>();
   const dispatch = useDispatch<AppDispatch>();
-  const { data, loading } = useSelector((state: RootState) => state.main);
+  const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
+  const { data, loading, apiUserData, userAllPermissions } = useSelector(
+    (state: RootState) => state.main,
+  );
   const { userData } = useSelector((state: RootState) => state.auth);
   const [refreshing, setRefreshing] = useState(false);
-  const flatListRef = useRef<FlatList | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const companyId = '35';
-  const ITEM_WIDTH = width - 80;
-  const SPACING = 14;
-  const banners = data?.data?.banners || [];
-  const recentPGs = data?.data?.recent_pgs || [];
-  const categories = data?.data?.property_categories || [];
-  const dashBoardReviews = data?.data?.reviews || [];
+  const [isDashboardLoading, setIsDashboardLoading] = useState(true);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const sectionPositions = useRef<Record<string, number>>({});
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [accessDeniedMessage, setAccessDeniedMessage] = useState(
+    'You do not have permission to perform this action.',
+  );
 
-  const fetchData = useCallback(() => {
-    const payload: any = {
+  // Animated values for buttons
+  const buttonAnimations = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+
+  // Use userData company_id with fallback
+  const companyId = useMemo(
+    () => userData?.company_id,
+    [userData?.company_id],
+  );
+
+  // Memoize derived data to avoid unnecessary recalculations
+  const banners = useMemo(
+    () => data?.data?.banners || [],
+    [data?.data?.banners],
+  );
+  const recentPGs = useMemo(
+    () => data?.data?.recent_pgs || [],
+    [data?.data?.recent_pgs],
+  );
+  const categories = useMemo(
+    () => data?.data?.property_categories || [],
+    [data?.data?.property_categories],
+  );
+  const dashBoardReviews = useMemo(() => {
+    return Array.isArray(data?.data?.reviews) ? data.data.reviews : [];
+  }, [data?.data?.reviews]);
+
+  const userName = useMemo(
+    () => userData?.user_fullname || apiUserData?.user_fullname || 'Guest',
+    [userData?.user_fullname, apiUserData?.user_fullname],
+  );
+  const isLandlord = useMemo(
+    () => userData?.user_type === 'landlord',
+    [userData?.user_type],
+  );
+
+  const summaryStats = useMemo(
+    () => [
+      { label: 'Listings', value: recentPGs?.length || 0, target: 'listings' },
+      {
+        label: 'Paid',
+        value: data?.data?.received_payment || 0,
+        target: 'received_payment',
+      },
+      {
+        label: 'Due',
+        value: data?.data?.due_payment || 0,
+        target: 'due_payment',
+      },
+    ],
+    [recentPGs?.length, data?.data?.received_payment, data?.data?.due_payment],
+  );
+
+  const fetchData = useCallback(async () => {
+    setIsDashboardLoading(true);
+    const payload = {
       company_id: companyId,
+      user_id: userData?.user_id,
     };
-    if (userData?.user_type === 'landlord' && userData?.user_id) {
-      payload.user_id = userData.user_id;
+    try {
+      await dispatch(fetchDashboardData(payload));
+    } catch (error) {
+      appLog('HomeScreen', 'fetchData Error', error);
+      // Error is handled by Redux, but we log it here for debugging
+    } finally {
+      setIsDashboardLoading(false);
     }
-    appLog('HomeScreen', 'Dashboard Payload', payload);
-    dispatch(fetchDashboardData(payload));
   }, [dispatch, companyId, userData]);
+
+  const fetchUserAndPermissions = useCallback(async () => {
+    try {
+      if (!userData?.user_id || !userData?.company_id) return;
+      const userPayload = {
+        user_id: userData?.user_id,
+        company_id: userData?.company_id,
+      };
+      const permissionPayload = {
+        company_id: userData?.company_id,
+      };
+      // Parallel dispatch for better performance
+      await Promise.all([
+        dispatch(apiUserDataFetch(userPayload)),
+        dispatch(fetchAllUserPermissions(permissionPayload)),
+      ]);
+    } catch (error) {
+      appLog('HomeScreen', 'fetchUserAndPermissions Error', error);
+    }
+  }, [dispatch, userData]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const onRefresh = async () => {
+  // Fetch latest user info from API
+  useEffect(() => {
+    if (isFocused) {
+      fetchUserAndPermissions();
+    }
+  }, [isFocused, fetchUserAndPermissions]);
+
+  // Animate buttons when screen is focused and data is loaded
+  useEffect(() => {
+    if (isFocused && !loading && !isDashboardLoading && !refreshing) {
+      // Reset animations
+      buttonAnimations.forEach(anim => anim.setValue(0));
+
+      // Create staggered animations for buttons
+      const animations = buttonAnimations.map((anim, index) => {
+        const delay = index * 100; // Stagger each button by 100ms
+        return Animated.sequence([
+          Animated.delay(delay),
+          Animated.parallel([
+            Animated.timing(anim, {
+              toValue: 1,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]);
+      });
+
+      Animated.parallel(animations).start();
+    }
+  }, [isFocused, loading, isDashboardLoading, refreshing, buttonAnimations]);
+
+  const handleStatPress = useCallback((target: string) => {
+    const position = sectionPositions.current[target];
+    if (typeof position === 'number' && scrollRef.current) {
+      scrollRef.current.scrollTo({
+        y: Math.max(position - 20, 0),
+        animated: true,
+      });
+    }
+  }, []);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  };
+    try {
+      await Promise.all([
+        fetchData(), // Dashboard API
+        fetchUserAndPermissions(), // User + Permission APIs
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchData, fetchUserAndPermissions]);
 
-  const reviewsRenderItem = ({ item, index }: any) => {
-    return (
-      <View
-        style={[
-          styles.reviewCard,
-          {
-            width: ITEM_WIDTH,
-            marginRight: index === dashBoardReviews?.length - 1 ? 0 : SPACING,
-          },
-        ]}
-      >
-        <Typography
-          variant="body"
-          color="#333"
-          style={{
-            marginBottom: 20,
-            lineHeight: 22,
-          }}
-        >
-          {item.review_text}
-        </Typography>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <FontAwesome
-            style={{
-              marginRight: 12,
-            }}
-            name="user-circle-o"
-            size={30}
-            color={colors.mainColor}
-          />
-          <View style={{ width: '88%' }}>
-            <Typography style={{ fontWeight: 'bold', color: '#3A3A3A' }}>
-              {item.name}
-            </Typography>
-            <Typography style={{ color: '#666' }}>
-              {item.company_name} - {item.role}
-            </Typography>
-          </View>
-        </View>
-      </View>
-    );
-  };
-  // console.log('HOME.  userData ============',userData);
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="Home"
-        rightIcon={
-          <FontAwesome
-            name="user-circle-o"
-            size={25}
-            color={colors.mainColor}
-          />
-        }
-      />
+      {/* Modern Header */}
+      <View
+        style={[
+          styles.modernHeader,
+          { paddingTop: Math.max(insets.top + 10, 20) },
+        ]}
+      >
+        <View style={styles.headerAccentOne} />
+        <View style={styles.headerAccentTwo} />
+        <View style={styles.headerTop}>
+          <View style={styles.headerLeft}>
+            <AppLogo
+              style={styles.headerLogo}
+              resizeMode="cover"
+            />
+            <View style={styles.greetingContainer}>
+              <Typography
+                variant="subheading"
+                weight="bold"
+                color={colors.white}
+                style={styles.heroTitle}
+              >
+                Hi, {userName}
+              </Typography>
+              <Typography
+                variant="label"
+                color="rgba(255, 255, 255, 0.85)"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={styles.addressText}
+              >
+                Complete your profile?
+              </Typography>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate(NAV_KEYS.ProfileScreen as any)}
+          >
+            <View style={styles.profileIconContainer}>
+              <FontAwesome
+                name="user-circle-o"
+                size={26}
+                color={colors.white}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
+        {userData?.user_type === 'user' ? null : (
+          <View style={styles.heroStatsRow}>
+            {summaryStats.map(stat => (
+              <TouchableOpacity
+                key={stat.label}
+                style={styles.heroStatCard}
+                activeOpacity={0.9}
+                onPress={() => handleStatPress(stat.target)}
+              >
+                <AnimatedCounter value={stat.value} trigger={isFocused} />
+                <Typography
+                  align="center"
+                  variant="caption"
+                  color="rgba(255,255,255,0.85)"
+                >
+                  {stat.label}
+                </Typography>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
 
-      {loading && !refreshing ? (
+      {/*Show loader when loading or refreshing */}
+      {loading || refreshing || isDashboardLoading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.mainColor} />
+          <Typography
+            style={{ textAlign: 'center', marginTop: 10 }}
+            weight="medium"
+          >
+            Loading dashboard...
+          </Typography>
         </View>
       ) : (
+        //Main Home Content
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -178,340 +313,218 @@ const HomeScreen = () => {
             />
           }
         >
-          {/* Banner Slider */}
-          <View style={styles.sliderContainer}>
-            {banners && banners.length > 0 ? (
-              <AppImageSlider
-                data={banners.map((b: any, index: number) => ({
-                  id: b.banner_id || index.toString(),
-                  image: { uri: b.banner_image },
-                }))}
-                showThumbnails={false}
-              />
-            ) : (
-              <AppImagePlaceholder />
-            )}
-          </View>
-
-          {userData?.user_type == 'landlord' ? (
-            <View style={{ paddingHorizontal: 40, marginTop: 15 }}>
-              <AppButton
-                title={'Add PG'}
-                loading={loading}
-                disabled={loading}
-                onPress={() =>
-                  navigation.navigate(NAV_KEYS.LandlordAddPG, { type: 'addPG' })
-                }
-              />
-            </View>
-          ) : null}
-
-          {/* Recent PG */}
-          <View style={styles.sectionContainer}>
-            {recentPGs?.length > 0 ? (
-              <Typography
-                variant="subheading"
-                weight="bold"
-                color={colors.mainColor}
-              >
-                Recent PG
-              </Typography>
-            ) : null}
-
-            <FlatList
-              data={recentPGs}
-              keyExtractor={item => item.property_id}
-              contentContainerStyle={{ paddingBottom: 10, padding: 5 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.pgCard}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    const { room_available, property_id, company_id } = item;
-                    if (room_available?.toLowerCase() === 'available') {
-                      navigation.navigate(NAV_KEYS.PGRoomListScreen, {
-                        propertyId: property_id,
-                        companyId: company_id,
-                      });
-                    } else {
-                      navigation.navigate(NAV_KEYS.PGDetailScreen, {
-                        propertyId: property_id,
-                        companyId: company_id,
-                      });
-                    }
-                  }}
-                >
-                  <View style={styles.pgInfoRow}>
-                    <View style={styles.pgTextContainer}>
-                      <Typography
-                        variant="body"
-                        weight="medium"
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        color={colors.mainColor}
-                      >
-                        {item.property_title}
-                      </Typography>
-                      <View style={styles.addressRow}>
-                        <Feather name="map-pin" size={14} color={colors.gray} />
-                        <Typography
-                          variant="caption"
-                          color={colors.gray}
-                          style={styles.addressText}
-                          ellipsizeMode="tail"
-                          numberOfLines={2}
-                        >
-                          {item.property_address}
-                        </Typography>
-                      </View>
-                    </View>
-                  </View>
-
-                  {item?.pg_for == null ? null : (
-                    <View
-                      style={[
-                        styles.forPgContainer,
-                        {
-                          backgroundColor:
-                            item.pg_for !== 'Girls'
-                              ? colors.mainColor
-                              : '#e83f8b',
-                        },
-                      ]}
-                    >
-                      <Typography
-                        variant="caption"
-                        weight="medium"
-                        color={colors.white}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
-                        FOR {item.pg_for}
-                      </Typography>
-                    </View>
-                  )}
-
-                  <AppImage
-                    source={{ uri: item.property_featured_image }}
-                    style={styles.pgImage}
-                  />
-
-                  <Typography
-                    style={{ marginTop: 8 }}
-                    variant="body"
-                    weight="bold"
-                    color={colors.mainColor}
-                  >
-                    ₹{item.property_price}
-                  </Typography>
-                </TouchableOpacity>
-              )}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-
-          {/* Categories */}
-          <View style={styles.sectionContainer}>
-            <Typography
-              variant="subheading"
-              weight="bold"
-              color={colors.mainColor}
-            >
-              Browse by Category
-            </Typography>
-            <FlatList
-              horizontal
-              data={categories}
-              keyExtractor={item => item.property_category_id}
-              contentContainerStyle={{ paddingBottom: 15 }}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <View style={styles.categoryCard}>
-                  <AppImage
-                    source={{ uri: item.property_category_icon }}
-                    style={styles.categoryImage}
-                  />
-                  <Typography
-                    variant="body"
-                    weight="bold"
-                    align="center"
-                    style={{ marginTop: 10 }}
-                    color={colors.mainColor}
-                  >
-                    {item.property_category_title}
-                  </Typography>
-                </View>
-              )}
-            />
-          </View>
-
-          <View style={styles.sectionContainer}>
-            {/* ---- Book PG in Just 3 Steps ---- */}
-            <View>
-              <Typography
-                variant="subheading"
-                weight="bold"
-                color={colors.mainColor}
-              >
-                Book PG in Just 3 Steps
-              </Typography>
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContainer}
-              >
-                {steps.map(step => (
-                  <View key={step.id} style={styles.card}>
-                    <View style={styles.stepBadgeWrapper}>
-                      <View style={styles.stepBadge}>
-                        <Typography
-                          variant="label"
-                          weight="bold"
-                          color={colors.white}
-                        >
-                          {step.id}
-                        </Typography>
-                      </View>
-                    </View>
-
-                    <FontAwesome
-                      name={step.icon}
-                      size={30}
-                      color={colors.mainColor}
-                    />
-
-                    <Typography
-                      variant="body"
-                      weight="bold"
-                      align="center"
-                      color={colors.mainColor}
-                      style={styles.stepTitle}
-                    >
-                      {step.title}
-                    </Typography>
-
-                    <Typography
-                      variant="label"
-                      align="center"
-                      color={colors.gray}
-                      style={styles.stepDesc}
-                    >
-                      {step.desc}
-                    </Typography>
-
-                    <AppButton
-                      title={step.btnText}
-                      onPress={() => console.log(`${step.btnText} clicked`)}
-                      style={styles.stepButton}
-                      titleSize="label"
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-            {/* ---- Why Choose Us ---- */}
-            <View style={styles.whyChooseUsContainer}>
-              <Typography
-                variant="subheading"
-                weight="bold"
-                color={colors.mainColor}
-              >
-                Why Choose Us
-              </Typography>
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContainer}
-              >
-                {whyChooseUs.map((item, index) => (
-                  <View key={index} style={styles.whyCard}>
-                    <Typography
-                      variant="body"
-                      weight="bold"
-                      color={colors.mainColor}
-                      style={styles.whyTitle}
-                    >
-                      {item.title}
-                    </Typography>
-                    <Typography variant="label" color={colors.gray}>
-                      {item.desc}
-                    </Typography>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-
-            {dashBoardReviews?.length <= 0 ? null : (
-              <View style={{ marginTop: 20 }}>
-                <Typography
-                  variant="subheading"
-                  weight="bold"
-                  color={colors.mainColor}
-                  style={{ marginBottom: 5 }}
-                >
-                  Customer Reviews
-                </Typography>
-
-                <FlatList
-                  ref={flatListRef}
-                  data={dashBoardReviews}
-                  renderItem={reviewsRenderItem}
-                  snapToInterval={ITEM_WIDTH + SPACING}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  keyExtractor={item => item.review_id}
-                  // onMomentumScrollEnd={event => {
-                  //   const newIndex = Math.round(
-                  //     event.nativeEvent.contentOffset.x / width,
-                  //   );
-                  //   setCurrentIndex(newIndex);
-                  // }}
-                  onMomentumScrollEnd={event => {
-                            const newIndex = Math.min(
-                              Math.max(
-                                Math.round(
-                                  event.nativeEvent.contentOffset.x /
-                                    (ITEM_WIDTH + SPACING),
-                                ),
-                                0,
-                              ),
-                              dashBoardReviews.length - 1,
-                            );
-                            setCurrentIndex(newIndex);
-                  }}
-                  contentContainerStyle={{
-                    paddingLeft: 0,
-                    paddingRight: (width - ITEM_WIDTH) / 2,
-                  }}
+          {/* Promo Slider + CTA */}
+          <View style={styles.promoContainer}>
+            <View style={styles.promoSliderWrapper}>
+              {banners && banners.length > 0 ? (
+                <AppImageSlider
+                  data={banners.map((b: any, index: number) => ({
+                    id: b.banner_id || index.toString(),
+                    image: { uri: b.banner_image },
+                  }))}
+                  showThumbnails={false}
                 />
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    marginTop: 10,
-                  }}
-                >
-                  {dashBoardReviews?.map((item: any, index: number) => (
-                    <View
-                      key={item?.review_id ?? index.toString()}
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        marginHorizontal: 4,
-                        backgroundColor:
-                          currentIndex === index ? colors.primary : '#D3D3D3',
-                      }}
-                    />
-                  ))}
+              ) : (
+                <View style={styles.promoSliderPlaceholder}>
+                  <AppImagePlaceholder />
                 </View>
+              )}
+            </View>
+            {userData?.user_type === 'user' ? null : (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: 8,
+                  justifyContent: 'space-between',
+                  marginTop: 15,
+                  marginBottom: 12,
+                }}
+              >
+                <Animated.View
+                  style={[
+                    styles.buttonWrapper,
+                    {
+                      opacity: buttonAnimations[0].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1],
+                      }),
+                      transform: [
+                        {
+                          translateY: buttonAnimations[0].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <AppButton
+                    title="Add PG"
+                    onPress={() => {
+                      if (
+                        hasPermission(
+                          userData,
+                          apiUserData,
+                          'add_pg',
+                          userAllPermissions,
+                        )
+                      ) {
+                        navigation.navigate(NAV_KEYS.LandlordAddPG, {
+                          type: 'addPG',
+                        });
+                      } else {
+                        setAccessDeniedMessage(
+                          'You do not have permission to add a new PG.',
+                        );
+                        setShowAccessDenied(true);
+                      }
+                    }}
+                    style={styles.bannerCtaButton}
+                    titleColor={colors.mainColor}
+                    titleSize="caption"
+                    iconPosition="left"
+                    titleIcon={
+                      <MaterialIcons
+                        name={'add-business'}
+                        size={18}
+                        color={colors.mainColor}
+                      />
+                    }
+                  />
+                </Animated.View>
+                <Animated.View
+                  style={[
+                    styles.buttonWrapper,
+                    {
+                      opacity: buttonAnimations[1].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1],
+                      }),
+                      transform: [
+                        {
+                          translateY: buttonAnimations[1].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <AppButton
+                    title="Add Tenant"
+                    onPress={() => {
+                      if (
+                        hasPermission(
+                          userData,
+                          apiUserData,
+                          'add_tenant',
+                          userAllPermissions,
+                        )
+                      ) {
+                        navigation.navigate(NAV_KEYS.AddNewTenantScreen);
+                      } else {
+                        setAccessDeniedMessage(
+                          'You do not have permission to add a new tenant.',
+                        );
+                        setShowAccessDenied(true);
+                      }
+                    }}
+                    titleColor={colors.mainColor}
+                    titleSize="caption"
+                    style={styles.bannerCtaButton}
+                    titleIcon={
+                      <MaterialIcons
+                        name={'person-add'}
+                        size={18}
+                        color={colors.mainColor}
+                      />
+                    }
+                  />
+                </Animated.View>
+                <Animated.View
+                  style={[
+                    styles.buttonWrapper,
+                    {
+                      opacity: buttonAnimations[2].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1],
+                      }),
+                      transform: [
+                        {
+                          translateY: buttonAnimations[2].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <AppButton
+                    title="Enquiry"
+                    onPress={() => {
+                      navigation.navigate(NAV_KEYS.LandlordEnquiryScreen);
+                    }}
+                    titleColor={colors.mainColor}
+                    titleSize="caption"
+                    style={styles.bannerCtaButton}
+                    iconPosition="left"
+                    titleIcon={
+                      <MaterialIcons
+                        name={'message'}
+                        size={18}
+                        color={colors.mainColor}
+                      />
+                    }
+                  />
+                </Animated.View>
               </View>
             )}
           </View>
+
+          {/*Recent PG */}
+          <RecentPGSection
+            recentPGs={recentPGs}
+            isLandlord={isLandlord}
+            navigation={navigation}
+            onLayout={({ nativeEvent }) => {
+              sectionPositions.current.listings = nativeEvent.layout.y;
+            }}
+          />
+
+          {/*Categories */}
+          {/* <CategoriesSection
+            categories={categories}
+            onLayout={({ nativeEvent }) => {
+              sectionPositions.current.categories = nativeEvent.layout.y;
+            }}
+          /> */}
+
+          {/*Book PG in 3 Steps */}
+          <BookPGStepsSection
+            onLayout={({ nativeEvent }) => {
+              sectionPositions.current.steps = nativeEvent.layout.y;
+            }}
+          />
+
+          {/* ---- Why Choose Us ---- */}
+          <WhyChooseUsSection />
+
+          {/* Dashboard Reviews */}
+          <DashboardReviewsSection
+            reviews={dashBoardReviews}
+            onLayout={({ nativeEvent }) => {
+              sectionPositions.current.reviews = nativeEvent.layout.y;
+            }}
+          />
           <View style={{ height: 120 }} />
+          <AccessDeniedModal
+            visible={showAccessDenied}
+            onClose={() => setShowAccessDenied(false)}
+            message={accessDeniedMessage}
+          />
         </ScrollView>
       )}
     </View>

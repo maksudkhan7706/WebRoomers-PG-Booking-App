@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import Typography from '../../../../ui/Typography';
 import AppHeader from '../../../../ui/AppHeader';
@@ -24,44 +24,19 @@ import {
   fetchPgFloors,
   fetchPgWashrooms,
 } from '../../../../store/mainSlice';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
-import Geocoder from 'react-native-geocoding';
-import { checkLocationPermission } from '../../../../utils/permissions';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/NavKeys';
 import { showErrorMsg, showSuccessMsg } from '../../../../utils/appMessages';
 import { appLog } from '../../../../utils/appLog';
+import { dropdownOptions, uploadItems } from '../../../../constants/dummyData';
+import LocationPickerCard from '../../../../components/LocationPickerCard';
 
-Geocoder.init('AIzaSyBZrmzANmT_V2heVloY7S7ASKniWrLAtQs', { language: 'en' });
-
-// Dropdown options
-const pgForOptions = [
-  { label: 'Boys', value: 'Boys' },
-  { label: 'Girls', value: 'Girls' },
-  { label: 'Both', value: 'Both' },
-];
-const availabilityOptions = [
-  { label: 'Ready to Move', value: 'Ready to Move' },
-  { label: 'Under Construction', value: 'Under Construction' },
-];
-const furnitureOptions = [
-  { label: 'Fully Furnished', value: 'Full Furnished' },
-  { label: 'Semi Furnished', value: 'Semi Furnished' },
-  { label: 'Unfurnished', value: 'Unfurnished' },
-];
-const parkingOptions = ['2 Wheeler', '4 Wheeler', 'No Parking'];
-
-const uploadItems = [
-  { key: 'mainPicture', label: 'Main Picture (Single)' },
-  { key: 'livingRoom', label: 'Living Room (Multiple)' },
-  { key: 'bedroom', label: 'Bedroom (Multiple)' },
-  { key: 'kitchen', label: 'Kitchen (Multiple)' },
-  { key: 'bathroom', label: 'Bathroom (Multiple)' },
-  { key: 'floorplan', label: 'Floorplan (Multiple)' },
-  { key: 'extraImages', label: 'Extra Images (Multiple)' },
-  { key: 'video', label: 'Video (Single)' },
-];
 type LandlordAddPGNavProp = NativeStackNavigationProp<RootStackParamList>;
+
+const DEFAULT_COORDS = {
+  latitude: 26.9123975,
+  longitude: 75.7872966,
+};
 
 const LandlordAddPG = () => {
   const route = useRoute<any>();
@@ -71,13 +46,23 @@ const LandlordAddPG = () => {
     pgCategories,
     pgCities,
     pgFloors,
-    pgFloorings,
     pgWashrooms,
     pgExtraFeatures,
     pgCityLocation,
   } = useSelector((state: any) => state.main);
   const dispatch = useDispatch<AppDispatch>();
   const { userData } = useSelector((state: any) => state.auth);
+  const [furniture, setFurniture] = useState<string | null>(null);
+  const [parking, setParking] = useState<string[]>([]);
+  const [extraFeatures, setExtraFeatures] = useState<string[]>([]);
+  const [images, setImages] = useState<any>({});
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const isActive = isAgreed;
+  const [pgAddress, setPgAddress] = useState<string>('');
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [coordinates, setCoordinates] = useState(DEFAULT_COORDS);
+
   const [form, setForm] = useState<any>({
     pgTitle: '',
     pgFor: '',
@@ -93,126 +78,18 @@ const LandlordAddPG = () => {
     maintenance: '',
     area: '',
     description: '',
+    noticePeriod: [],
+    lockInPeriod: [],
   });
-  const [availability, setAvailability] = useState<string | null>(null);
-  const [furniture, setFurniture] = useState<string | null>(null);
-  const [parking, setParking] = useState<string[]>([]);
-  const [extraFeatures, setExtraFeatures] = useState<string[]>([]);
-  const [images, setImages] = useState<any>({});
-  const [isAgreed, setIsAgreed] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const isActive = isAgreed;
-  const [pgAddress, setPgAddress] = useState<string>('');
-  const mapRef = useRef<MapView>(null);
-  const [region, setRegion] = useState({
-    latitude: 26.9123975, // Jaipur default
-    longitude: 75.7872966,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  });
-  const [lastCoords, setLastCoords] = useState({
-    lat: 26.9124,
-    lng: 75.7873,
-  });
-  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true); //to detect first load
 
-  //Get Address from Coordinates (Using OpenStreetMap - Nominatim)
-  const getAddressFromCoordinates = async (lat: number, lng: number) => {
-    try {
-      setIsFetchingAddress(true);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        {
-          headers: {
-            'User-Agent': 'MeharPGApp/1.0 (contact: support@meharpg.com)',
-            'Accept-Language': 'en',
-          },
-        },
-      );
-
-      if (!response.ok) {
-        appLog('LandlordAddPG', 'HTTP Error:', response.status);
-        throw new Error(`HTTP Error ${response.status}`);
-      }
-      const data = await response.json();
-      appLog('LandlordAddPG', 'Full Nominatim Response:', data);
-      if (data && data.address) {
-        const { road, neighbourhood, city, state, postcode, country } =
-          data.address;
-        //If first load → only show city/state/postcode/country
-        let formattedAddress = '';
-        if (isInitialLoad) {
-          formattedAddress = [city, state, postcode, country]
-            .filter(Boolean)
-            .join(', ');
-          setIsInitialLoad(false); //next time full address allowed
-        } else {
-          //After map drag → show detailed address
-          formattedAddress = [
-            road,
-            neighbourhood,
-            city,
-            state,
-            postcode,
-            country,
-          ]
-            .filter(Boolean)
-            .join(', ');
-        }
-
-        setPgAddress(formattedAddress);
-      } else {
-        setPgAddress('Address not found');
-      }
-    } catch (error) {
-      console.error('Error fetching address:', error);
-      setPgAddress('Error fetching address');
-    } finally {
-      setIsFetchingAddress(false);
-    }
-  };
-
-  //Fetch default Jaipur address when screen opens
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      getAddressFromCoordinates(region.latitude, region.longitude);
-    }, 800); // Slight delay to allow map load
-    return () => clearTimeout(timeout);
-  }, []);
-
-  //Update address on map drag
-  const onRegionChangeComplete = async (newRegion: Region) => {
-    //Check permission before fetching address
-    const hasPermission = await checkLocationPermission();
-    if (!hasPermission) {
-      Alert.alert(
-        'Permission Required',
-        'Please allow location access to update address on map.',
-      );
-      return;
-    }
-    //User granted permission → proceed with address update
-    const latChanged = Math.abs(newRegion.latitude - lastCoords.lat) > 0.0005;
-    const lngChanged = Math.abs(newRegion.longitude - lastCoords.lng) > 0.0005;
-    if (latChanged || lngChanged) {
-      setRegion(newRegion);
-      setLastCoords({
-        lat: newRegion.latitude,
-        lng: newRegion.longitude,
-      });
-      getAddressFromCoordinates(newRegion.latitude, newRegion.longitude);
-    }
-  };
-  // Drop-down Apis
-  useEffect(() => {
-    dispatch(fetchPgCategories({ company_id: userData?.company_id || '35' }));
-    dispatch(fetchPgCities({ company_id: userData?.company_id || '35' }));
-    dispatch(fetchPgFloors({ company_id: userData?.company_id || '35' }));
-    dispatch(fetchPgFloorings({ company_id: userData?.company_id || '35' }));
-    dispatch(fetchPgWashrooms({ company_id: userData?.company_id || '35' }));
+    dispatch(fetchPgCategories({ company_id: userData?.company_id }));
+    dispatch(fetchPgCities({ company_id: userData?.company_id }));
+    dispatch(fetchPgFloors({ company_id: userData?.company_id }));
+    dispatch(fetchPgFloorings({ company_id: userData?.company_id }));
+    dispatch(fetchPgWashrooms({ company_id: userData?.company_id }));
     dispatch(
-      fetchPgExtraFeatures({ company_id: userData?.company_id || '35' }),
+      fetchPgExtraFeatures({ company_id: userData?.company_id }),
     );
   }, []);
 
@@ -238,10 +115,24 @@ const LandlordAddPG = () => {
 
   useEffect(() => {
     if (type === 'editPG' && propertyData) {
+      // Extract category IDs from categories array
+      const categoryIds = Array.isArray(propertyData.categories)
+        ? propertyData.categories.map((cat: any) =>
+          String(cat?.category_id || cat?.id || ''),
+        )
+        : propertyData.category_id
+          ? Array.isArray(propertyData.category_id)
+            ? propertyData.category_id.map((id: any) => String(id))
+            : typeof propertyData.category_id === 'string' &&
+              propertyData.category_id.includes(',')
+              ? propertyData.category_id.split(',').map((id: string) => id.trim())
+              : [String(propertyData.category_id)]
+          : [];
+
       setForm({
         pgTitle: propertyData.title || '',
         pgFor: propertyData.pg_for || '',
-        pgType: propertyData.category_id || '',
+        pgType: categoryIds,
         pgCity: propertyData.city_id || '',
         pgCityLocation: propertyData?.city_location_id || '',
         pgFloor: propertyData.floor || '',
@@ -253,9 +144,14 @@ const LandlordAddPG = () => {
         maintenance: propertyData.maintainance_charges || '',
         area: propertyData.area_sqft || '',
         description: propertyData.description || '',
+        noticePeriod: propertyData.notice_period
+          ? [String(propertyData.notice_period)]
+          : [],
+        lockInPeriod: propertyData.lock_in_period
+          ? [String(propertyData.lock_in_period)]
+          : [],
       });
       setPgAddress(propertyData.address || '');
-      setAvailability(propertyData.availability || null);
       setFurniture(propertyData.furnished || null);
       setParking(propertyData.parking ? propertyData.parking.split(',') : []);
       setExtraFeatures(
@@ -274,16 +170,15 @@ const LandlordAddPG = () => {
         bathroom: propertyData.gallery?.bathroom || [],
         floorplan: propertyData.gallery?.floorplan || [],
         extraImages: propertyData.gallery?.extra || [],
+        video: propertyData.property_video ? [propertyData.property_video] : [],
       });
-      // Map setup
-      setRegion({
-        latitude: Number(propertyData.latitude) || 26.9124,
-        longitude: Number(propertyData.longitude) || 75.7873,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+      setCoordinates({
+        latitude: Number(propertyData.latitude) || DEFAULT_COORDS.latitude,
+        longitude: Number(propertyData.longitude) || DEFAULT_COORDS.longitude,
       });
     }
   }, [type, propertyData]);
+
 
   // Submit handler
   const handleSubmit = async () => {
@@ -304,16 +199,16 @@ const LandlordAddPG = () => {
           name: img.fileName || `image_${index}.jpg`,
           type: img.type || 'image/jpeg',
         }));
-
     //Make FormData
     const formData = new FormData();
     formData.append('company_id', userData?.company_id);
     formData.append('landlord_id', userData?.user_id);
+    formData.append('user_type', userData?.user_type || 'landlord');
     formData.append('property_type', 'PG');
     formData.append('title', form.pgTitle);
     formData.append(
       'category',
-      Array.isArray(form.pgType) ? form.pgType[0] : form.pgType,
+      Array.isArray(form.pgType) ? form.pgType.join(',') : form.pgType,
     );
     formData.append(
       'city',
@@ -325,16 +220,24 @@ const LandlordAddPG = () => {
         ? form.pgCityLocation[0]
         : form.pgCityLocation || '',
     );
-    formData.append('latitude', region.latitude.toString());
-    formData.append('longitude', region.longitude.toString());
-    // formData.append('latitude', '24.0972531');
-    // formData.append('longitude', '23.097753');
+    formData.append('latitude', coordinates.latitude.toString());
+    formData.append('longitude', coordinates.longitude.toString());
     formData.append('address', pgAddress);
     formData.append('price', form.price);
+    // Convert notice period and lock-in period to numeric values
+    const noticePeriodValue =
+      Array.isArray(form.noticePeriod) && form.noticePeriod.length > 0
+        ? form.noticePeriod[0]
+        : form.noticePeriod || '0';
+    const lockInPeriodValue =
+      Array.isArray(form.lockInPeriod) && form.lockInPeriod.length > 0
+        ? form.lockInPeriod[0]
+        : form.lockInPeriod || '0';
+    formData.append('notice_period', noticePeriodValue);
+    formData.append('lock_in_period', lockInPeriodValue);
     formData.append('security_charges', form.security);
     formData.append('maintainance_charges', form.maintenance);
     formData.append('area_sqft', form.area);
-    // formData.append('availability', availability);
     formData.append('furnished', furniture);
     formData.append(
       'parking',
@@ -365,8 +268,6 @@ const LandlordAddPG = () => {
       'pg_for',
       Array.isArray(form.pgFor) ? form.pgFor[0] : form.pgFor,
     );
-
-    // Featured Image (only append if it's a new local image)
     if (images.mainPicture?.[0]) {
       const mainPic = images.mainPicture[0];
       if (mainPic.uri && mainPic.uri.startsWith('file')) {
@@ -377,7 +278,6 @@ const LandlordAddPG = () => {
         });
       }
     }
-    //Multiple gallery image fields
     const imageKeysMap = {
       living_room: 'livingRoom',
       bedroom: 'bedroom',
@@ -392,7 +292,7 @@ const LandlordAddPG = () => {
       imgs.forEach(img => formData.append(`${apiKey}[]`, img));
     });
 
-    if (images.video?.[0]) {
+    if (images.video?.[0] && typeof images.video[0] !== 'string') {
       const vid = images.video[0];
       formData.append('video', {
         uri: vid.uri,
@@ -400,22 +300,17 @@ const LandlordAddPG = () => {
         type: vid.type || 'video/mp4',
       });
     }
-    //Add pg_id if editing
     if (type === 'editPG' && propertyData?.property_id) {
       formData.append('pg_id', propertyData.property_id);
     }
-    //Debug log
     (formData as any)._parts?.forEach((part: any) => {
       appLog(part[0], ':', part[1]);
     });
-    // API call
     try {
       setLoading(true);
       const resultAction = await dispatch(addEditPg(formData)).unwrap();
       setLoading(false);
-      appLog('LandlordAddPG', 'resultAction', resultAction);
-
-      // 🧩 Check API success status
+      //Check API success status
       if (resultAction?.success) {
         showSuccessMsg(
           resultAction?.message || 'Property updated successfully.',
@@ -423,12 +318,13 @@ const LandlordAddPG = () => {
         navigation.goBack();
         dispatch(
           fetchMyPgList({
-            company_id: userData?.company_id || '35',
-            landlord_id: userData?.user_id || '197',
+            company_id: userData?.company_id,
+            landlord_id: userData?.user_id,
+            user_type: userData?.user_type,
+            property_id: userData?.assigned_pg_ids,
           }),
         );
       } else {
-        //API ne success = false diya
         showErrorMsg(resultAction?.message || 'Something went wrong');
       }
     } catch (error: any) {
@@ -470,19 +366,22 @@ const LandlordAddPG = () => {
     (value: string[]) => setForm((prev: any) => ({ ...prev, pgFloor: value })),
     [],
   );
-
-  const handleFlooringSelect = React.useCallback(
-    (value: string[]) => setForm((prev: any) => ({ ...prev, flooring: value })),
-    [],
-  );
-
   const handleWashroomSelect = React.useCallback(
     (value: string[]) => setForm((prev: any) => ({ ...prev, washroom: value })),
     [],
   );
 
+  const handleNoticePeriodSelect = React.useCallback(
+    (value: string[]) =>
+      setForm((prev: any) => ({ ...prev, noticePeriod: value })),
+    [],
+  );
 
-console.log('propertyData ==============>>>>>>>>>>',propertyData);
+  const handleLockInPeriodSelect = React.useCallback(
+    (value: string[]) =>
+      setForm((prev: any) => ({ ...prev, lockInPeriod: value })),
+    [],
+  );
 
 
   return (
@@ -491,7 +390,6 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingBottom: 80,
           paddingHorizontal: 16,
           paddingTop: 15,
         }}
@@ -504,7 +402,7 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
         />
         <AppCustomDropdown
           label="PG For *"
-          data={pgForOptions}
+          data={dropdownOptions.pgForOptions}
           selectedValues={form.pgFor}
           onSelect={handlePgForSelect}
         />
@@ -513,6 +411,7 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           data={pgCategories}
           selectedValues={form.pgType}
           onSelect={handlePgTypeSelect}
+          multiSelect={true}
         />
         <AppCustomDropdown
           label="PG City *"
@@ -529,22 +428,13 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           />
         )}
 
-        <View>
-          <Typography color={colors.gray} style={{ textAlign: 'center' }}>
-            Drag or zoom to set location
-          </Typography>
-          <View style={styles.mapContainer}>
-            <MapView
-              ref={mapRef}
-              provider={PROVIDER_GOOGLE}
-              style={styles.map}
-              region={region}
-              onRegionChangeComplete={onRegionChangeComplete}
-            >
-              <Marker coordinate={region} title="PG Location" />
-            </MapView>
-          </View>
-        </View>
+        <LocationPickerCard
+          coordinates={coordinates}
+          onCoordinatesChange={setCoordinates}
+          address={pgAddress}
+          onAddressChange={setPgAddress}
+          onAddressFetchingChange={setIsFetchingAddress}
+        />
         {/* 📍 Address field */}
         <AppTextInput
           label="PG Address *"
@@ -555,7 +445,6 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           editable={!isFetchingAddress}
           onChangeText={text => setPgAddress(text)}
         />
-
         {/* Room & Pricing */}
         <AppTextInput
           label="Total Rooms *"
@@ -570,6 +459,20 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           keyboardType="numeric"
           value={form.price}
           onChangeText={text => setForm({ ...form, price: text })}
+        />
+        <AppCustomDropdown
+          label="Notice Period *"
+          placeholder="Select Notice Period"
+          data={dropdownOptions.noticePeriodOptions}
+          selectedValues={form.noticePeriod}
+          onSelect={handleNoticePeriodSelect}
+        />
+        <AppCustomDropdown
+          label="Lock-in Period *"
+          placeholder="Select Lock-in Period"
+          data={dropdownOptions.lockInPeriodOptions}
+          selectedValues={form.lockInPeriod}
+          onSelect={handleLockInPeriodSelect}
         />
         <AppTextInput
           label="Security Charges (₹)"
@@ -592,55 +495,12 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           value={form.area}
           onChangeText={text => setForm({ ...form, area: text })}
         />
-        {/* Availability */}
-        {/* <Typography variant="body" weight="medium" style={styles.sectionTitle}>
-          Availability
-        </Typography>
-        <View style={styles.rowWrap}>
-          {availabilityOptions.map(opt => (
-            <TouchableOpacity
-              key={opt.value}
-              onPress={() =>
-                toggleSingleSelect(opt.value, setAvailability, availability)
-              }
-              style={styles.optionItem}
-            >
-              <Icon
-                name={
-                  availability === opt.value
-                    ? 'radio-button-checked'
-                    : 'radio-button-unchecked'
-                }
-                size={20}
-                color={
-                  availability === opt.value ? colors.mainColor : colors.gray
-                }
-              />
-              <Typography
-                variant="label"
-                weight="medium"
-                style={[
-                  styles.optionLabel,
-                  {
-                    color:
-                      availability === opt.value
-                        ? colors.mainColor
-                        : colors.gray,
-                  },
-                ]}
-              >
-                {opt.label}
-              </Typography>
-            </TouchableOpacity>
-          ))}
-        </View> */}
-
         {/* Furniture */}
         <Typography variant="body" weight="medium" style={styles.sectionTitle}>
           Furniture
         </Typography>
         <View style={styles.rowWrap}>
-          {furnitureOptions.map(opt => (
+          {dropdownOptions.furnitureOptions.map(opt => (
             <TouchableOpacity
               key={opt.value}
               onPress={() =>
@@ -678,7 +538,7 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           Parking
         </Typography>
         <View style={styles.rowWrap}>
-          {parkingOptions.map((label, index) => (
+          {dropdownOptions?.parkingOptions.map((label, index) => (
             <TouchableOpacity
               key={index}
               onPress={() => toggleMultiSelect(parking, setParking, label)}
@@ -720,13 +580,6 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           selectedValues={form.pgFloor}
           onSelect={handlePgFloorSelect}
         />
-
-        {/* <AppCustomDropdown
-          label="Flooring"
-          data={pgFloorings}
-          selectedValues={form.flooring}
-          onSelect={handleFlooringSelect}
-        /> */}
 
         <AppCustomDropdown
           label="Washroom"
@@ -790,7 +643,6 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
           onChangeText={text => setForm({ ...form, description: text })}
           multiline
           numberOfLines={4}
-        // containerStyle={styles.descContainer}
         />
         {/* Upload Section in 2 Columns */}
         <Typography
@@ -822,7 +674,6 @@ console.log('propertyData ==============>>>>>>>>>>',propertyData);
             );
           })}
         </View>
-
         {/* Checkbox Section */}
         <TouchableOpacity
           style={styles.checkboxContainer}

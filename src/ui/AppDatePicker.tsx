@@ -38,7 +38,14 @@ const AppDatePicker: React.FC<Props> = ({
 
   const handleChange = (event: any, selectedDate?: Date) => {
     setShowPicker(Platform.OS === 'ios');
-    if (selectedDate) onDateChange(selectedDate);
+    if (selectedDate) {
+      // Ensure selected date respects minimumDate constraint
+      if (minimumDate && selectedDate < minimumDate) {
+        onDateChange(minimumDate);
+      } else {
+        onDateChange(selectedDate);
+      }
+    }
   };
 
   return (
@@ -71,7 +78,13 @@ const AppDatePicker: React.FC<Props> = ({
             { color: date ? colors.black : colors.gray },
           ]}
         >
-          {date ? date.toDateString() : placeholder}
+          {date
+            ? date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
+            : placeholder}
         </Typography>
         <FontAwesome name="calendar" size={18} color={colors.mainColor} />
       </TouchableOpacity>
@@ -88,9 +101,9 @@ const AppDatePicker: React.FC<Props> = ({
       {showPicker &&
         !disabled && ( // ✅ Prevent showing picker if disabled
           <DateTimePicker
-            value={date || new Date()}
+            value={date || minimumDate || new Date()}
             mode="date"
-            display="default"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleChange}
             minimumDate={minimumDate}
             maximumDate={maximumDate}
@@ -117,7 +130,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: colors.mainColor,
     borderRadius: 5,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     height: 45,
   },
   dateText: { fontSize: 15 },

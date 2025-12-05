@@ -34,6 +34,7 @@ export default StyleSheet.create({
   value: {
     width: '70%',
     textAlign: 'right',
+    textTransform: 'capitalize',
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -69,16 +70,15 @@ export default StyleSheet.create({
     fontSize: 20,
   },
   modalImage: {
-    width: '90%',
-    height: '80%',
+    width: '100%',
+    height: '100%',
     borderRadius: 8,
-    resizeMode: 'contain',
   },
 
   imageContainer: {
     backgroundColor: '#fff',
     width: '95%',
-    height: '50%',
+    height: '60%',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',

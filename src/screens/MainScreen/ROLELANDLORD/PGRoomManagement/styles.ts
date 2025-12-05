@@ -78,16 +78,50 @@ export default StyleSheet.create({
     padding: 10,
     marginRight: 10,
   },
-  facilityRow: {
+  facilityHeader: {
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  facilityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
+    justifyContent: 'space-between',
+    marginTop: 4,
   },
-  checkItem: {
+  facilityOption: {
+    flexBasis: '48%',
+    maxWidth: '48%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 15,
-    marginBottom: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F7F8FC',
+  },
+  facilityOptionSelected: {
+    borderColor: colors.mainColor,
+    backgroundColor: '#E6F2FF',
+  },
+  facilityIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#E0E7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  facilityIconWrapSelected: {
+    backgroundColor: colors.mainColor,
+  },
+  facilityLabel: {
+    flex: 1,
+    color: colors.gray,
+  },
+  facilityLabelSelected: {
+    color: colors.mainColor,
   },
   textArea: {
     borderWidth: 1,
@@ -107,7 +141,7 @@ export default StyleSheet.create({
   },
   descContainer: {
     marginTop: 5,
-    marginBottom: 50,
+    marginBottom: 65,
   },
   listEmpty: {
     flex: 1,
@@ -115,5 +149,30 @@ export default StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     marginTop: 100,
+  },
+  videoPreviewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  videoPreviewCard: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    paddingTop: 40,
+  },
+  videoPreviewClose: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 2,
+    padding: 6,
+  },
+  videoPlayer: {
+    width: '100%',
+    height: 260,
   },
 });

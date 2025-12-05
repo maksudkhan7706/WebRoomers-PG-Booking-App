@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
-  Image,
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
@@ -12,14 +11,15 @@ import { NAV_KEYS } from '../../../navigation/NavKeys';
 import colors from '../../../constants/colors';
 import styles from './styles';
 import AppHeader from '../../../ui/AppHeader';
-import images from '../../../assets/images';
 import Typography from '../../../ui/Typography';
 import AppButton from '../../../ui/AppButton';
 import AppTextInput from '../../../ui/AppTextInput';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
-import { registerUser, sendOtp } from '../../../store/authSlice';
+import { sendOtp } from '../../../store/authSlice';
 import { showErrorMsg, showSuccessMsg } from '../../../utils/appMessages';
+import AppCustomDropdown from '../../../ui/AppCustomDropdown';
+import AppLogo from '../../../ui/AppLogo';
 
 const Register: React.FC<{ navigation: any; route: any }> = ({
   navigation,
@@ -36,6 +36,13 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isActive, setIsActive] = useState(false);
+  const genderOptions = [
+    { label: 'Male', value: 'Male' },
+    { label: 'Female', value: 'Female' },
+  ];
+
+  const [gender, setGender] = useState('');
+  const apiGender = gender === 'Male' ? 'Boys' : 'Girls';
 
   useEffect(() => {
     setIsActive(
@@ -55,6 +62,7 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
       newErrors.email = 'Enter a valid email address';
     if (!mobile) newErrors.mobile = 'Mobile number is required';
     else if (mobile.length < 10) newErrors.mobile = 'Enter valid mobile number';
+    if (!gender) newErrors.gender = 'Gender is required';
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 6)
       newErrors.password = 'Password must be at least 6 characters';
@@ -77,6 +85,7 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
         password: confirmPassword,
         user_type: role,
         company_id: '35',
+        gender: apiGender,
       };
 
       const otpPayload = {
@@ -84,7 +93,6 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
         mobile_number: mobile.trim(),
         full_name: fullName.trim(),
       };
-
       try {
         const otpResponse = await dispatch(sendOtp(otpPayload)).unwrap();
         if (otpResponse.success) {
@@ -119,104 +127,111 @@ const Register: React.FC<{ navigation: any; route: any }> = ({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.innerContainer}
         >
-          <View
-            style={{
-              height: 180,
-             width: '100%',
+          <AppLogo
+            containerStyle={{
+              height: 300,
+              width: '100%',
               alignSelf: 'center',
+              marginTop: -100,
             }}
-          >
-            <Image
-              source={images.NewAppLogo}
-              style={[
-                {
-                  height: '100%',
-                  width: '100%',
-                  resizeMode: 'contain',
-                },
-              ]}
-            />
-          </View>
-          <Typography
-            variant="heading"
-            weight="bold"
-            color={colors.mainColor}
-            style={styles.titleText}
-          >
-            Register
-          </Typography>
-          <Typography
-            variant="body"
-            weight="light"
-            color={colors.mainColor}
-            style={styles.subtitleText}
-          >
-            Register using your details.
-          </Typography>
-
-          <AppTextInput
-            placeholder="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
-            error={errors.fullName}
           />
-          <AppTextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            error={errors.email}
-            keyboardType="email-address"
-          />
-          <AppTextInput
-            placeholder="Mobile Number"
-            value={mobile}
-            onChangeText={setMobile}
-            error={errors.mobile}
-            keyboardType="number-pad"
-            maxLength={10}
-          />
-          <AppTextInput
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            error={errors.password}
-          />
-          <AppTextInput
-            placeholder="Confirm Password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            error={errors.confirmPassword}
-          />
-
-          <AppButton
-            title="Register"
-            onPress={handleRegister}
-            loading={loading}
-            disabled={!isActive || loading}
-          />
-
-          <View style={styles.loginContainer}>
+          <View style={{ marginTop: -40 }}>
             <Typography
-              variant="label"
-              weight="regular"
+              variant="heading"
+              weight="bold"
               color={colors.mainColor}
+              style={styles.titleText}
             >
-              Already have an account?{' '}
+              Register
             </Typography>
-            <TouchableOpacity
-              onPress={() => navigation.navigate(NAV_KEYS.LOGIN, { role })}
+            <Typography
+              variant="body"
+              weight="light"
+              color={colors.mainColor}
+              style={styles.subtitleText}
             >
+              Register using your details.
+            </Typography>
+
+            <AppTextInput
+              placeholder="Full Name"
+              value={fullName}
+              onChangeText={setFullName}
+              error={errors.fullName}
+            />
+            <AppTextInput
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              error={errors.email}
+              keyboardType="email-address"
+            />
+            <AppTextInput
+              placeholder="Mobile Number"
+              value={mobile}
+              onChangeText={setMobile}
+              error={errors.mobile}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+
+            <AppCustomDropdown
+              label=""
+              placeholder="Select Gender"
+              data={genderOptions}
+              selectedValues={gender ? [gender] : []}
+              onSelect={value => {
+                setGender(
+                  Array.isArray(value) ? value[0] ?? '' : (value as string),
+                );
+                setErrors(prev => ({ ...prev, gender: '' }));
+              }}
+              error={errors.gender}
+            />
+
+            <AppTextInput
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              error={errors.password}
+            />
+            <AppTextInput
+              placeholder="Confirm Password"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              error={errors.confirmPassword}
+            />
+
+            <AppButton
+              title="Register"
+              onPress={handleRegister}
+              loading={loading}
+              disabled={!isActive || loading}
+            />
+
+            <View style={styles.loginContainer}>
               <Typography
                 variant="label"
-                weight="medium"
+                weight="regular"
                 color={colors.mainColor}
-                style={styles.loginText}
               >
-                Login
+                Already have an account?{' '}
               </Typography>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate(NAV_KEYS.LOGIN, { role })}
+              >
+                <Typography
+                  variant="label"
+                  weight="medium"
+                  color={colors.mainColor}
+                  style={styles.loginText}
+                >
+                  Login
+                </Typography>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAwareScrollView>
       </TouchableWithoutFeedback>

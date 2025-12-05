@@ -16,7 +16,6 @@ export default StyleSheet.create({
   },
   listContent: {
     padding: 10,
-    paddingBottom: 200,
   },
   card: {
     backgroundColor: '#fff',

@@ -8,6 +8,7 @@ import {
   reSendOtpUrl,
   sendOtpUrl,
 } from '../services/urlHelper';
+import { appLog } from '../utils/appLog';
 
 // =======================
 // 🔹 Initial State
@@ -48,14 +49,29 @@ export const loginUser = createAsyncThunk(
       if (response.success) {
         const userRoleFromAPI = response?.data?.user_type?.toLowerCase();
         const selectedRole = payload?.role?.toLowerCase();
-        //Role mismatch check
-        if (userRoleFromAPI !== selectedRole) {
+
+        appLog('loginUser', 'userRoleFromAPI', userRoleFromAPI);
+        appLog('loginUser', 'selectedRole', selectedRole);
+
+        //Custom role match logic
+        let isRoleValid = false;
+
+        if (selectedRole === 'user') {
+          // User must match exactly 'user'
+          isRoleValid = userRoleFromAPI === 'user';
+        } else if (selectedRole === 'landlord') {
+          // Landlord should NOT be 'user'
+          isRoleValid = userRoleFromAPI !== 'user';
+        }
+
+        if (!isRoleValid) {
           return {
             success: false,
             message: `Selected role (${selectedRole}) does not match your account role (${userRoleFromAPI}).`,
           };
         }
-        //Only save when role matches
+
+        //Only save when role is valid
         await AsyncStorage.setItem('userData', JSON.stringify(response.data));
         await AsyncStorage.setItem('userRole', payload.role);
       }

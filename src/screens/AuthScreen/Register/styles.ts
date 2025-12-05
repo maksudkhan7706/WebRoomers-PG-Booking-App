@@ -22,7 +22,6 @@ export default StyleSheet.create({
   },
   titleText: {
     textAlign: 'center',
-    marginTop: 20,
   },
   subtitleText: {
     textAlign: 'center',

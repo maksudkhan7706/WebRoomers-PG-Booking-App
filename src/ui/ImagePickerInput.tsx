@@ -5,6 +5,10 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  StyleProp,
+  TextStyle,
+  Linking,
+  Platform,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -12,6 +16,8 @@ import Typography from '../ui/Typography';
 import colors from '../constants/colors';
 import { checkCameraAndGalleryPermissions } from '../utils/permissions';
 import AppImage from './AppImage';
+import { appLog } from '../utils/appLog';
+import RNFetchBlob from 'rn-fetch-blob';
 
 interface PickerFile {
   uri: string;
@@ -26,6 +32,8 @@ interface Props {
   multiple?: boolean;
   onSelect: (files: PickerFile[]) => void;
   onPreview?: (uri: string) => void;
+  labelStyle?: StyleProp<TextStyle>;
+  mediaType?: 'photo' | 'video';
 }
 
 const ImagePickerInput: React.FC<Props> = ({
@@ -34,9 +42,18 @@ const ImagePickerInput: React.FC<Props> = ({
   multiple = false,
   onSelect,
   onPreview,
-  pickerPlachholer = 'Upload / Capture Photo',
+  pickerPlachholer,
+  labelStyle,
+  mediaType,
 }) => {
   const [images, setImages] = useState<string[]>([]);
+  const resolvedMediaType =
+    mediaType ??
+    (label?.toLowerCase().includes('video') ? 'video' : 'photo');
+  const isVideoPicker = resolvedMediaType === 'video';
+  const placeholderText =
+    pickerPlachholer ||
+    (isVideoPicker ? 'Upload / Capture Video' : 'Upload / Capture Photo');
 
   useEffect(() => {
     if (!value) {
@@ -70,6 +87,34 @@ const ImagePickerInput: React.FC<Props> = ({
     }
   }, [value]);
 
+  const handlePreviewPress = (uri?: string) => {
+    appLog('handlePreviewPress', 'uri', uri);
+    if (!uri) return;
+    if (onPreview) {
+      onPreview(uri);
+      return;
+    }
+
+    const normalizedUri = uri.startsWith('file://') ? uri : uri;
+    if (isVideoPicker && normalizedUri.startsWith('file://')) {
+      const path = normalizedUri.replace('file://', '');
+      try {
+        if (Platform.OS === 'android') {
+          RNFetchBlob.android.actionViewIntent(path, 'video/*');
+        } else {
+          RNFetchBlob.ios.previewDocument(normalizedUri);
+        }
+        return;
+      } catch (err) {
+        appLog('VideoPreviewError', 'actionViewIntent failed', err);
+      }
+    }
+
+    Linking.openURL(uri).catch(() =>
+      Alert.alert('Unable to preview', 'Please try again.'),
+    );
+  };
+
   const openPicker = async () => {
     const hasPermission = await checkCameraAndGalleryPermissions();
     if (!hasPermission) {
@@ -79,9 +124,6 @@ const ImagePickerInput: React.FC<Props> = ({
       );
       return;
     }
-
-    // 🧩 Check if this field is for video
-    const isVideoPicker = label.toLowerCase().includes('video');
 
     Alert.alert(
       isVideoPicker ? 'Upload Video' : 'Upload Photo',
@@ -144,7 +186,12 @@ const ImagePickerInput: React.FC<Props> = ({
   return (
     <View style={styles.container}>
       {label ? (
-        <Typography variant="caption" weight="medium" style={styles.label}>
+        <Typography
+          variant="caption"
+          weight="medium"
+          style={[styles.label, labelStyle]}
+          numberOfLines={1}
+        >
           {label}
         </Typography>
       ) : null}
@@ -160,11 +207,38 @@ const ImagePickerInput: React.FC<Props> = ({
             >
               {images.map((uri, index) => (
                 <View key={index} style={{ position: 'relative' }}>
-                  <AppImage
-                    source={{ uri }}
-                    style={styles.multiImage}
-                    resizeMode="cover"
-                  />
+                  {isVideoPicker ? (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => handlePreviewPress(uri)}
+                      style={styles.videoThumb}
+                    >
+                      <Icon
+                        name="videocam"
+                        size={26}
+                        color={colors.mainColor}
+                      />
+                      <Typography
+                        variant="caption"
+                        weight="medium"
+                        numberOfLines={1}
+                        style={styles.videoLabel}
+                      >
+                        {`Video ${index + 1}`}
+                      </Typography>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => handlePreviewPress(uri)}
+                    >
+                      <AppImage
+                        source={{ uri }}
+                        style={styles.multiImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity
                     style={styles.removeIcon}
                     onPress={() => removeImage(uri)}
@@ -181,27 +255,41 @@ const ImagePickerInput: React.FC<Props> = ({
                 activeOpacity={0.8}
               >
                 <Icon
-                  name="add-photo-alternate"
+                  name={isVideoPicker ? 'video-library' : 'add-photo-alternate'}
                   size={30}
                   color={colors.gray}
                 />
                 <Typography variant="label" weight="medium" color={colors.gray}>
-                  Add More
+                  {isVideoPicker ? 'Add Video' : 'Add More'}
                 </Typography>
               </TouchableOpacity>
             </ScrollView>
           ) : (
             // 🔹 Single Image UI
             <TouchableOpacity
-              onPress={() => onPreview?.(images[0])}
-              style={styles.singleImage}
+              onPress={() => handlePreviewPress(images[0])}
+              style={isVideoPicker ? styles.singleVideo : styles.singleImage}
               activeOpacity={0.8}
             >
-              <AppImage
-                source={{ uri: images[0] }}
-                style={styles.singleImage}
-                resizeMode="stretch"
-              />
+              {isVideoPicker ? (
+                <View style={styles.videoPreviewContent}>
+                  <Icon name="play-circle-filled" size={36} color="#fff" />
+                  <Typography
+                    variant="label"
+                    weight="medium"
+                    color="#fff"
+                    style={{ marginTop: 6 }}
+                  >
+                    Preview Video
+                  </Typography>
+                </View>
+              ) : (
+                <AppImage
+                  source={{ uri: images[0] }}
+                  style={styles.singleImage}
+                  resizeMode="contain"
+                />
+              )}
               <TouchableOpacity
                 style={styles.removeIcon}
                 onPress={() => removeImage(images[0])}
@@ -217,9 +305,13 @@ const ImagePickerInput: React.FC<Props> = ({
             onPress={openPicker}
             style={styles.placeholderContainer}
           >
-            <Icon name="photo-camera" size={30} color={colors.gray} />
+            <Icon
+              name={isVideoPicker ? 'videocam' : 'photo-camera'}
+              size={30}
+              color={colors.gray}
+            />
             <Typography variant="label" weight="medium" color={colors.gray}>
-              {pickerPlachholer}
+              {placeholderText}
             </Typography>
           </TouchableOpacity>
         )}
@@ -283,6 +375,32 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  videoThumb: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    backgroundColor: '#e4e8f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
+  videoLabel: {
+    marginTop: 6,
+    textAlign: 'center',
+    color: colors.textDark,
+  },
+  singleVideo: {
+    width: '100%',
+    height: 110,
+    borderRadius: 10,
+    backgroundColor: colors.mainColor,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoPreviewContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

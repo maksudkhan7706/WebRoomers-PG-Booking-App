@@ -21,7 +21,7 @@ export interface DropdownItem {
 }
 
 interface AppCustomDropdownProps {
-  label: string;
+  label?: string;
   data: DropdownItem[];
   selectedValues?: string[];
   onSelect?: (values: string[]) => void;
@@ -31,7 +31,7 @@ interface AppCustomDropdownProps {
   error?: string;
   inputWrapperStyle?: ViewStyle;
   editable?: boolean; // ✅ added prop
-  dropdownContainerStyle?:ViewStyle
+  dropdownContainerStyle?: ViewStyle;
 }
 
 const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
@@ -144,42 +144,59 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
 
   return (
     <>
-      <TouchableOpacity
-        style={[
-          styles.inputWrapper,
-          {
-            marginBottom: error ? 5 : 16,
-            backgroundColor: editable ? colors.white : '#f5f5f5', // grey background if not editable
-            borderColor: editable ? colors.mainColor : '#ccc', //light border if not editable
-            ...inputWrapperStyle,
-          },
-        ]}
-        onPress={openModal}
-        activeOpacity={editable ? 0.7 : 1} //disable press effect
-      >
-        <Typography style={{ color: selected.length ? '#000' : '#999' }}>
-          {selected.length ? selectedLabels : placeholder || label}
-        </Typography>
-        {editable ? (
-          <FontAwesome
-            name="angle-down"
-            size={18}
-            color={colors.lightGary} //greyed arrow
-          />
-        ) : null}
-      </TouchableOpacity>
+      <View style={styles.container}>
+        {label && (
+          <Typography
+            variant="caption"
+            weight="medium"
+            color={colors.textDark}
+            style={styles.label}
+          >
+            {label}
+          </Typography>
+        )}
+        <TouchableOpacity
+          style={[
+            styles.inputWrapper,
+            {
+              marginBottom: error ? 5 : 0,
+              backgroundColor: editable ? colors.white : '#f5f5f5', // grey background if not editable
+              borderColor: editable ? colors.mainColor : '#ccc', //light border if not editable
+              ...inputWrapperStyle,
+            },
+          ]}
+          onPress={openModal}
+          activeOpacity={editable ? 0.7 : 1} //disable press effect
+        >
+          <Typography
+            numberOfLines={multiSelect ? 2 : 1}
+            variant={multiSelect ? 'label' : 'body'}
+            style={{ color: selected.length ? '#000' : '#999', width: '95%' }}
+          >
+            {selected.length ? selectedLabels : placeholder || '-- SELECT --'}
+          </Typography>
+          {editable ? (
+            <FontAwesome
+              name="angle-down"
+              size={18}
+              color={colors.lightGary} //greyed arrow
+            />
+          ) : null}
+        </TouchableOpacity>
 
-      {error ? (
-        <Typography variant="label" style={{ color: 'red', marginBottom: 10 }}>
-          {error}
-        </Typography>
-      ) : null}
+        {error ? (
+          <Typography variant="caption" color={colors.error} style={styles.error}>
+            {error}
+          </Typography>
+        ) : null}
+      </View>
 
       <Modal
         visible={visible}
         transparent
         animationType="none"
         onRequestClose={closeModal}
+        statusBarTranslucent
       >
         <TouchableOpacity
           activeOpacity={1}
@@ -188,17 +205,22 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
         >
           <Animated.View
             style={[
-              styles.dropdownContainer, dropdownContainerStyle,
+              styles.dropdownContainer,
+              !showSearch && styles.dropdownContainerNoSearch,
+              showSearch && styles.dropdownContainerWithSearch,
+              dropdownContainerStyle,
               { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <Typography
-              variant="body"
-              weight="bold"
-              style={styles.dropdownLabel}
-            >
-              {label}
-            </Typography>
+            {showSearch && (
+              <Typography
+                variant="body"
+                weight="bold"
+                style={styles.dropdownLabel}
+              >
+                {label}
+              </Typography>
+            )}
             {showSearch && (
               <TextInput
                 value={searchText}
@@ -230,6 +252,12 @@ const AppCustomDropdown: React.FC<AppCustomDropdownProps> = ({
 export default React.memo(AppCustomDropdown);
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    marginBottom: 6,
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -238,6 +266,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 45,
     justifyContent: 'space-between',
+  },
+  error: {
+    marginTop: 4,
   },
   overlay: {
     flex: 1,
@@ -252,8 +283,21 @@ const styles = StyleSheet.create({
     padding: 15,
     maxHeight: '70%',
   },
+  dropdownContainerNoSearch: {
+    paddingTop: 0,
+    paddingBottom: 8,
+    paddingHorizontal: 15,
+  },
+  dropdownContainerWithSearch: {
+    paddingTop: 0,
+    paddingBottom: 8,
+    paddingHorizontal: 15,
+  },
   dropdownLabel: {
-    marginBottom: 10,
+    marginBottom: 0,
+  },
+  dropdownLabelNoSearch: {
+    marginBottom: 0,
   },
   searchInput: {
     borderWidth: 0.5,
@@ -261,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     height: 40,
-    marginBottom: 10,
+    marginBottom: 0,
   },
   itemContainer: {
     flexDirection: 'row',
